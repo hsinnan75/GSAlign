@@ -1,2 +1,2 @@
-# Gecom
-Genome sequence comparison
+# GenAlign
+Genome sequence alignment
