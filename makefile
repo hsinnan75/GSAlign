@@ -9,10 +9,16 @@ SOURCE		= main.cpp GetData.cpp GSAlign.cpp nw_alignment.cpp ksw2_alignment.cpp e
 HEADER		= structure.h
 OBJECT		= $(SOURCE:%.cpp=%.o)
 
+all:		main index
+
 main:		$(OBJECT)
 			$(Compiler) $(FLAGS) $(OBJECT) -o GSAlign $(LIB)
 %.o:		%.cpp $(HEADER)
 			$(Compiler) $(FLAGS) -c $<
+
+index:
+		make -C BWT_Index && mv BWT_Index/bwa_index .
+		
 clean:
 		rm -f *.o *~
 
