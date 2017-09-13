@@ -5,7 +5,7 @@ bwt_t *Refbwt;
 bwaidx_t *RefIdx;
 time_t StartProcessTime;
 vector<QueryChr_t> QueryChrVec;
-const char* VersionStr = "0.1.0";
+const char* VersionStr = "0.9.0";
 int iThreadNum, iQueryChrNum, MinSeedLength;
 bool bDebugMode, bShowSubstitution, bShowIndel, bShowDotPlot;
 char *RefSequence, *RefSeqFileName, *IndexFileName, *QueryFileName, *OutputPrefix, *vcfFileName, *alnFileName, *snpFileName, *indFileName, *svsFileName, *gpFileName;
@@ -110,10 +110,10 @@ int main(int argc, char* argv[])
 		else if (parameter == "-q") QueryFileName = argv[++i];
 		else if (parameter == "-t")
 		{
-			if ((iThreadNum = atoi(argv[++i])) > 16)
+			if ((iThreadNum = atoi(argv[++i])) > 40)
 			{
-				fprintf(stderr, "Warning! Thread number is limited to 16!\n");
-				iThreadNum = 16;
+				fprintf(stderr, "Warning! Thread number is limited to 40!\n");
+				iThreadNum = 40;
 			}
 		}
 		else if (parameter == "-sub") bShowSubstitution = true;

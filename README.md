@@ -1,2 +1,2 @@
-# GeAlign
+# GSAlign
 Genome sequence alignment
