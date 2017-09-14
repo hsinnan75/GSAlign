@@ -71,21 +71,21 @@ void InitializeOutputFiles()
 	FILE *outFile;
 	int len = strlen(OutputPrefix);
 
-	alnFileName = new char[len + 4]; strcpy(alnFileName, OutputPrefix), strcpy(alnFileName + len, ".aln"); outFile = fopen(alnFileName, "w"); fclose(outFile);
-	vcfFileName = new char[len + 4]; strcpy(vcfFileName, OutputPrefix), strcpy(vcfFileName + len, ".vcf"); outFile = fopen(vcfFileName, "w"); fclose(outFile);
+	alnFileName = new char[len + 5]; strcpy(alnFileName, OutputPrefix), strcpy(alnFileName + len, ".aln"); alnFileName[len + 4] = '\0'; outFile = fopen(alnFileName, "w"); fclose(outFile);
+	vcfFileName = new char[len + 5]; strcpy(vcfFileName, OutputPrefix), strcpy(vcfFileName + len, ".vcf"); vcfFileName[len + 4] = '\0'; outFile = fopen(vcfFileName, "w"); fclose(outFile);
 	if (bShowSubstitution)
 	{
-		snpFileName = new char[len + 4]; strcpy(snpFileName, OutputPrefix), strcpy(snpFileName + len, ".snp"); outFile = fopen(snpFileName, "w"); fclose(outFile);
+		snpFileName = new char[len + 5]; strcpy(snpFileName, OutputPrefix), strcpy(snpFileName + len, ".snp"); snpFileName[len + 4] = '\0'; outFile = fopen(snpFileName, "w"); fclose(outFile);
 	}
 	if (bShowIndel)
 	{
-		indFileName = new char[len + 4]; strcpy(indFileName, OutputPrefix), strcpy(indFileName + len, ".ind"); outFile = fopen(indFileName, "w"); fclose(outFile);
+		indFileName = new char[len + 5]; strcpy(indFileName, OutputPrefix), strcpy(indFileName + len, ".ind"); indFileName[len + 4] = '\0'; outFile = fopen(indFileName, "w"); fclose(outFile);
 	}
 	if (bShowDotPlot)
 	{
-		gpFileName = new char[len + 3];  strcpy(gpFileName, OutputPrefix); strcpy(gpFileName + len, ".gp");
+		gpFileName = new char[len + 4];  strcpy(gpFileName, OutputPrefix); gpFileName[len + 3] = '\0'; strcpy(gpFileName + len, ".gp");
 	}
-	//svsFileName = new char[len + 4]; strcpy(svsFileName, OutputPrefix), strcpy(svsFileName + len, ".svs"); outFile = fopen(svsFileName, "w"); fclose(outFile);
+	//svsFileName = new char[len + 5]; strcpy(svsFileName, OutputPrefix), strcpy(svsFileName + len, ".svs"); svsFileName[len + 4] = '\0';outFile = fopen(svsFileName, "w"); fclose(outFile);
 }
 
 int main(int argc, char* argv[])
