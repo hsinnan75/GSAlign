@@ -17,7 +17,7 @@ to download the package of Kart.
 
 # Compiling
 
-To compile GSAlign and the index tool, please change to GSAlign's folder and just type 'make' to compile GSAlign and bwa_index. If the compilation or the program fails, please contact me (arith@iis.sinica.edu.tw), Thanks.
+To compile GSAlign and the index tool, please change to GSAlign's folder and just type 'make' to compile GSAlign and bwa_index. If the compilation or the programs fail, please contact me (arith@iis.sinica.edu.tw), Thanks.
 
 # Changes
 
@@ -48,7 +48,7 @@ If the index files are not mdade beforehand, GSAlign will generate index files i
 	4. snp file: it shows all the SNPs of the query genome (compared to the reference genome).
 	5. ind file: it shows all the insertions and deletions of the query genome (compared to the reference genome).
 
-All above file format are in text mode.
+All above file formats are in text mode.
 
 # Parameter setting
 
