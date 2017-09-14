@@ -179,7 +179,7 @@ int main(int argc, char* argv[])
 		bwa_idx_destroy(RefIdx);
 		if (RefSequence != NULL) delete[] RefSequence;
 	}
-	fprintf(stderr, "\nIt took %lld seconds.\n", (long long)(time(NULL) - StartProcessTime));
+	fprintf(stderr, "\nDone! It took %lld seconds.\n\n\n", (long long)(time(NULL) - StartProcessTime));
 
 	return 0;
 }

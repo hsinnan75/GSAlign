@@ -719,37 +719,6 @@ void OutputIndeles()
 	std::fclose(outFile);
 }
 
-//void OutputStrVar()
-//{
-//	FILE *outFile;
-//	int64_t rGap, last_ref_end;
-//	string QueryChrName, RefChrName;
-//	int i, RefIdx, last_query_end, qGap, num, FragNum;
-//
-//	outFile = fopen(svsFileName, "a");  num = (int)AlnBlockVec.size();
-//	for (i = 1; i < num; i++)
-//	{
-//		if (AlnBlockVec[i - 1].coor.ChromosomeIdx == AlnBlockVec[i].coor.ChromosomeIdx)
-//		{
-//			RefIdx = AlnBlockVec[i].coor.ChromosomeIdx;
-//
-//			QueryChrName = QueryChrVec[QueryChrIdx].name; RefChrName = ChromosomeVec[RefIdx].name;
-//			if (QueryChrName.length() > RefChrName.length()) RefChrName += string().assign((QueryChrName.length() - RefChrName.length()), ' ');
-//			else QueryChrName += string().assign((RefChrName.length() - QueryChrName.length()), ' ');
-//
-//			FragNum = AlnBlockVec[i - 1].FragPairVec.size() - 1;
-//			last_query_end = AlnBlockVec[i - 1].FragPairVec[FragNum].qPos + AlnBlockVec[i - 1].FragPairVec[FragNum].qLen - 1;
-//			last_ref_end = AlnBlockVec[i - 1].FragPairVec[FragNum].rPos + AlnBlockVec[i - 1].FragPairVec[FragNum].rLen - 1;
-//
-//			qGap = abs(AlnBlockVec[i].FragPairVec[0].qPos - last_query_end);
-//			rGap = abs(AlnBlockVec[i].FragPairVec[0].rPos - last_ref_end);
-//
-//			if(abs(rGap - qGap) >= MaximumGaps) fprintf(outFile, "SV#%d\nRefer_Gap_size=%d %s[%d-%d]\nQuery_Gap_size=%d %s[%d-%d]\n\n", ++SVS_num, qGap, (char*)RefChrName.c_str(), GenCoordinateInfo(last_ref_end).gPos, AlnBlockVec[i].coor.gPos, (char*)QueryChrName.c_str(), last_query_end, AlnBlockVec[i].FragPairVec[0].qPos + 1, rGap + 1);
-//		}
-//	}
-//	std::fclose(outFile);
-//}
-
 void OutputDotplot()
 {
 	int64_t last_ref_end;
@@ -848,36 +817,17 @@ void GenomeComparison()
 			memset(CoverageArr + ABiter->FragPairVec[0].qPos, true, ABiter->FragPairVec[n].qPos + ABiter->FragPairVec[n].qLen - ABiter->FragPairVec[0].qPos);
 			ABiter->coor = GenCoordinateInfo(ABiter->FragPairVec[0].rPos);
 		}
-		fprintf(stderr, "\tOutput the alignment for query chromosome %s in the file: %s...\n", QueryChrVec[QueryChrIdx].name.c_str(), alnFileName);
-		OutputAlignment();
-
-		fprintf(stderr, "\tOutput the variants for query chromosome %s in the file: %s...\n", QueryChrVec[QueryChrIdx].name.c_str(), vcfFileName);
-		OutputVariantCallingFile();
-		
-		if (bShowSubstitution)
-		{
-			fprintf(stderr, "\tOutput the SNPs for query chromosome %s in the file: %s...\n", QueryChrVec[QueryChrIdx].name.c_str(), snpFileName);
-			OutputSNPs();
-		}
-
-		if (bShowIndel)
-		{
-			fprintf(stderr, "\tOutput the indels for query chromosome %s in the file: %s...\n", QueryChrVec[QueryChrIdx].name.c_str(), indFileName);
-			OutputIndeles();
-		}
-
-		if (GnuPlotPath != NULL)
-		{
-			fprintf(stderr, "\tGenerate the dotplot for query chromosome %s in the file: %s-%s.ps...\n", QueryChrVec[QueryChrIdx].name.c_str(), OutputPrefix, QueryChrVec[QueryChrIdx].name.c_str());
-			OutputDotplot();
-		}
+		fprintf(stderr, "\tOutput the alignment for query chromosome %s in the file: %s...\n", QueryChrVec[QueryChrIdx].name.c_str(), alnFileName);	OutputAlignment();
+		fprintf(stderr, "\tOutput the variants for query chromosome %s in the file: %s...\n", QueryChrVec[QueryChrIdx].name.c_str(), vcfFileName); OutputVariantCallingFile();
+		if (bShowSubstitution) fprintf(stderr, "\tOutput the SNPs for query chromosome %s in the file: %s...\n", QueryChrVec[QueryChrIdx].name.c_str(), snpFileName), OutputSNPs();
+		if (bShowIndel) fprintf(stderr, "\tOutput the indels for query chromosome %s in the file: %s...\n", QueryChrVec[QueryChrIdx].name.c_str(), indFileName), OutputIndeles();
+		if (GnuPlotPath != NULL) fprintf(stderr, "\tGenerate the dotplot for query chromosome %s in the file: %s-%s.ps...\n", QueryChrVec[QueryChrIdx].name.c_str(), OutputPrefix, QueryChrVec[QueryChrIdx].name.c_str()), OutputDotplot();
 
 		iTotalLength += (n = (int)QueryChrVec[QueryChrIdx].seq.length());
 		for (i = 0; i < n; i++) if (CoverageArr[i]) iCoverage++;
 		delete[] CoverageArr;
 	}
 	fprintf(stderr, "\nAlignment coverage = %.4f\n", 1.0*iCoverage / iTotalLength);
-	fprintf(stderr, "\n\t(Current memory consumption: %.1f GB)\n\n", CheckMemoryUsage() / 1024.0);
 
 	delete[] ThreadArr;
 }
