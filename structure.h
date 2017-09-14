@@ -130,9 +130,9 @@ extern vector<QueryChr_t> QueryChrVec;
 extern unsigned char nst_nt4_table[256];
 extern int64_t GenomeSize, TwoGenomeSize;
 extern vector<Chromosome_t> ChromosomeVec;
+extern bool bDebugMode, bShowSubstitution, bShowIndel;
 extern int iThreadNum, iQueryChrNum, iChromsomeNum, MinSeedLength;
-extern bool bDebugMode, bShowSubstitution, bShowIndel, bShowDotPlot;
-extern char *RefSequence, *RefSeqFileName, *IndexFileName, *QueryFileName, *OutputPrefix, *vcfFileName, *alnFileName, *snpFileName, *indFileName, *svsFileName, *gpFileName;
+extern char *RefSequence, *RefSeqFileName, *IndexFileName, *QueryFileName, *OutputPrefix, *vcfFileName, *alnFileName, *snpFileName, *indFileName, *svsFileName, *gpFileName, *GnuPlotPath;
 
 // bwt_index.cpp
 extern void RestoreReferenceInfo();

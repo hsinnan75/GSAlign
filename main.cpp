@@ -7,8 +7,8 @@ time_t StartProcessTime;
 vector<QueryChr_t> QueryChrVec;
 const char* VersionStr = "0.9.0";
 int iThreadNum, iQueryChrNum, MinSeedLength;
-bool bDebugMode, bShowSubstitution, bShowIndel, bShowDotPlot;
-char *RefSequence, *RefSeqFileName, *IndexFileName, *QueryFileName, *OutputPrefix, *vcfFileName, *alnFileName, *snpFileName, *indFileName, *svsFileName, *gpFileName;
+bool bDebugMode, bShowSubstitution, bShowIndel;
+char *RefSequence, *RefSeqFileName, *IndexFileName, *QueryFileName, *OutputPrefix, *vcfFileName, *alnFileName, *snpFileName, *indFileName, *svsFileName, *gpFileName, *GnuPlotPath;
 
 bool LoadQueryFile()
 {
@@ -81,11 +81,30 @@ void InitializeOutputFiles()
 	{
 		indFileName = new char[len + 5]; strcpy(indFileName, OutputPrefix), strcpy(indFileName + len, ".ind"); indFileName[len + 4] = '\0'; outFile = fopen(indFileName, "w"); fclose(outFile);
 	}
-	if (bShowDotPlot)
+	if (GnuPlotPath != NULL)
 	{
 		gpFileName = new char[len + 4];  strcpy(gpFileName, OutputPrefix); gpFileName[len + 3] = '\0'; strcpy(gpFileName + len, ".gp");
 	}
 	//svsFileName = new char[len + 5]; strcpy(svsFileName, OutputPrefix), strcpy(svsFileName + len, ".svs"); svsFileName[len + 4] = '\0';outFile = fopen(svsFileName, "w"); fclose(outFile);
+}
+
+void FindGnuPlotPath()
+{
+	fstream file;
+	stringstream ss;
+	string fullpath, cmd, str, tmp;
+
+	cmd = "/usr/bin/whereis gnuplot > GnuPlotPath"; system(cmd.c_str());
+	file.open("GnuPlotPath"); getline(file, str); file.close();
+	ss.clear(); ss.str(str);
+
+	ss >> tmp >> fullpath;
+	if (fullpath == "") GnuPlotPath = NULL;
+	else
+	{
+		GnuPlotPath = new char[(int)fullpath.length() + 1];
+		strcpy(GnuPlotPath, (const char*)fullpath.c_str());
+	}
 }
 
 int main(int argc, char* argv[])
@@ -98,7 +117,6 @@ int main(int argc, char* argv[])
 	MinSeedLength = 20;
 	bShowSubstitution = false;
 	bShowIndel = false;
-	bShowDotPlot = true;
 	RefSequence = RefSeqFileName = IndexFileName = QueryFileName = OutputPrefix = NULL;
 
 	for (i = 1; i < argc; i++)
@@ -156,7 +174,7 @@ int main(int argc, char* argv[])
 		Refbwt = RefIdx->bwt;
 		RestoreReferenceInfo();
 
-		InitializeOutputFiles();
+		FindGnuPlotPath(); InitializeOutputFiles();
 		GenomeComparison();
 		bwa_idx_destroy(RefIdx);
 		if (RefSequence != NULL) delete[] RefSequence;

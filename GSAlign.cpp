@@ -798,9 +798,9 @@ void OutputDotplot()
 		}
 	}
 	fprintf(outFile, "#unset multiplot\n"); std::fclose(outFile);
-
-	cmd = "./gnuplot " + (string)gpFileName; system((char*)cmd.c_str());
-	//cmd = "rm " + (string)gpFileName + " " + DataFileName + "*"; system(cmd.c_str());
+	cmd = (string)GnuPlotPath + " " + (string)gpFileName; system((char*)cmd.c_str());
+	DataFileName = (string)OutputPrefix + "." + QueryChrName + "-*.*";
+	cmd = "rm " + DataFileName; system(cmd.c_str());
 }
 
 void GenomeComparison()
@@ -866,18 +866,14 @@ void GenomeComparison()
 			OutputIndeles();
 		}
 
-		if (bShowDotPlot)
+		if (GnuPlotPath != NULL)
 		{
 			fprintf(stderr, "\tGenerate the dotplot for query chromosome %s in the file: %s-%s.ps...\n", QueryChrVec[QueryChrIdx].name.c_str(), OutputPrefix, QueryChrVec[QueryChrIdx].name.c_str());
 			OutputDotplot();
 		}
 
 		iTotalLength += (n = (int)QueryChrVec[QueryChrIdx].seq.length());
-		for (i = 0; i < n; i++)
-		{
-			if (CoverageArr[i]) iCoverage++;
-		}
-
+		for (i = 0; i < n; i++) if (CoverageArr[i]) iCoverage++;
 		delete[] CoverageArr;
 	}
 	fprintf(stderr, "\nAlignment coverage = %.4f\n", 1.0*iCoverage / iTotalLength);
