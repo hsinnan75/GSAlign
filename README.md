@@ -1,4 +1,4 @@
-GSAlign: a large genome sequence alignment tool with Burrows-Wheeler Transform
+GSAlign: an ultra-fast genome sequence alignment tool
 ===================
 
 Developers: Dr. Hsin-Nan Lin and Dr. Wen-Lian Hsu Institute of Information Science, Academia Sinica, Taiwan.
