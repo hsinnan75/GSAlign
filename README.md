@@ -34,6 +34,13 @@ The above command is to index the genome file Ecoli.fa and store the index files
 
 If the index files are not mdade beforehand, GSAlign will generate index files istself with the given reference genome sequences.
 
+# Datasets
+
+You may download test datasets at http://bioapp.iis.sinica.edu.tw/~arith/GSAlign/ to test the performance of GSAlign.
+The dataset contains four simulated human genome sequences with 0.1%, 0.2%, 0.5%, and 1% of mutation rates, respectively. It also contains the corresponding VCF file listing the variants between the hg38 genome and the mutant ones.
+You can also use the evaulation tool (Evaluation.cpp) to measure the precision and recall of the resulting VCF files. 
+To compile Evaluation.cpp, just type 'g++ Evaluation.cpp -o eva'
+
 # File formats
 
 - Reference and query genome files
