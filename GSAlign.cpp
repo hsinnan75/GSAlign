@@ -409,8 +409,8 @@ void *GenerateFragAlignment(void *arg)
 				FragPair->aln2.resize(FragPair->rLen); strncpy((char*)FragPair->aln2.c_str(), RefSequence + FragPair->rPos, FragPair->rLen);
 				
 				//nw_alignment(FragPair->qLen, FragPair->aln1, FragPair->rLen, FragPair->aln2);
-				//ksw2_alignment(FragPair->qLen, FragPair->aln1, FragPair->rLen, FragPair->aln2);
-				edlib_alignment(FragPair->qLen, FragPair->aln1, FragPair->rLen, FragPair->aln2);
+				ksw2_alignment(FragPair->qLen, FragPair->aln1, FragPair->rLen, FragPair->aln2);
+				//edlib_alignment(FragPair->qLen, FragPair->aln1, FragPair->rLen, FragPair->aln2);
 			}
 		}
 	}
