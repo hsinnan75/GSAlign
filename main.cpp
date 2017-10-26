@@ -112,7 +112,7 @@ int main(int argc, char* argv[])
 	int i;
 	string parameter, str;
 
-	iThreadNum = 16;
+	iThreadNum = 4;
 	bDebugMode = false;
 	MinSeedLength = 20;
 	bShowSubstitution = false;
@@ -146,7 +146,7 @@ int main(int argc, char* argv[])
 		fprintf(stderr, "\n");
 		fprintf(stderr, "GenAlign v%s\n", VersionStr);
 		fprintf(stderr, "Usage: %s [-i IndexFile Prefix / -r Reference file] -q QueryFile[Fasta]\n\n", argv[0]);
-		fprintf(stderr, "Options: -t INT        number of threads [16]\n");
+		fprintf(stderr, "Options: -t INT        number of threads [%d]\n", iThreadNum);
 		fprintf(stderr, "         -o            Set the prefix of the output files\n");
 		fprintf(stderr, "\n");
 		exit(0);
