@@ -25,7 +25,7 @@ version 0.9.0: First release version.
 
 # Instructions
 
-For indexing a reference genome, GSAlign requires the target genome file (in fasta format) and the prefix of the index files (including the directory path).
+To index a reference genome, GSAlign requires the target genome file (in fasta format) and the prefix of the index files (including the directory path).
 
   ```
   $ ./bwa_index ref_file[ex.ecoli.fa] index_prefix[ex. Ecoli]
