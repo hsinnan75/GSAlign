@@ -39,12 +39,12 @@ void nw_alignment(int m, string& s1, int n, string& s2)
 	for (i = 1; i < m; i++)
 	{
 		r[i][0] = MaxPenalty;
-		s[i][0] = t[i][0] = 0;
+		s[i][0] = t[i][0] = NEW_GAP + i*EXTEND_GAP;;
 	}
 	for (j = 1; j < n; j++)
 	{
 		t[0][j] = MaxPenalty;
-		s[0][j] = r[0][j] = 0;
+		s[0][j] = r[0][j] = NEW_GAP + j*EXTEND_GAP;
 	}
 
 	for (i = 1; i < m; i++)
