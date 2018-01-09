@@ -5,10 +5,10 @@ bwt_t *Refbwt;
 bwaidx_t *RefIdx;
 time_t StartProcessTime;
 vector<QueryChr_t> QueryChrVec;
-const char* VersionStr = "0.9.0";
+const char* VersionStr = "0.9.1";
 int iThreadNum, iQueryChrNum, MinSeedLength;
 bool bDebugMode, bShowSubstitution, bShowIndel;
-char *RefSequence, *RefSeqFileName, *IndexFileName, *QueryFileName, *OutputPrefix, *vcfFileName, *alnFileName, *snpFileName, *indFileName, *svsFileName, *gpFileName, *GnuPlotPath;
+char *RefSequence, *RefSeqFileName, *IndexFileName, *QueryFileName, *OutputPrefix, *vcfFileName, *mafFileName, *alnFileName, *snpFileName, *indFileName, *svsFileName, *gpFileName, *GnuPlotPath;
 
 bool LoadQueryFile()
 {
@@ -34,7 +34,7 @@ bool LoadQueryFile()
 			else QueryChr.seq.append(str);
 		}
 		if (QueryChr.seq != "") QueryChrVec.push_back(QueryChr);
-		fprintf(stderr, "\tLoad the query sequences (%d chromosome%s)\n", (int)QueryChrVec.size(), (QueryChrVec.size() > 1 ? "s":""));
+		fprintf(stderr, "\tLoad the query sequences (%d %s)\n", (int)QueryChrVec.size(), (QueryChrVec.size() > 1 ? "chromosomes":"chromosome"));
 	}
 	file.close();
 
@@ -71,7 +71,8 @@ void InitializeOutputFiles()
 	FILE *outFile;
 	int len = strlen(OutputPrefix);
 
-	alnFileName = new char[len + 5]; strcpy(alnFileName, OutputPrefix), strcpy(alnFileName + len, ".aln"); alnFileName[len + 4] = '\0'; outFile = fopen(alnFileName, "w"); fclose(outFile);
+	mafFileName = new char[len + 5]; strcpy(mafFileName, OutputPrefix), strcpy(mafFileName + len, ".maf"); mafFileName[len + 4] = '\0'; outFile = fopen(mafFileName, "w"); fclose(outFile);
+	//alnFileName = new char[len + 5]; strcpy(alnFileName, OutputPrefix), strcpy(alnFileName + len, ".aln"); alnFileName[len + 4] = '\0'; outFile = fopen(alnFileName, "w"); fclose(outFile);
 	vcfFileName = new char[len + 5]; strcpy(vcfFileName, OutputPrefix), strcpy(vcfFileName + len, ".vcf"); vcfFileName[len + 4] = '\0'; outFile = fopen(vcfFileName, "w"); fclose(outFile);
 	if (bShowSubstitution)
 	{
@@ -112,7 +113,7 @@ int main(int argc, char* argv[])
 	int i;
 	string parameter, str;
 
-	iThreadNum = 4;
+	iThreadNum = 16;
 	bDebugMode = false;
 	MinSeedLength = 20;
 	bShowSubstitution = false;

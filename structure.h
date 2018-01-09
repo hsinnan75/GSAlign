@@ -132,7 +132,7 @@ extern int64_t GenomeSize, TwoGenomeSize;
 extern vector<Chromosome_t> ChromosomeVec;
 extern bool bDebugMode, bShowSubstitution, bShowIndel;
 extern int iThreadNum, iQueryChrNum, iChromsomeNum, MinSeedLength;
-extern char *RefSequence, *RefSeqFileName, *IndexFileName, *QueryFileName, *OutputPrefix, *vcfFileName, *alnFileName, *snpFileName, *indFileName, *svsFileName, *gpFileName, *GnuPlotPath;
+extern char *RefSequence, *RefSeqFileName, *IndexFileName, *QueryFileName, *OutputPrefix, *vcfFileName, *mafFileName, *alnFileName, *snpFileName, *indFileName, *svsFileName, *gpFileName, *GnuPlotPath;
 
 // bwt_index.cpp
 extern void RestoreReferenceInfo();
@@ -152,12 +152,7 @@ extern bool CheckBWAIndexFiles(string IndexPrefix);
 // tools.cpp
 extern int CheckMemoryUsage();
 extern void ShowSeedLocationInfo(int64_t MyPos);
+extern void SelfComplementarySeq(int len, char* seq);
 
 // nw_alignment.cpp
 extern void nw_alignment(int m, string& s1, int n, string& s2);
-
-// ksw2_alignment.cpp
-extern void ksw2_alignment(int m, string& s1, int n, string& s2);
-
-// edlib_alignment.cpp
-extern void edlib_alignment(int m, string& s1, int n, string& s2);
