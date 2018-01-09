@@ -9,7 +9,7 @@ Personal genomics and comparative genomics are two fields that are more and more
 
 # Download
 
-Current version: 2.3.0. Please use the command 
+Current version: 0.9.1 Please use the command 
   ```
   $ git clone https://github.com/hsinnan75/GSAlign.git
   ```
@@ -20,6 +20,7 @@ to download the package of Kart.
 To compile GSAlign and the index tool, please change to GSAlign's folder and just type 'make' to compile GSAlign and bwa_index. If the compilation or the programs fail, please contact me (arith@iis.sinica.edu.tw), Thanks.
 
 # Changes
+version 0.9.1: Add MAF output.
 
 version 0.9.0: First release version.
 
@@ -49,7 +50,7 @@ To compile Evaluation.cpp, just type 'g++ Evaluation.cpp -o eva'
 
 - Output file
 
-	1. aln file: it shows the pairwise alignments between the two genomes.
+	1. maf file: it shows the pairwise alignments between the two genomes (standard MAF format).
 	2. vcf file: it shows the sequence variants between the two genomes (standard VCF format).
 	3. ps  file: it shows the dotplot between two chromosomes (gnuplot is required).
 	4. snp file: it shows all the SNPs of the query genome (compared to the reference genome).
