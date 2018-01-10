@@ -803,7 +803,7 @@ void OutputDotplot()
 	for (iCluster = i = 0; i < iChromsomeNum; i++) if (ChrScoreVec[i] > thr) iCluster++;
 
 	outFile = fopen(gpFileName, "w"); QueryChrName = QueryChrVec[QueryChrIdx].name;
-	fprintf(outFile, "set terminal postscript color solid 'Courier' 8\nset output '%s-%s.ps'\n", OutputPrefix, QueryChrVec[QueryChrIdx].name.c_str());
+	fprintf(outFile, "set terminal postscript color solid 'Courier' 15\nset output '%s-%s.ps'\n", OutputPrefix, QueryChrVec[QueryChrIdx].name.c_str());
 	fprintf(outFile, "set multiplot layout %d,1\nset grid\nset border 1\n", iCluster);
 	fprintf(outFile, "set style line 1 lw 4 pt 0 ps 0.5 lc rgb 'red'\nset style line 2 lw 4 pt 0 ps 0.5 lc rgb 'blue'\n");
 
