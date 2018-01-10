@@ -594,7 +594,7 @@ void OutputMAF()
 			else
 			{
 				i = (int)ABiter->FragPairVec.size() - 1;
-				int rPos = ABiter->FragPairVec[i].rPos + ABiter->FragPairVec[i].rLen - 1;
+				int64_t rPos = ABiter->FragPairVec[i].rPos + ABiter->FragPairVec[i].rLen - 1;
 				SelfComplementarySeq((int)aln1.length(), (char*)aln1.c_str());
 				SelfComplementarySeq((int)aln2.length(), (char*)aln2.c_str());
 				fprintf(outFile, "s %s %lld %lld + %d %s\n", ChromosomeVec[RefIdx].name, GenCoordinateInfo(rPos).gPos, (long long)aln1.length(), ChromosomeVec[RefIdx].len, (char*)aln1.c_str());
