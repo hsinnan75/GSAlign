@@ -6,8 +6,8 @@ bwaidx_t *RefIdx;
 time_t StartProcessTime;
 vector<QueryChr_t> QueryChrVec;
 const char* VersionStr = "0.9.1";
-int iThreadNum, iQueryChrNum, MinSeedLength;
 bool bDebugMode, bShowSubstitution, bShowIndel;
+int iThreadNum = 4, iQueryChrNum, MinSeedLength, OutputFormat = 0;
 char *RefSequence, *RefSeqFileName, *IndexFileName, *QueryFileName, *OutputPrefix, *vcfFileName, *mafFileName, *alnFileName, *snpFileName, *indFileName, *svsFileName, *gpFileName, *GnuPlotPath;
 
 bool LoadQueryFile()
@@ -71,22 +71,36 @@ void InitializeOutputFiles()
 	FILE *outFile;
 	int len = strlen(OutputPrefix);
 
+	mafFileName = alnFileName = vcfFileName = snpFileName = indFileName = gpFileName = NULL;
+
 	mafFileName = new char[len + 5]; strcpy(mafFileName, OutputPrefix), strcpy(mafFileName + len, ".maf"); mafFileName[len + 4] = '\0'; outFile = fopen(mafFileName, "w"); fclose(outFile);
-	//alnFileName = new char[len + 5]; strcpy(alnFileName, OutputPrefix), strcpy(alnFileName + len, ".aln"); alnFileName[len + 4] = '\0'; outFile = fopen(alnFileName, "w"); fclose(outFile);
+	alnFileName = new char[len + 5]; strcpy(alnFileName, OutputPrefix), strcpy(alnFileName + len, ".aln"); alnFileName[len + 4] = '\0'; outFile = fopen(alnFileName, "w"); fclose(outFile);
 	vcfFileName = new char[len + 5]; strcpy(vcfFileName, OutputPrefix), strcpy(vcfFileName + len, ".vcf"); vcfFileName[len + 4] = '\0'; outFile = fopen(vcfFileName, "w"); fclose(outFile);
 	if (bShowSubstitution)
 	{
 		snpFileName = new char[len + 5]; strcpy(snpFileName, OutputPrefix), strcpy(snpFileName + len, ".snp"); snpFileName[len + 4] = '\0'; outFile = fopen(snpFileName, "w"); fclose(outFile);
 	}
+
 	if (bShowIndel)
 	{
 		indFileName = new char[len + 5]; strcpy(indFileName, OutputPrefix), strcpy(indFileName + len, ".ind"); indFileName[len + 4] = '\0'; outFile = fopen(indFileName, "w"); fclose(outFile);
 	}
+
 	if (GnuPlotPath != NULL)
 	{
 		gpFileName = new char[len + 4];  strcpy(gpFileName, OutputPrefix); gpFileName[len + 3] = '\0'; strcpy(gpFileName + len, ".gp");
 	}
 	//svsFileName = new char[len + 5]; strcpy(svsFileName, OutputPrefix), strcpy(svsFileName + len, ".svs"); svsFileName[len + 4] = '\0';outFile = fopen(svsFileName, "w"); fclose(outFile);
+}
+
+void DestroyOutputFileNames()
+{
+	if (mafFileName != NULL) delete[] mafFileName;
+	if (alnFileName != NULL) delete[] alnFileName;
+	if (vcfFileName != NULL) delete[] vcfFileName;
+	if (snpFileName != NULL) delete[] snpFileName;
+	if (indFileName != NULL) delete[] indFileName;
+	if (gpFileName != NULL) delete[] gpFileName;
 }
 
 void FindGnuPlotPath()
@@ -113,7 +127,6 @@ int main(int argc, char* argv[])
 	int i;
 	string parameter, str;
 
-	iThreadNum = 16;
 	bDebugMode = false;
 	MinSeedLength = 20;
 	bShowSubstitution = false;
@@ -125,9 +138,9 @@ int main(int argc, char* argv[])
 		parameter = argv[i];
 
 		if (parameter == "-i") IndexFileName = argv[++i];
-		else if (parameter == "-r") RefSeqFileName = argv[++i];
-		else if (parameter == "-q") QueryFileName = argv[++i];
-		else if (parameter == "-t")
+		else if (parameter == "-r" &&  i + 1 < argc) RefSeqFileName = argv[++i];
+		else if (parameter == "-q" && i + 1 < argc) QueryFileName = argv[++i];
+		else if (parameter == "-t" && i + 1 < argc)
 		{
 			if ((iThreadNum = atoi(argv[++i])) > 40)
 			{
@@ -137,6 +150,7 @@ int main(int argc, char* argv[])
 		}
 		else if (parameter == "-sub") bShowSubstitution = true;
 		else if (parameter == "-ind") bShowIndel = true;
+		else if (parameter == "-fmt" && i + 1 < argc) OutputFormat = atoi(argv[++i]);
 		else if (parameter == "-o") OutputPrefix = argv[++i];
 		else if (parameter == "-d" || parameter == "-debug") bDebugMode = true;
 		else fprintf(stderr, "Warning! Unknow parameter: %s\n", argv[i]);
@@ -147,8 +161,9 @@ int main(int argc, char* argv[])
 		fprintf(stderr, "\n");
 		fprintf(stderr, "GenAlign v%s\n", VersionStr);
 		fprintf(stderr, "Usage: %s [-i IndexFile Prefix / -r Reference file] -q QueryFile[Fasta]\n\n", argv[0]);
-		fprintf(stderr, "Options: -t INT        number of threads [%d]\n", iThreadNum);
-		fprintf(stderr, "         -o            Set the prefix of the output files\n");
+		fprintf(stderr, "Options: -t   INT     number of threads [%d]\n", iThreadNum);
+		fprintf(stderr, "         -o   STR     Set the prefix of the output files\n");
+		fprintf(stderr, "         -fmt INT     Set the output format [%d]: 0:maf, 1:aln\n", OutputFormat);
 		fprintf(stderr, "\n");
 		exit(0);
 	}
@@ -179,6 +194,7 @@ int main(int argc, char* argv[])
 		GenomeComparison();
 		bwa_idx_destroy(RefIdx);
 		if (RefSequence != NULL) delete[] RefSequence;
+		DestroyOutputFileNames();
 	}
 	fprintf(stderr, "\nDone! It took %lld seconds.\n\n\n", (long long)(time(NULL) - StartProcessTime));
 

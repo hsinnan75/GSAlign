@@ -633,9 +633,9 @@ void OutputVariantCallingFile()
 					frag2.resize(FragPairIter->qLen + 1); strncpy((char*)frag2.c_str(), QueryChrVec[QueryChrIdx].seq.c_str() + FragPairIter->qPos - 1, FragPairIter->qLen + 1);
 					fprintf(outFile, "%s\t%d\t.\t%c\t%s\t100\tPASS\tmt=INSERT\n", RefChrName.c_str(), GenCoordinateInfo(FragPairIter->rPos - 1).gPos, RefSequence[FragPairIter->rPos - 1], (char*)frag2.c_str());
 				}
-				else if (FragPairIter->qLen == 1 && FragPairIter->rLen == 1) // substitution
+				else if (FragPairIter->qLen == 1 && FragPairIter->rLen == 1 && nst_nt4_table[FragPairIter->aln1[0]] != nst_nt4_table[FragPairIter->aln2[0]]) // substitution
 				{
-					fprintf(outFile, "%s\t%d\t.\t%c\t%c\t100\tPASS\tmt=SUBSTITUTE\n", RefChrName.c_str(), GenCoordinateInfo(FragPairIter->rPos).gPos, FragPairIter->aln2[0], FragPairIter->aln1[0]);
+					fprintf(outFile, "%s\t%d\t.\t%c\t%c\t100\tPASS\tmt=SUBSTITUTE\n", RefChrName.c_str(), GenCoordinateInfo(FragPairIter->rPos).gPos, FragPairIter->aln1[0], FragPairIter->aln2[0]);
 				}
 				else
 				{
@@ -661,7 +661,7 @@ void OutputVariantCallingFile()
 							fprintf(outFile, "%s\t%d\t.\t%s\t%c\t100\tPASS\tmt=DELETE\n", RefChrName.c_str(), GenCoordinateInfo(rPos - 1).gPos, (char*)frag1.c_str(), frag1[0]);
 							rPos += ind_len; i += ind_len - 1;
 						}
-						else // substitute
+						else if (nst_nt4_table[FragPairIter->aln1[i]] != nst_nt4_table[FragPairIter->aln2[i]])// substitute
 						{
 							fprintf(outFile, "%s\t%d\t.\t%c\t%c\t100\tPASS\tmt=SUBSTITUTE\n", RefChrName.c_str(), GenCoordinateInfo(rPos).gPos, FragPairIter->aln1[i], FragPairIter->aln2[i]);
 							rPos++; qPos++;
@@ -880,11 +880,11 @@ void GenomeComparison()
 			memset(CoverageArr + ABiter->FragPairVec[0].qPos, true, ABiter->FragPairVec[n].qPos + ABiter->FragPairVec[n].qLen - ABiter->FragPairVec[0].qPos);
 			ABiter->coor = GenCoordinateInfo(ABiter->FragPairVec[0].rPos);
 		}
-		//fprintf(stderr, "\tOutput the alignment for query chromosome %s in the file: %s...\n", QueryChrVec[QueryChrIdx].name.c_str(), alnFileName);	OutputAlignment();
-		fprintf(stderr, "\tOutput the MAF for query chromosome %s in the file: %s...\n", QueryChrVec[QueryChrIdx].name.c_str(), mafFileName);	OutputMAF();
+		if (OutputFormat == 0) fprintf(stderr, "\tOutput the MAF for query chromosome %s in the file: %s...\n", QueryChrVec[QueryChrIdx].name.c_str(), mafFileName),OutputMAF();
+		if (OutputFormat == 1) fprintf(stderr, "\tOutput the alignment for query chromosome %s in the file: %s...\n", QueryChrVec[QueryChrIdx].name.c_str(), alnFileName),OutputAlignment();
 		fprintf(stderr, "\tOutput the variants for query chromosome %s in the file: %s...\n", QueryChrVec[QueryChrIdx].name.c_str(), vcfFileName); OutputVariantCallingFile();
-		//if (bShowSubstitution) fprintf(stderr, "\tOutput the SNPs for query chromosome %s in the file: %s...\n", QueryChrVec[QueryChrIdx].name.c_str(), snpFileName), OutputSNPs();
-		//if (bShowIndel) fprintf(stderr, "\tOutput the indels for query chromosome %s in the file: %s...\n", QueryChrVec[QueryChrIdx].name.c_str(), indFileName), OutputIndeles();
+		if (bShowSubstitution) fprintf(stderr, "\tOutput the SNPs for query chromosome %s in the file: %s...\n", QueryChrVec[QueryChrIdx].name.c_str(), snpFileName), OutputSNPs();
+		if (bShowIndel) fprintf(stderr, "\tOutput the indels for query chromosome %s in the file: %s...\n", QueryChrVec[QueryChrIdx].name.c_str(), indFileName), OutputIndeles();
 		if (GnuPlotPath != NULL) fprintf(stderr, "\tGenerate the dotplot for query chromosome %s in the file: %s-%s.ps...\n", QueryChrVec[QueryChrIdx].name.c_str(), OutputPrefix, QueryChrVec[QueryChrIdx].name.c_str()), OutputDotplot();
 
 		iTotalLength += (n = (int)QueryChrVec[QueryChrIdx].seq.length());
