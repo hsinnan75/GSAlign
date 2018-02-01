@@ -179,7 +179,7 @@ int main(int argc, char* argv[])
 	else if (RefSeqFileName != NULL)
 	{
 		string cmd(argv[0]), prefix(RefSeqFileName); prefix.resize(prefix.find_first_of('.'));
-		cmd = cmd.substr(0, cmd.find_last_of('/') + 1) + "bwa_index " + RefSeqFileName + " " + prefix ;
+		cmd = cmd.substr(0, cmd.find_last_of('/') + 1) + "bwt_index " + RefSeqFileName + " " + prefix ;
 		system((char*)cmd.c_str()); RefIdx = bwa_idx_load(prefix.c_str());
 	}
 	else fprintf(stderr, "Please specify a reference genome\n"), exit(0);

@@ -17,7 +17,7 @@ to download the package of Kart.
 
 # Compiling
 
-To compile GSAlign and the index tool, please change to GSAlign's folder and just type 'make' to compile GSAlign and bwa_index. If the compilation or the programs fail, please contact me (arith@iis.sinica.edu.tw), Thanks.
+To compile GSAlign and the index tool, please change to GSAlign's folder and just type 'make' to compile GSAlign and bwt_index. If the compilation or the programs fail, please contact me (arith@iis.sinica.edu.tw), Thanks.
 
 # Changes
 version 0.9.1: Add MAF output.
@@ -29,7 +29,7 @@ version 0.9.0: First release version.
 To index a reference genome, GSAlign requires the target genome file (in fasta format) and the prefix of the index files (including the directory path).
 
   ```
-  $ ./bwa_index ref_file[ex.ecoli.fa] index_prefix[ex. Ecoli]
+  $ ./bwt_index ref_file[ex.ecoli.fa] index_prefix[ex. Ecoli]
   ```
 The above command is to index the genome file Ecoli.fa and store the index files begining with ecoli.
 If the index files are not mdade beforehand, GSAlign will generate index files istself with the given reference genome sequences.

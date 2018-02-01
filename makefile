@@ -17,7 +17,7 @@ main:		$(OBJECT)
 			$(Compiler) $(FLAGS) -c $<
 
 index:
-		make -C BWT_Index && mv BWT_Index/bwa_index .
+		make -C BWT_Index && mv BWT_Index/bwt_index .
 		
 clean:
 		rm -f *.o *~

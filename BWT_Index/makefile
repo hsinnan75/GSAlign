@@ -2,7 +2,7 @@ CC=gcc
 CFLAGS=	-g -Wall -O3
 AR=ar
 LOBJS=		utils.o bwt.o bntseq.o QSufSort.o bwt_gen.o bwtindex.o
-PROG=		bwa_index
+PROG=		bwt_index
 LIBS=		-lm -lz
 
 .c.o:
@@ -10,7 +10,7 @@ LIBS=		-lm -lz
 
 all:$(PROG)
 
-bwa_index:libbwa.a main.o
+bwt_index:libbwa.a main.o
 		$(CC) $(CFLAGS) main.o -o $@ -L. -lbwa $(LIBS)
 
 libbwa.a:$(LOBJS)
