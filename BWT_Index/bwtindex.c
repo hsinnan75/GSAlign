@@ -90,7 +90,7 @@ int bwa_idx_build(const char *fa, const char *prefix) //**//
 	{ // nucleotide indexing
 		gzFile fp = xzopen(fa, "r");
 		t = clock();
-		fprintf(stderr, "[bwa_index] Pack FASTA... ");
+		fprintf(stderr, "[bwt_index] Pack FASTA... ");
 		l_pac = bns_fasta2bntseq(fp, prefix, 0);
 		fprintf(stderr, "%.2f sec\n", (float)(clock() - t) / CLOCKS_PER_SEC);
 		err_gzclose(fp);
@@ -102,7 +102,7 @@ int bwa_idx_build(const char *fa, const char *prefix) //**//
 		strcpy(str, prefix); strcat(str, ".pac");
 		strcpy(str2, prefix); strcat(str2, ".bwt");
 		t = clock();
-		fprintf(stderr, "[bwa_index] Construct BWT for the packed sequence...\n");
+		fprintf(stderr, "[bwt_index] Construct BWT for the packed sequence...\n");
 		//if (algo_type == 2) 
 			bwt_bwtgen2(str, str2, 10000000);
 		//else if (algo_type == 1 || algo_type == 3) {
@@ -111,13 +111,13 @@ int bwa_idx_build(const char *fa, const char *prefix) //**//
 			//bwt_dump_bwt(str2, bwt);
 			//bwt_destroy(bwt);
 		//}
-		fprintf(stderr, "[bwa_index] %.2f seconds elapse.\n", (float)(clock() - t) / CLOCKS_PER_SEC);
+		fprintf(stderr, "[bwt_index] %.2f seconds elapse.\n", (float)(clock() - t) / CLOCKS_PER_SEC);
 	}
 	{
 		bwt_t *bwt;
 		strcpy(str, prefix); strcat(str, ".bwt");
 		t = clock();
-		fprintf(stderr, "[bwa_index] Update BWT... ");
+		fprintf(stderr, "[bwt_index] Update BWT... ");
 		bwt = bwt_restore_bwt(str);
 		bwt_bwtupdate_core(bwt);
 		bwt_dump_bwt(str, bwt);
@@ -127,7 +127,7 @@ int bwa_idx_build(const char *fa, const char *prefix) //**//
 	{
 		gzFile fp = xzopen(fa, "r");
 		t = clock();
-		fprintf(stderr, "[bwa_index] Pack forward-only FASTA... ");
+		fprintf(stderr, "[bwt_index] Pack forward-only FASTA... ");
 		l_pac = bns_fasta2bntseq(fp, prefix, 1);
 		fprintf(stderr, "%.2f sec\n", (float)(clock() - t) / CLOCKS_PER_SEC);
 		err_gzclose(fp);
@@ -137,7 +137,7 @@ int bwa_idx_build(const char *fa, const char *prefix) //**//
 		strcpy(str, prefix); strcat(str, ".bwt");
 		strcpy(str3, prefix); strcat(str3, ".sa");
 		t = clock();
-		fprintf(stderr, "[bwa_index] Construct SA from BWT and Occ... ");
+		fprintf(stderr, "[bwt_index] Construct SA from BWT and Occ... ");
 		bwt = bwt_restore_bwt(str);
 		bwt_cal_sa(bwt, 32);
 		bwt_dump_sa(str3, bwt);
