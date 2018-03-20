@@ -5,10 +5,25 @@ bwt_t *Refbwt;
 bwaidx_t *RefIdx;
 time_t StartProcessTime;
 vector<QueryChr_t> QueryChrVec;
-const char* VersionStr = "0.9.1";
+const char* VersionStr = "0.9.2";
 bool bDebugMode, bShowSubstitution, bShowIndel;
-int iThreadNum = 4, iQueryChrNum, MinSeedLength, OutputFormat = 0;
+int iThreadNum = 4, iQueryChrNum, MinSeedLength, MinClusterSize, MaxGapSize, OutputFormat = 0;
 char *RefSequence, *RefSeqFileName, *IndexFileName, *QueryFileName, *OutputPrefix, *vcfFileName, *mafFileName, *alnFileName, *snpFileName, *indFileName, *svsFileName, *gpFileName, *GnuPlotPath;
+
+void ShowProgramUsage(const char* program)
+{
+	fprintf(stderr, "\n");
+	fprintf(stderr, "GenAlign v%s\n", VersionStr);
+	fprintf(stderr, "Usage: %s [-i IndexFile Prefix / -r Reference file] -q QueryFile[Fasta]\n\n", program);
+	fprintf(stderr, "Options: -t     INT     number of threads [%d]\n", iThreadNum);
+	fprintf(stderr, "         -o     STR     Set the prefix of the output files\n");
+	fprintf(stderr, "         -fmt   INT     Set the output format [%d]: 0:maf, 1:aln\n", OutputFormat);
+	fprintf(stderr, "         -slen  INT     Set the minimal seed length [%d]\n", MinSeedLength);
+	fprintf(stderr, "         -clr   INT     Set the minimal cluster size [%d]\n", MinClusterSize);
+	fprintf(stderr, "         -gap   INT     Set the minimal cluster size [%d]\n", MinClusterSize);
+	fprintf(stderr, "\n");
+}
+
 
 bool LoadQueryFile()
 {
@@ -73,8 +88,14 @@ void InitializeOutputFiles()
 
 	mafFileName = alnFileName = vcfFileName = snpFileName = indFileName = gpFileName = NULL;
 
-	mafFileName = new char[len + 5]; strcpy(mafFileName, OutputPrefix), strcpy(mafFileName + len, ".maf"); mafFileName[len + 4] = '\0'; outFile = fopen(mafFileName, "w"); fclose(outFile);
-	alnFileName = new char[len + 5]; strcpy(alnFileName, OutputPrefix), strcpy(alnFileName + len, ".aln"); alnFileName[len + 4] = '\0'; outFile = fopen(alnFileName, "w"); fclose(outFile);
+	if (OutputFormat == 0)
+	{
+		mafFileName = new char[len + 5]; strcpy(mafFileName, OutputPrefix), strcpy(mafFileName + len, ".maf"); mafFileName[len + 4] = '\0'; outFile = fopen(mafFileName, "w"); fclose(outFile);
+	}
+	if (OutputFormat == 1)
+	{
+		alnFileName = new char[len + 5]; strcpy(alnFileName, OutputPrefix), strcpy(alnFileName + len, ".aln"); alnFileName[len + 4] = '\0'; outFile = fopen(alnFileName, "w"); fclose(outFile);
+	}
 	vcfFileName = new char[len + 5]; strcpy(vcfFileName, OutputPrefix), strcpy(vcfFileName + len, ".vcf"); vcfFileName[len + 4] = '\0'; outFile = fopen(vcfFileName, "w"); fclose(outFile);
 	if (bShowSubstitution)
 	{
@@ -129,42 +150,61 @@ int main(int argc, char* argv[])
 
 	bDebugMode = false;
 	MinSeedLength = 20;
+	MinClusterSize = 100;
 	bShowSubstitution = false;
 	bShowIndel = false;
+	MaxGapSize = 100;
 	RefSequence = RefSeqFileName = IndexFileName = QueryFileName = OutputPrefix = NULL;
 
-	for (i = 1; i < argc; i++)
+	if (argc == 1 || strcmp(argv[1], "-h") == 0)
 	{
-		parameter = argv[i];
-
-		if (parameter == "-i") IndexFileName = argv[++i];
-		else if (parameter == "-r" &&  i + 1 < argc) RefSeqFileName = argv[++i];
-		else if (parameter == "-q" && i + 1 < argc) QueryFileName = argv[++i];
-		else if (parameter == "-t" && i + 1 < argc)
-		{
-			if ((iThreadNum = atoi(argv[++i])) > 40)
-			{
-				fprintf(stderr, "Warning! Thread number is limited to 40!\n");
-				iThreadNum = 40;
-			}
-		}
-		else if (parameter == "-sub") bShowSubstitution = true;
-		else if (parameter == "-ind") bShowIndel = true;
-		else if (parameter == "-fmt" && i + 1 < argc) OutputFormat = atoi(argv[++i]);
-		else if (parameter == "-o") OutputPrefix = argv[++i];
-		else if (parameter == "-d" || parameter == "-debug") bDebugMode = true;
-		else fprintf(stderr, "Warning! Unknow parameter: %s\n", argv[i]);
+		ShowProgramUsage(argv[0]);
+		exit(0);
 	}
+	else if (strcmp(argv[1], "update") == 0)
+	{
+		system("git fetch; git merge origin/master master;make");
+		exit(0);
+	}
+	else
+	{
+		for (i = 1; i < argc; i++)
+		{
+			parameter = argv[i];
 
+			if (parameter == "-i") IndexFileName = argv[++i];
+			else if (parameter == "-r" &&  i + 1 < argc) RefSeqFileName = argv[++i];
+			else if (parameter == "-q" && i + 1 < argc) QueryFileName = argv[++i];
+			else if (parameter == "-t" && i + 1 < argc)
+			{
+				if ((iThreadNum = atoi(argv[++i])) > 40)
+				{
+					fprintf(stderr, "Warning! Thread number is limited to 40!\n");
+					iThreadNum = 40;
+				}
+			}
+			else if (parameter == "-slen" && i + 1 < argc)
+			{
+				MinSeedLength = atoi(argv[++i]);
+				if (MinSeedLength <= 10 || MinSeedLength >= 26)
+				{
+					fprintf(stderr, "Warning! minimal seed length is between 11~25!\n");
+					exit(0);
+				}
+			}
+			else if (parameter == "-clr" && i + 1 < argc) MinClusterSize = atoi(argv[++i]);
+			else if (parameter == "-gap" && i + 1 < argc) MaxGapSize = atoi(argv[++i]);
+			else if (parameter == "-sub") bShowSubstitution = true;
+			else if (parameter == "-ind") bShowIndel = true;
+			else if (parameter == "-fmt" && i + 1 < argc) OutputFormat = atoi(argv[++i]);
+			else if (parameter == "-o") OutputPrefix = argv[++i];
+			else if (parameter == "-d" || parameter == "-debug") bDebugMode = true;
+			else fprintf(stderr, "Warning! Unknow parameter: %s\n", argv[i]);
+		}
+	}
 	if ((IndexFileName == NULL && RefSeqFileName == NULL)|| QueryFileName == NULL)
 	{
-		fprintf(stderr, "\n");
-		fprintf(stderr, "GenAlign v%s\n", VersionStr);
-		fprintf(stderr, "Usage: %s [-i IndexFile Prefix / -r Reference file] -q QueryFile[Fasta]\n\n", argv[0]);
-		fprintf(stderr, "Options: -t   INT     number of threads [%d]\n", iThreadNum);
-		fprintf(stderr, "         -o   STR     Set the prefix of the output files\n");
-		fprintf(stderr, "         -fmt INT     Set the output format [%d]: 0:maf, 1:aln\n", OutputFormat);
-		fprintf(stderr, "\n");
+		ShowProgramUsage(argv[0]);
 		exit(0);
 	}
 	if (OutputPrefix == NULL) OutputPrefix = (char*)"output";

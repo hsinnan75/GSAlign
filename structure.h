@@ -131,7 +131,7 @@ extern unsigned char nst_nt4_table[256];
 extern int64_t GenomeSize, TwoGenomeSize;
 extern vector<Chromosome_t> ChromosomeVec;
 extern bool bDebugMode, bShowSubstitution, bShowIndel;
-extern int iThreadNum, iQueryChrNum, iChromsomeNum, MinSeedLength, OutputFormat;
+extern int iThreadNum, iQueryChrNum, iChromsomeNum, MinSeedLength, MinClusterSize, MaxGapSize, OutputFormat;
 extern char *RefSequence, *RefSeqFileName, *IndexFileName, *QueryFileName, *OutputPrefix, *vcfFileName, *mafFileName, *alnFileName, *snpFileName, *indFileName, *svsFileName, *gpFileName, *GnuPlotPath;
 
 // bwt_index.cpp

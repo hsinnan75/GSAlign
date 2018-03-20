@@ -9,7 +9,7 @@ Personal genomics and comparative genomics are two fields that are more and more
 
 # Download
 
-Current version: 0.9.1 Please use the command 
+Current version: 0.9.2 Please use the command 
   ```
   $ git clone https://github.com/hsinnan75/GSAlign.git
   ```
@@ -20,7 +20,9 @@ to download the package of Kart.
 To compile GSAlign and the index tool, please change to GSAlign's folder and just type 'make' to compile GSAlign and bwt_index. If the compilation or the programs fail, please contact me (arith@iis.sinica.edu.tw), Thanks.
 
 # Changes
-version 0.9.1: Add MAF output.
+version 0.9.2: Fixed a bug in removing overlaps between seed pairs, and fixed a bug in reporting alignment coordinates.
+
+version 0.9.1: Added MAF output.
 
 version 0.9.0: First release version.
 
