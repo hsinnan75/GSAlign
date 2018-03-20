@@ -88,5 +88,10 @@ All above file formats are in text mode.
 
 -fmt INT Set the output format [0]: 0:maf, 1:aln
 
+-slen set the minimal seed length [20]
+
+-clr set the minimal cluster size [100]
+
+-gap set the maximal gaps between adjacent seeds [100]
 
   ```
