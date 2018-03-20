@@ -20,7 +20,7 @@ void ShowProgramUsage(const char* program)
 	fprintf(stderr, "         -fmt   INT     Set the output format [%d]: 0:maf, 1:aln\n", OutputFormat);
 	fprintf(stderr, "         -slen  INT     Set the minimal seed length [%d]\n", MinSeedLength);
 	fprintf(stderr, "         -clr   INT     Set the minimal cluster size [%d]\n", MinClusterSize);
-	fprintf(stderr, "         -gap   INT     Set the minimal cluster size [%d]\n", MinClusterSize);
+	fprintf(stderr, "         -gap   INT     Set the maximal gaps between adjacent seeds [%d]\n", MaxGapSize);
 	fprintf(stderr, "\n");
 }
 
