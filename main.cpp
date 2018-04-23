@@ -6,8 +6,8 @@ bwaidx_t *RefIdx;
 time_t StartProcessTime;
 vector<QueryChr_t> QueryChrVec;
 const char* VersionStr = "0.9.2";
-bool bDebugMode, bShowSubstitution, bShowIndel;
-int iThreadNum = 4, iQueryChrNum, MinSeedLength, MinClusterSize, MaxGapSize, OutputFormat = 0;
+bool bDebugMode, bShowSubstitution, bShowIndel, bShowPlot;
+int iThreadNum = 4, iQueryChrNum, MinSeedLength, MinClusterSize, MinAlnLength, MaxGapSize, OutputFormat = 0;
 char *RefSequence, *RefSeqFileName, *IndexFileName, *QueryFileName, *OutputPrefix, *vcfFileName, *mafFileName, *alnFileName, *snpFileName, *indFileName, *svsFileName, *gpFileName, *GnuPlotPath;
 
 void ShowProgramUsage(const char* program)
@@ -16,14 +16,27 @@ void ShowProgramUsage(const char* program)
 	fprintf(stderr, "GenAlign v%s\n", VersionStr);
 	fprintf(stderr, "Usage: %s [-i IndexFile Prefix / -r Reference file] -q QueryFile[Fasta]\n\n", program);
 	fprintf(stderr, "Options: -t     INT     number of threads [%d]\n", iThreadNum);
-	fprintf(stderr, "         -o     STR     Set the prefix of the output files\n");
-	fprintf(stderr, "         -fmt   INT     Set the output format [%d]: 0:maf, 1:aln\n", OutputFormat);
+	fprintf(stderr, "         -o     STR     Set the prefix of the output files [output]\n");
+	fprintf(stderr, "         -dp            Output Dot-plot for each chromosome pair\n");
+	fprintf(stderr, "         -fmt   INT     Set the output format 0:maf, 1:aln [%d]\n", OutputFormat);
 	fprintf(stderr, "         -slen  INT     Set the minimal seed length [%d]\n", MinSeedLength);
+	fprintf(stderr, "         -alen  INT     Set the minimal alignment length\n", MinAlnLength);
 	fprintf(stderr, "         -clr   INT     Set the minimal cluster size [%d]\n", MinClusterSize);
 	fprintf(stderr, "         -gap   INT     Set the maximal gaps between adjacent seeds [%d]\n", MaxGapSize);
 	fprintf(stderr, "\n");
 }
 
+string TrimChromosomeName(string name)
+{
+	string str;
+	int i, len = (int)name.length();
+
+	for (i = 0; i < len; i++)
+	{
+		if (name[i] == ' ' || name[i] == '\t') break;
+	}
+	return name.substr(0, i);
+}
 
 bool LoadQueryFile()
 {
@@ -43,7 +56,7 @@ bool LoadQueryFile()
 			else if (str[0] == '>')
 			{
 				if (QueryChr.seq != "") QueryChrVec.push_back(QueryChr);
-				QueryChr.name = str.substr(1); QueryChr.seq.clear();
+				QueryChr.name = TrimChromosomeName(str.substr(1)); QueryChr.seq.clear();
 				//fprintf(stderr, "\r\tGet sequence of %s...", QueryChr.name.c_str());
 			}
 			else QueryChr.seq.append(str);
@@ -148,12 +161,14 @@ int main(int argc, char* argv[])
 	int i;
 	string parameter, str;
 
+	bShowPlot = false;
 	bDebugMode = false;
 	MinSeedLength = 20;
-	MinClusterSize = 100;
+	MinClusterSize = 50;
 	bShowSubstitution = false;
 	bShowIndel = false;
-	MaxGapSize = 100;
+	MaxGapSize = 200;
+	MinAlnLength = 200;
 	RefSequence = RefSeqFileName = IndexFileName = QueryFileName = OutputPrefix = NULL;
 
 	if (argc == 1 || strcmp(argv[1], "-h") == 0)
@@ -192,10 +207,12 @@ int main(int argc, char* argv[])
 					exit(0);
 				}
 			}
+			else if (parameter == "-alen" && i + 1 < argc) MinAlnLength = atoi(argv[++i]);
 			else if (parameter == "-clr" && i + 1 < argc) MinClusterSize = atoi(argv[++i]);
 			else if (parameter == "-gap" && i + 1 < argc) MaxGapSize = atoi(argv[++i]);
-			else if (parameter == "-sub") bShowSubstitution = true;
-			else if (parameter == "-ind") bShowIndel = true;
+			//else if (parameter == "-sub") bShowSubstitution = true;
+			//else if (parameter == "-ind") bShowIndel = true;
+			else if (parameter == "-dp") bShowPlot = true;
 			else if (parameter == "-fmt" && i + 1 < argc) OutputFormat = atoi(argv[++i]);
 			else if (parameter == "-o") OutputPrefix = argv[++i];
 			else if (parameter == "-d" || parameter == "-debug") bDebugMode = true;
@@ -230,7 +247,8 @@ int main(int argc, char* argv[])
 		Refbwt = RefIdx->bwt;
 		RestoreReferenceInfo();
 
-		FindGnuPlotPath(); InitializeOutputFiles();
+		if (bShowPlot) FindGnuPlotPath();
+		InitializeOutputFiles();
 		GenomeComparison();
 		bwa_idx_destroy(RefIdx);
 		if (RefSequence != NULL) delete[] RefSequence;

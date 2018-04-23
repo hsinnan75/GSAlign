@@ -15,8 +15,6 @@
 #include <pthread.h>
 #include <sys/time.h>
 
-#define MaxSeedFreq 50
-
 using namespace std;
 
 typedef unsigned char ubyte_t;
@@ -130,8 +128,8 @@ extern vector<QueryChr_t> QueryChrVec;
 extern unsigned char nst_nt4_table[256];
 extern int64_t GenomeSize, TwoGenomeSize;
 extern vector<Chromosome_t> ChromosomeVec;
-extern bool bDebugMode, bShowSubstitution, bShowIndel;
-extern int iThreadNum, iQueryChrNum, iChromsomeNum, MinSeedLength, MinClusterSize, MaxGapSize, OutputFormat;
+extern bool bDebugMode, bShowSubstitution, bShowIndel, bShowPlot;
+extern int iThreadNum, iQueryChrNum, iChromsomeNum, MinSeedLength, MinAlnLength, MinClusterSize, MaxGapSize, OutputFormat;
 extern char *RefSequence, *RefSeqFileName, *IndexFileName, *QueryFileName, *OutputPrefix, *vcfFileName, *mafFileName, *alnFileName, *snpFileName, *indFileName, *svsFileName, *gpFileName, *GnuPlotPath;
 
 // bwt_index.cpp

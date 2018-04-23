@@ -22,9 +22,3 @@ bool CheckBWAIndexFiles(string IndexPrefix)
 
 	return bChecked;
 }
-
-void GetQueryGenomeSeq()
-{
-	fstream file;
-	string str;
-}

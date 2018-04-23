@@ -1,5 +1,7 @@
 #include "structure.h"
 
+#define MaxSeedFreq 30
+
 #define OCC_INTV_SHIFT 7
 #define OCC_INTERVAL   (1LL<<OCC_INTV_SHIFT)
 #define OCC_INTV_MASK  (OCC_INTERVAL - 1)

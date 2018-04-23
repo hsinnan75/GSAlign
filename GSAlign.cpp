@@ -2,7 +2,6 @@
 #include "structure.h"
 
 #define WindowSize 80
-//#define MaximumGaps 100
 #define SeedExplorationChunk 10000
 
 int QueryChrIdx;
@@ -10,7 +9,7 @@ FILE *AlnFile = stdout;
 vector<FragPair_t> SeedVec;
 static pthread_mutex_t Lock;
 vector<AlnBlock_t> AlnBlockVec;
-int64_t LocalAlignmentNum = 0, SNP_num = 0, IND_num = 0, SVS_num = 0;
+int64_t TotalAlignmentLength = 0, LocalAlignmentNum = 0, SNP_num = 0, IND_num = 0, SVS_num = 0;
 
 
 bool CompByPosDiff(const FragPair_t& p1, const FragPair_t& p2)
@@ -69,10 +68,10 @@ void ShowFragPairVec(vector<FragPair_t>& FragPairVec)
 		if(iter->bSeed)
 		{
 			printf("\t\tq[%d-%d] r[%lld-%lld] PosDiff=%lld, len=%d\n", iter->qPos, iter->qPos + iter->qLen - 1, iter->rPos, iter->rPos + iter->rLen - 1, iter->PosDiff, iter->qLen);
-			char *frag = new char[iter->qLen + 1];
-			strncpy(frag, QueryChrVec[QueryChrIdx].seq.c_str() + iter->qPos, iter->qLen); frag[iter->qLen] = '\0';
-			printf("\t\t%s\n", frag);
-			delete[] frag;
+			//char *frag = new char[iter->qLen + 1];
+			//strncpy(frag, QueryChrVec[QueryChrIdx].seq.c_str() + iter->qPos, iter->qLen); frag[iter->qLen] = '\0';
+			//printf("\t\t%s\n", frag);
+			//delete[] frag;
 		}
 		else
 		{
@@ -80,6 +79,7 @@ void ShowFragPairVec(vector<FragPair_t>& FragPairVec)
 			printf("\t\t%s\n\t\t%s\n", iter->aln1.c_str(), iter->aln2.c_str());
 		}
 	}
+	printf("\n\n");
 }
 
 void ShowAlnBlock(int idx)
@@ -144,11 +144,9 @@ void *IdentifyLocalMEM(void *arg)
 	else
 	{
 		pthread_mutex_lock(&Lock);
-
 		num = (int)SeedVec.size();
 		copy(vec.begin(), vec.end(), back_inserter(SeedVec));
 		inplace_merge(SeedVec.begin(), SeedVec.begin() + num, SeedVec.end(), CompByQueryPos);
-
 		pthread_mutex_unlock(&Lock);
 	}
 
@@ -170,9 +168,8 @@ void AlignmentBlockClustering()
 	AlnBlock_t AlnBlock;
 	int i, j, ci, ext_size, num;
 
-	num = (int)SeedVec.size(); SeedVec.resize(num + 1); SeedVec[num].qLen = 0; SeedVec[num].PosDiff = 0; num += 1;
-
-	VisitArr = new bool[num]();
+	num = (int)SeedVec.size() + 1; SeedVec.resize(num); SeedVec[num - 1].PosDiff = 0;
+	VisitArr = new bool[num](); VisitArr[num - 1] = true;
 	for (i = 0; i < num; i++)
 	{
 		if (VisitArr[i] == false)
@@ -192,159 +189,21 @@ void AlignmentBlockClustering()
 				}
 				if (j - ci > 100) break;
 			}
-			if ((AlnBlock.score = CalAlnBlockScore(AlnBlock.FragPairVec)) > MinClusterSize)
-			{
-				AlnBlockVec.push_back(AlnBlock);
-			}
+			i = ci;
+			if ((AlnBlock.score = CalAlnBlockScore(AlnBlock.FragPairVec)) > MinClusterSize) AlnBlockVec.push_back(AlnBlock);
 		}
 	}
 	delete[] VisitArr;
 }
 
-void RemoveRedundantAlnBlocks()
-{
-	int i, j, n, thr, num, iBeg, iEnd, jBeg, jEnd;
-
-	num = (int)AlnBlockVec.size();
-
-	for (i = 0; i < num; i++)
-	{
-		if (AlnBlockVec[i].score == 0) continue;
-
-		n = (int)AlnBlockVec[i].FragPairVec.size();
-
-		iBeg = AlnBlockVec[i].FragPairVec[0].qPos; iEnd = AlnBlockVec[i].FragPairVec[n - 1].qPos + AlnBlockVec[i].FragPairVec[n - 1].qLen - 1;
-
-		for (j = i + 1; j < num; j++)
-		{
-			if (AlnBlockVec[i].score == 0) continue;
-
-			n = (int)AlnBlockVec[j].FragPairVec.size(); thr = (AlnBlockVec[i].score >> 1);
-
-			jBeg = AlnBlockVec[j].FragPairVec[0].qPos; jEnd = AlnBlockVec[j].FragPairVec[n - 1].qPos + AlnBlockVec[j].FragPairVec[n - 1].qLen - 1;
-
-			if (jBeg >= iBeg && jEnd <= iEnd) // inclusive
-			{
-				if(AlnBlockVec[j].score < thr) AlnBlockVec[j].score = 0;
-			}
-			else break;
-		}
-	}
-	vector<AlnBlock_t> TmpVec;
-	for (vector<AlnBlock_t>::iterator iter = AlnBlockVec.begin(); iter != AlnBlockVec.end(); iter++)
-	{
-		if (iter->score > 0) TmpVec.push_back(*iter);
-	}
-	AlnBlockVec.swap(TmpVec);
-}
-
-void RemoveSmallAlnBlocks()
-{
-	vector<AlnBlock_t> TmpVec;
-	vector<AlnBlock_t>::iterator ABiter;
-	vector<FragPair_t>::iterator FragPairIter;
-
-	for (ABiter = AlnBlockVec.begin(); ABiter != AlnBlockVec.end(); ABiter++)
-	{
-		ABiter->score = 0;
-		for (FragPairIter = ABiter->FragPairVec.begin(); FragPairIter != ABiter->FragPairVec.end(); FragPairIter++) ABiter->score += FragPairIter->qLen;
-		if (ABiter->score < 50) ABiter->score = 0;
-		else TmpVec.push_back(*ABiter);
-	}
-	AlnBlockVec.swap(TmpVec);
-}
-
-//bool RemoveOverlaps(vector<FragPair_t>& FragPairVec)
-//{
-//	bool bNullPair;
-//	int64_t irBeg, irEnd, jrBeg, jrEnd;
-//	int iqBeg, iqEnd, iLen, jqBeg, jqEnd, jLen;
-//	int i, j, overlap_size, num = (int)FragPairVec.size();
-//
-//	if (FragPairVec[0].qPos == 1233307)
-//	{
-//		printf("Before removing overlaps\n");
-//		ShowFragPairVec(FragPairVec);
-//	}
-//	for (i = 0; i < num; i++)
-//	{
-//		if (FragPairVec[i].qLen == 0) continue;
-//
-//		iLen = FragPairVec[i].qLen;
-//		iqBeg = FragPairVec[i].qPos; iqEnd = iqBeg + iLen - 1;
-//		irBeg = FragPairVec[i].rPos; irEnd = irBeg + iLen - 1;
-//
-//		for (j = i + 1; j < num; j++)
-//		{
-//			if (FragPairVec[j].qLen == 0) continue;
-//
-//			jLen = FragPairVec[j].qLen;
-//			jqBeg = FragPairVec[j].qPos; jqEnd = jqBeg + jLen - 1;
-//			jrBeg = FragPairVec[j].rPos; jrEnd = jrBeg + jLen - 1;
-//
-//			if (jqBeg <= iqEnd)
-//			{
-//				if ((overlap_size = iqEnd - jqBeg + 1) > jLen) overlap_size = jLen;
-//				//printf("overlap@query\n\ti[%d-%d, %lld-%lld]=%d\n\tj[%d-%d, %lld-%lld]=%d\n\tOverlap=%d\n", iqBeg, iqEnd, irBeg, irEnd, iLen, jqBeg, jqEnd, jrBeg, jrEnd, jLen, overlap_size);
-//
-//				if (iLen <= jLen) // shrink block i
-//				{
-//					if ((FragPairVec[i].qLen -= overlap_size) < 10) FragPairVec[i].qLen = 0;
-//					FragPairVec[i].rLen = FragPairVec[i].qLen;
-//					//printf("update:i[%d-%d, %lld-%lld]=%d\n", iqBeg, iqBeg + FragPairVec[i].qLen - 1, irBeg, irBeg + FragPairVec[i].rLen - 1, FragPairVec[i].qLen);
-//				}
-//				else // shrink block j
-//				{
-//					FragPairVec[j].qPos += overlap_size; FragPairVec[j].rPos += overlap_size;
-//					if ((FragPairVec[j].qLen -= overlap_size) < 10) FragPairVec[j].qLen = 0;
-//					FragPairVec[j].rLen = FragPairVec[j].qLen;
-//					//printf("update:j[%d-%d, %lld-%lld]=%d\n", FragPairVec[j].qPos, FragPairVec[j].qPos + FragPairVec[j].qLen - 1, FragPairVec[j].rPos, FragPairVec[j].rPos + FragPairVec[j].rLen - 1, FragPairVec[j].qLen);
-//				}
-//			}
-//			else if (jrBeg <= irEnd)
-//			{
-//				if ((overlap_size = irEnd - jrBeg + 1) > jLen) overlap_size = jLen;
-//				//printf("overlap@ref\n\ti[%d-%d, %lld-%lld]=%d\n\tj[%d-%d, %lld-%lld]=%d\n\tOverlap=%d\n", iqBeg, iqEnd, irBeg, irEnd, iLen, jqBeg, jqEnd, jrBeg, jrEnd, jLen, overlap_size);
-//				if (iLen <= jLen) // shrink block i
-//				{
-//					if ((FragPairVec[i].qLen -= overlap_size) < 10) FragPairVec[i].qLen = 0;
-//					FragPairVec[i].rLen = FragPairVec[i].qLen;
-//					//printf("update:i[%d-%d, %lld-%lld]=%d\n", iqBeg, iqBeg + FragPairVec[i].qLen - 1, irBeg, irBeg + FragPairVec[i].rLen - 1, FragPairVec[i].qLen);
-//				}
-//				else // shrink block j
-//				{
-//					FragPairVec[j].qPos += overlap_size; FragPairVec[j].rPos += overlap_size;
-//					if ((FragPairVec[j].qLen -= overlap_size) < 10) FragPairVec[j].qLen = 0;
-//					FragPairVec[j].rLen = FragPairVec[j].qLen;
-//					//printf("update:j[%d-%d, %lld-%lld]=%d\n", FragPairVec[j].qPos, FragPairVec[j].qPos + FragPairVec[j].qLen - 1, FragPairVec[j].rPos, FragPairVec[j].rPos + FragPairVec[j].rLen - 1, FragPairVec[j].qLen);
-//				}
-//			}
-//			else break;
-//		}
-//	}
-//	for (bNullPair = false, i = 0; i < num; i++)
-//	{
-//		if (FragPairVec[i].qLen == 0)
-//		{
-//			bNullPair = true;
-//			break;
-//		}
-//	}
-//	return bNullPair;
-//}
 bool RemoveOverlaps(vector<FragPair_t>& FragPairVec)
 {
 	bool bNullPair;
 	bool bShowMsg = false;
 	int i, j, overlap_size, num = (int)FragPairVec.size();
 
-	//if (FragPairVec[0].qPos == 1791129) bShowMsg = true;
-	//if (bShowMsg)
-	//{
-	//	printf("Before removing overlaps\n");
-	//	ShowFragPairVec(FragPairVec);
-	//}
-	
+	//if (FragPairVec[0].qPos == 3048894) bShowMsg = true;
+	//if (bShowMsg) printf("Before removing overlaps\n"), ShowFragPairVec(FragPairVec);
 	for (i = 0; i < num; i++)
 	{
 		if (FragPairVec[i].qLen == 0) continue;
@@ -353,6 +212,10 @@ bool RemoveOverlaps(vector<FragPair_t>& FragPairVec)
 		{
 			if (FragPairVec[j].qLen == 0) continue;
 			else if (FragPairVec[j].PosDiff == FragPairVec[i].PosDiff) break;
+			else if (FragPairVec[j].qPos == FragPairVec[i].qPos && FragPairVec[j].qLen == FragPairVec[i].qLen) // repeats
+			{
+				FragPairVec[j].qLen = FragPairVec[j].rLen = 0, bNullPair = true;
+			}
 			else if (FragPairVec[j].rPos <= FragPairVec[i].rPos)
 			{
 				FragPairVec[j].qLen = FragPairVec[j].rLen = 0, bNullPair = true;
@@ -384,11 +247,7 @@ bool RemoveOverlaps(vector<FragPair_t>& FragPairVec)
 			else break;
 		}
 	}
-	//if (bShowMsg)
-	//{
-	//	printf("After removing overlaps\n");
-	//	ShowFragPairVec(FragPairVec);
-	//}
+	//if (bShowMsg) printf("After removing overlaps\n"), ShowFragPairVec(FragPairVec);
 	return bNullPair;
 }
 
@@ -397,10 +256,7 @@ void RemoveNullFragPairs(vector<FragPair_t>& FragPairVec)
 	vector<FragPair_t> vec;
 
 	vec.reserve((int)FragPairVec.size());
-	for (vector<FragPair_t>::iterator iter = FragPairVec.begin(); iter != FragPairVec.end(); iter++)
-	{
-		if (iter->qLen > 0) vec.push_back(*iter);
-	}
+	for (vector<FragPair_t>::iterator iter = FragPairVec.begin(); iter != FragPairVec.end(); iter++) if (iter->qLen > 0) vec.push_back(*iter);
 	FragPairVec.swap(vec);
 }
 
@@ -478,6 +334,7 @@ void *GenerateFragAlignment(void *arg)
 
 	for (i = 0; i < AlnBlockNum; i++)
 	{
+		//if (AlnBlockVec[i].score < 50) continue;
 		FragPairNum = (int)AlnBlockVec[i].FragPairVec.size(); TailIdx = FragPairNum - 1;
 		for (j = *my_id; j < FragPairNum; j+=iThreadNum)
 		{
@@ -620,9 +477,9 @@ void OutputAlignment()
 				aln2 += FragPairIter->aln2;
 			}
 		}
-		if ((n = (int)aln1.length()) > 200)
+		if ((n = (int)aln1.length()) >= MinAlnLength)
 		{
-			LocalAlignmentNum++;
+			LocalAlignmentNum++; TotalAlignmentLength += n;
 			RefIdx = ABiter->coor.ChromosomeIdx;
 			QueryChrName = QueryChrVec[QueryChrIdx].name; RefChrName = ChromosomeVec[RefIdx].name;
 			if (QueryChrName.length() > RefChrName.length()) RefChrName += string().assign((QueryChrName.length() - RefChrName.length()), ' ');
@@ -674,9 +531,9 @@ void OutputMAF()
 				aln2 += FragPairIter->aln2;
 			}
 		}
-		if ((n = (int)aln1.length()) > 200)
+		if ((n = (int)aln1.length()) >= MinAlnLength)
 		{
-			LocalAlignmentNum++;
+			LocalAlignmentNum++; TotalAlignmentLength += n;
 			RefIdx = ABiter->coor.ChromosomeIdx;
 			QueryChrName = QueryChrVec[QueryChrIdx].name; RefChrName = ChromosomeVec[RefIdx].name;
 			if (QueryChrName.length() > RefChrName.length()) RefChrName += string().assign((QueryChrName.length() - RefChrName.length()), ' ');
@@ -893,13 +750,13 @@ void OutputDotplot()
 
 	ChrScoreVec.resize(iChromsomeNum); ChrClusterVec.resize(iChromsomeNum);
 	for (ABiter = AlnBlockVec.begin(); ABiter != AlnBlockVec.end(); ABiter++) ChrScoreVec[ABiter->coor.ChromosomeIdx] += ABiter->score;
-	for (thr = i = 0; i < iChromsomeNum; i++) if (thr < ChrScoreVec[i]) thr = ChrScoreVec[i]; thr /= 4;
+	for (thr = i = 0; i < iChromsomeNum; i++) if (thr < ChrScoreVec[i]) thr = ChrScoreVec[i];
 	for (ABiter = AlnBlockVec.begin(); ABiter != AlnBlockVec.end(); ABiter++)
 	{
-		if (ABiter->score >= 100 && ChrScoreVec[ABiter->coor.ChromosomeIdx] > thr)
+		if (ABiter->score >= 100 && ChrScoreVec[ABiter->coor.ChromosomeIdx] == thr)
 			ChrClusterVec[ABiter->coor.ChromosomeIdx].push_back(ABiter);
 	}
-	for (iCluster = i = 0; i < iChromsomeNum; i++) if (ChrScoreVec[i] > thr) iCluster++;
+	for (iCluster = i = 0; i < iChromsomeNum; i++) if (ChrScoreVec[i] == thr) iCluster++;
 
 	outFile = fopen(gpFileName, "w"); QueryChrName = QueryChrVec[QueryChrIdx].name;
 	fprintf(outFile, "set terminal postscript color solid 'Courier' 15\nset output '%s-%s.ps'\n", OutputPrefix, QueryChrVec[QueryChrIdx].name.c_str());
@@ -973,7 +830,7 @@ void GenomeComparison()
 	int i, n;
 	bool* CoverageArr;
 	vector<AlnBlock_t>::iterator ABiter;
-	int64_t iTotalLength = 0, iCoverage = 0;
+	int64_t iTotalQueryLength = 0, iCoverage = 0;
 	pthread_t *ThreadArr = new pthread_t[iThreadNum];
 	
 	vector<int> vec(iThreadNum); for (i = 0; i < iThreadNum; i++) vec[i] = i;
@@ -996,30 +853,21 @@ void GenomeComparison()
 		for (i = 0; i < iThreadNum; i++) pthread_create(&ThreadArr[i], NULL, IdentifyLocalMEM, &vec[i]);
 		for (i = 0; i < iThreadNum; i++) pthread_join(ThreadArr[i], NULL);
 
-		//for (vector<FragPair_t>::iterator iter = SeedVec.begin(); iter != SeedVec.end(); iter++)
-		//	printf("q[%d-%d] r[%lld-%lld] len=%d PD=%lld\n", iter->qPos, iter->qPos + iter->qLen - 1, iter->rPos, iter->rPos + iter->rLen - 1, iter->qLen, iter->PosDiff);
-
+		//for (vector<FragPair_t>::iterator iter = SeedVec.begin(); iter != SeedVec.end(); iter++) printf("q[%d-%d] r[%lld-%lld] len=%d PD=%lld\n", iter->qPos, iter->qPos + iter->qLen - 1, iter->rPos, iter->rPos + iter->rLen - 1, iter->qLen, iter->PosDiff);
 		AlignmentBlockClustering();
 		//for (ABiter = AlnBlockVec.begin(); ABiter != AlnBlockVec.end(); ABiter++) ShowFragPairVec(ABiter->FragPairVec);
-		//RemoveRedundantAlnBlocks();
-
-		for (ABiter = AlnBlockVec.begin(); ABiter != AlnBlockVec.end(); ABiter++)
-		{
-			if (RemoveOverlaps(ABiter->FragPairVec)) RemoveNullFragPairs(ABiter->FragPairVec);
-		}
-		//RemoveSmallAlnBlocks();
-		//for (ABiter = AlnBlockVec.begin(); ABiter != AlnBlockVec.end(); ABiter++) CheckOverlaps(ABiter->FragPairVec);
-
+		////RemoveRedundantAlnBlocks();
+		for (ABiter = AlnBlockVec.begin(); ABiter != AlnBlockVec.end(); ABiter++) if (RemoveOverlaps(ABiter->FragPairVec)) RemoveNullFragPairs(ABiter->FragPairVec);
 		for (ABiter = AlnBlockVec.begin(); ABiter != AlnBlockVec.end(); ABiter++) IdentifyNormalPairs(ABiter->FragPairVec);
-		//for (ABiter = AlnBlockVec.begin(); ABiter != AlnBlockVec.end(); ABiter++) ShowFragPairVec(ABiter->FragPairVec);
+		//for (ABiter = AlnBlockVec.begin(); ABiter != AlnBlockVec.end(); ABiter++) CheckOverlaps(ABiter->FragPairVec);
+		fprintf(stderr, "\t\tGenreate sequence alignment...\n");
 		for (i = 0; i < iThreadNum; i++) pthread_create(&ThreadArr[i], NULL, GenerateFragAlignment, &vec[i]);
 		for (i = 0; i < iThreadNum; i++) pthread_join(ThreadArr[i], NULL);
-
 		CoverageArr = new bool[QueryChrVec[QueryChrIdx].seq.length()]();
 		for (ABiter = AlnBlockVec.begin(); ABiter != AlnBlockVec.end(); ABiter++)
 		{
 			n = (int)ABiter->FragPairVec.size() - 1;
-			memset(CoverageArr + ABiter->FragPairVec[0].qPos, true, ABiter->FragPairVec[n].qPos + ABiter->FragPairVec[n].qLen - ABiter->FragPairVec[0].qPos);
+			memset((CoverageArr + ABiter->FragPairVec[0].qPos), true, (int)(ABiter->FragPairVec[n].qPos + ABiter->FragPairVec[n].qLen - ABiter->FragPairVec[0].qPos));
 			ABiter->coor = GenCoordinateInfo(ABiter->FragPairVec[0].rPos);
 		}
 		if (OutputFormat == 0) fprintf(stderr, "\tOutput the MAF for query chromosome %s in the file: %s...\n", QueryChrVec[QueryChrIdx].name.c_str(), mafFileName),OutputMAF();
@@ -1027,13 +875,13 @@ void GenomeComparison()
 		fprintf(stderr, "\tOutput the variants for query chromosome %s in the file: %s...\n", QueryChrVec[QueryChrIdx].name.c_str(), vcfFileName); OutputVariantCallingFile();
 		if (bShowSubstitution) fprintf(stderr, "\tOutput the SNPs for query chromosome %s in the file: %s...\n", QueryChrVec[QueryChrIdx].name.c_str(), snpFileName), OutputSNPs();
 		if (bShowIndel) fprintf(stderr, "\tOutput the indels for query chromosome %s in the file: %s...\n", QueryChrVec[QueryChrIdx].name.c_str(), indFileName), OutputIndeles();
-		if (GnuPlotPath != NULL) fprintf(stderr, "\tGenerate the dotplot for query chromosome %s in the file: %s-%s.ps...\n", QueryChrVec[QueryChrIdx].name.c_str(), OutputPrefix, QueryChrVec[QueryChrIdx].name.c_str()), OutputDotplot();
+		if (bShowPlot && GnuPlotPath != NULL) fprintf(stderr, "\tGenerate the dotplot for query chromosome %s in the file: %s-%s.ps...\n", QueryChrVec[QueryChrIdx].name.c_str(), OutputPrefix, QueryChrVec[QueryChrIdx].name.c_str()), OutputDotplot();
 
-		iTotalLength += (n = (int)QueryChrVec[QueryChrIdx].seq.length());
+		iTotalQueryLength += (n = (int)QueryChrVec[QueryChrIdx].seq.length());
 		for (i = 0; i < n; i++) if (CoverageArr[i]) iCoverage++;
 		delete[] CoverageArr;
 	}
-	fprintf(stderr, "\nAlignment # = %lld, coverage = %.4f\n", (long long)LocalAlignmentNum, 1.0*iCoverage / iTotalLength);
+	if (LocalAlignmentNum > 0 && iTotalQueryLength > 0) fprintf(stderr, "\nAlignment # = %lld, Total alignment length = %lld (avgLen=%lld), coverage = %.2f%%\n", (long long)LocalAlignmentNum, (long long)TotalAlignmentLength, (long long)(TotalAlignmentLength/ LocalAlignmentNum), 100*(1.0*iCoverage / iTotalQueryLength));
 
 	delete[] ThreadArr;
 }
