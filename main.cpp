@@ -2,6 +2,7 @@
 #include <sys/stat.h>
 
 bwt_t *Refbwt;
+string cmd_line;
 bwaidx_t *RefIdx;
 time_t StartProcessTime;
 vector<QueryChr_t> QueryChrVec;
@@ -183,9 +184,10 @@ int main(int argc, char* argv[])
 	}
 	else
 	{
+		cmd_line = argv[0];
 		for (i = 1; i < argc; i++)
 		{
-			parameter = argv[i];
+			parameter = argv[i]; cmd_line += " " + parameter;
 
 			if (parameter == "-i") IndexFileName = argv[++i];
 			else if (parameter == "-r" &&  i + 1 < argc) RefSeqFileName = argv[++i];

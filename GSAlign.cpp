@@ -870,12 +870,12 @@ void GenomeComparison()
 			memset((CoverageArr + ABiter->FragPairVec[0].qPos), true, (int)(ABiter->FragPairVec[n].qPos + ABiter->FragPairVec[n].qLen - ABiter->FragPairVec[0].qPos));
 			ABiter->coor = GenCoordinateInfo(ABiter->FragPairVec[0].rPos);
 		}
-		if (OutputFormat == 0) fprintf(stderr, "\tOutput the MAF for query chromosome %s in the file: %s...\n", QueryChrVec[QueryChrIdx].name.c_str(), mafFileName),OutputMAF();
-		if (OutputFormat == 1) fprintf(stderr, "\tOutput the alignment for query chromosome %s in the file: %s...\n", QueryChrVec[QueryChrIdx].name.c_str(), alnFileName),OutputAlignment();
-		fprintf(stderr, "\tOutput the variants for query chromosome %s in the file: %s...\n", QueryChrVec[QueryChrIdx].name.c_str(), vcfFileName); OutputVariantCallingFile();
-		if (bShowSubstitution) fprintf(stderr, "\tOutput the SNPs for query chromosome %s in the file: %s...\n", QueryChrVec[QueryChrIdx].name.c_str(), snpFileName), OutputSNPs();
-		if (bShowIndel) fprintf(stderr, "\tOutput the indels for query chromosome %s in the file: %s...\n", QueryChrVec[QueryChrIdx].name.c_str(), indFileName), OutputIndeles();
-		if (bShowPlot && GnuPlotPath != NULL) fprintf(stderr, "\tGenerate the dotplot for query chromosome %s in the file: %s-%s.ps...\n", QueryChrVec[QueryChrIdx].name.c_str(), OutputPrefix, QueryChrVec[QueryChrIdx].name.c_str()), OutputDotplot();
+		if (OutputFormat == 0) fprintf(stderr, "\tOutput the MAF for query chromosome %s in the file: %s\n", QueryChrVec[QueryChrIdx].name.c_str(), mafFileName),OutputMAF();
+		if (OutputFormat == 1) fprintf(stderr, "\tOutput the alignment for query chromosome %s in the file: %s\n", QueryChrVec[QueryChrIdx].name.c_str(), alnFileName),OutputAlignment();
+		fprintf(stderr, "\tOutput the variants for query chromosome %s in the file: %s\n", QueryChrVec[QueryChrIdx].name.c_str(), vcfFileName); OutputVariantCallingFile();
+		if (bShowSubstitution) fprintf(stderr, "\tOutput the SNPs for query chromosome %s in the file: %s\n", QueryChrVec[QueryChrIdx].name.c_str(), snpFileName), OutputSNPs();
+		if (bShowIndel) fprintf(stderr, "\tOutput the indels for query chromosome %s in the file: %s\n", QueryChrVec[QueryChrIdx].name.c_str(), indFileName), OutputIndeles();
+		if (bShowPlot && GnuPlotPath != NULL) fprintf(stderr, "\tGenerate the dotplot for query chromosome %s in the file: %s-%s.ps\n", QueryChrVec[QueryChrIdx].name.c_str(), OutputPrefix, QueryChrVec[QueryChrIdx].name.c_str()), OutputDotplot();
 
 		iTotalQueryLength += (n = (int)QueryChrVec[QueryChrIdx].seq.length());
 		for (i = 0; i < n; i++) if (CoverageArr[i]) iCoverage++;
