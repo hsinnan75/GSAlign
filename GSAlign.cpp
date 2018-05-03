@@ -30,6 +30,17 @@ bool CompByRefPos(const FragPair_t& p1, const FragPair_t& p2)
 	else return p1.rPos < p2.rPos;
 }
 
+int CountIdenticalPairs(string& aln1, string& aln2)
+{
+	int i, n, len = (int)aln1.length();
+
+	for (n = len, i = 0; i < len; i++)
+	{
+		if (nst_nt4_table[aln1[i]] != nst_nt4_table[aln2[i]]) n--;
+	}
+	return n;
+}
+
 void ShowAlnBlockDistance(int idx1, int idx2)
 {
 	int n, qPos1, qPos2;
@@ -332,22 +343,28 @@ void *GenerateFragAlignment(void *arg)
 
 	AlnBlockNum = (int)AlnBlockVec.size();
 
-	for (i = 0; i < AlnBlockNum; i++)
+	for (i = *my_id; i < AlnBlockNum; i+= iThreadNum)
 	{
-		//if (AlnBlockVec[i].score < 50) continue;
+		AlnBlockVec[i].score = AlnBlockVec[i].aln_len = 0;
 		FragPairNum = (int)AlnBlockVec[i].FragPairVec.size(); TailIdx = FragPairNum - 1;
-		for (j = *my_id; j < FragPairNum; j+=iThreadNum)
+		for (j = 0; j < FragPairNum; j++)
 		{
-			if (AlnBlockVec[i].FragPairVec[j].bSeed) continue;
-
+			if (AlnBlockVec[i].FragPairVec[j].bSeed)
+			{
+				AlnBlockVec[i].score += AlnBlockVec[i].FragPairVec[j].qLen;
+				AlnBlockVec[i].aln_len += AlnBlockVec[i].FragPairVec[j].qLen;
+				continue;
+			}
 			FragPair = &AlnBlockVec[i].FragPairVec[j];
 			if (FragPair->qLen == 0)
 			{
+				AlnBlockVec[i].aln_len += FragPair->rLen;
 				FragPair->aln1.resize(FragPair->rLen); strncpy((char*)FragPair->aln1.c_str(), RefSequence + FragPair->rPos, FragPair->rLen);
 				FragPair->aln2.assign(FragPair->rLen, '-');
 			}
 			else if (FragPair->rLen == 0)
 			{
+				AlnBlockVec[i].aln_len += FragPair->qLen;
 				FragPair->aln1.assign(FragPair->qLen, '-');
 				FragPair->aln2.resize(FragPair->qLen); strncpy((char*)FragPair->aln2.c_str(), QueryChrVec[QueryChrIdx].seq.c_str() + FragPair->qPos, FragPair->qLen);
 			}
@@ -355,6 +372,7 @@ void *GenerateFragAlignment(void *arg)
 			{
 				FragPair->aln1.resize(FragPair->rLen); strncpy((char*)FragPair->aln1.c_str(), RefSequence + FragPair->rPos, FragPair->rLen);
 				FragPair->aln2.resize(FragPair->qLen); strncpy((char*)FragPair->aln2.c_str(), QueryChrVec[QueryChrIdx].seq.c_str() + FragPair->qPos, FragPair->qLen);
+				AlnBlockVec[i].score += CountIdenticalPairs(FragPair->aln1, FragPair->aln2);
 			}
 			else
 			{
@@ -363,6 +381,8 @@ void *GenerateFragAlignment(void *arg)
 				FragPair->aln2.resize(FragPair->qLen); strncpy((char*)FragPair->aln2.c_str(), QueryChrVec[QueryChrIdx].seq.c_str() + FragPair->qPos, FragPair->qLen);
 				
 				nw_alignment(FragPair->rLen, FragPair->aln1, FragPair->qLen, FragPair->aln2);
+				AlnBlockVec[i].score += CountIdenticalPairs(FragPair->aln1, FragPair->aln2);
+				AlnBlockVec[i].aln_len += (int)FragPair->aln1.length();
 			}
 
 			if (j == 0 && !AlnBlockVec[i].FragPairVec[j].bSeed)
@@ -380,6 +400,7 @@ void *GenerateFragAlignment(void *arg)
 					FragPair->aln2 = FragPair->aln2.substr(k);
 					FragPair->rLen -= rGaps; FragPair->rPos += rGaps;
 					FragPair->qLen -= qGaps; FragPair->qPos += qGaps;
+					AlnBlockVec[i].aln_len -= (rGaps + qGaps);
 				}
 			}
 			else if (j == TailIdx && !AlnBlockVec[i].FragPairVec[j].bSeed)
@@ -397,9 +418,11 @@ void *GenerateFragAlignment(void *arg)
 					FragPair->aln2.resize(k);
 					FragPair->rLen -= rGaps;
 					FragPair->qLen -= qGaps;
+					AlnBlockVec[i].aln_len -= (rGaps + qGaps);
 				}
 			}
 		}
+		if (AlnBlockVec[i].aln_len < MinAlnLength || (int)(100 * (1.0*AlnBlockVec[i].score / AlnBlockVec[i].aln_len)) < MinSeqIdy) AlnBlockVec[i].score = 0;
 	}
 	return (void*)(1);
 }
@@ -437,67 +460,53 @@ int CountBaseNum(string& frag)
 	return n;
 }
 
-int CountIdenticalPairs(string& aln1, string& aln2)
-{
-	int i, n, len = (int)aln1.length();
-
-	for (n = len, i = 0; i < len; i++)
-	{
-		if (nst_nt4_table[aln1[i]] != nst_nt4_table[aln2[i]]) n--;
-	}
-	return n;
-}
-
 void OutputAlignment()
 {
 	char* frag;
 	FILE *outFile;
 	int64_t RefPos;
-	int i, p, q, n, RefIdx, QueryPos, idy;
+	int i, p, q, RefIdx, QueryPos;
 	vector<FragPair_t>::iterator FragPairIter;
 	string QueryChrName, RefChrName, aln1, aln2, frag1, frag2;
 
 	outFile = fopen(alnFileName, "a"); 
 	for (vector<AlnBlock_t>::iterator ABiter = AlnBlockVec.begin(); ABiter != AlnBlockVec.end(); ABiter++)
 	{
-		aln1.clear(); aln2.clear(); idy = 0;
+		if (ABiter->score == 0) continue;
+
+		aln1.clear(); aln2.clear();
 		for (FragPairIter = ABiter->FragPairVec.begin(); FragPairIter != ABiter->FragPairVec.end(); FragPairIter++)
 		{
 			if (FragPairIter->bSeed)
 			{
-				idy += FragPairIter->qLen; 
 				frag = new char[FragPairIter->qLen + 1]; frag[FragPairIter->qLen] = '\0';
 				strncpy(frag, QueryChrVec[QueryChrIdx].seq.c_str() + FragPairIter->qPos, FragPairIter->qLen);
 				aln1 += frag; aln2 += frag; delete[] frag;
 			}
 			else
 			{
-				idy += CountIdenticalPairs(FragPairIter->aln1, FragPairIter->aln2);
 				aln1 += FragPairIter->aln1;
 				aln2 += FragPairIter->aln2;
 			}
 		}
-		if ((n = (int)aln1.length()) >= MinAlnLength)
+		LocalAlignmentNum++; TotalAlignmentLength += ABiter->aln_len;
+		RefIdx = ABiter->coor.ChromosomeIdx;
+		QueryChrName = QueryChrVec[QueryChrIdx].name; RefChrName = ChromosomeVec[RefIdx].name;
+		if (QueryChrName.length() > RefChrName.length()) RefChrName += string().assign((QueryChrName.length() - RefChrName.length()), ' ');
+		else QueryChrName += string().assign((RefChrName.length() - QueryChrName.length()), ' ');
+
+		fprintf(outFile, "#Identity = %d / %d (%.2f%%) Orientation = %s\n\n", ABiter->score, ABiter->aln_len, (int)(10000 * (1.0*ABiter->score / ABiter->aln_len)) / 100.0, ABiter->coor.bDir? "Forward":"Reverse");
+		//ShowFragPairVec(ABiter->FragPairVec); printf("\n\n");
+		i = 0; QueryPos = ABiter->FragPairVec[0].qPos + 1; RefPos = ABiter->coor.gPos;
+		while (i < ABiter->aln_len)
 		{
-			LocalAlignmentNum++; TotalAlignmentLength += n;
-			RefIdx = ABiter->coor.ChromosomeIdx;
-			QueryChrName = QueryChrVec[QueryChrIdx].name; RefChrName = ChromosomeVec[RefIdx].name;
-			if (QueryChrName.length() > RefChrName.length()) RefChrName += string().assign((QueryChrName.length() - RefChrName.length()), ' ');
-			else QueryChrName += string().assign((RefChrName.length() - QueryChrName.length()), ' ');
+			frag1 = aln1.substr(i, WindowSize); frag2 = aln2.substr(i, WindowSize);
+			p = CountBaseNum(frag1); q = CountBaseNum(frag2);
 
-			fprintf(outFile, "#Identity = %d / %d (%.2f%%) Orientation = %s\n\n", idy, n, (int)(10000 * (1.0*idy / n)) / 100.0, ABiter->coor.bDir? "Forward":"Reverse");
-			//ShowFragPairVec(ABiter->FragPairVec); printf("\n\n");
-			i = 0; QueryPos = ABiter->FragPairVec[0].qPos + 1; RefPos = ABiter->coor.gPos;
-			while (i < n)
-			{
-				frag1 = aln1.substr(i, WindowSize); frag2 = aln2.substr(i, WindowSize);
-				p = CountBaseNum(frag1); q = CountBaseNum(frag2);
-
-				fprintf(outFile, "%s\t%12d\t%s\n%s\t%12d\t%s\n\n", RefChrName.c_str(), RefPos, frag1.c_str(), QueryChrName.c_str(), QueryPos, frag2.c_str());
-				i += WindowSize; RefPos += (ABiter->coor.bDir ? p : 0 - p); QueryPos += q;
-			}
-			fprintf(outFile, "%s\n", string().assign(100, '*').c_str());
+			fprintf(outFile, "%s\t%12d\t%s\n%s\t%12d\t%s\n\n", RefChrName.c_str(), RefPos, frag1.c_str(), QueryChrName.c_str(), QueryPos, frag2.c_str());
+			i += WindowSize; RefPos += (ABiter->coor.bDir ? p : 0 - p); QueryPos += q;
 		}
+		fprintf(outFile, "%s\n", string().assign(100, '*').c_str());
 	}
 	std::fclose(outFile);
 	//printf("Total alignment length = %lld\n", TotalAlnLen);
@@ -507,55 +516,52 @@ void OutputMAF()
 {
 	char* frag;
 	FILE *outFile;
-	int i, p, q, n, RefIdx, idy, ns;
+	int i, p, q, RefIdx, ns;
 	vector<FragPair_t>::iterator FragPairIter;
 	string QueryChrName, RefChrName, aln1, aln2, frag1, frag2;
 
 	outFile = fopen(mafFileName, "a");
 	for (vector<AlnBlock_t>::iterator ABiter = AlnBlockVec.begin(); ABiter != AlnBlockVec.end(); ABiter++)
 	{
-		aln1.clear(); aln2.clear(); idy = 0;
+		if (ABiter->score == 0) continue;
+
+		aln1.clear(); aln2.clear();
 		for (FragPairIter = ABiter->FragPairVec.begin(); FragPairIter != ABiter->FragPairVec.end(); FragPairIter++)
 		{
 			if (FragPairIter->bSeed)
 			{
-				idy += FragPairIter->qLen;
 				frag = new char[FragPairIter->qLen + 1]; frag[FragPairIter->qLen] = '\0';
 				strncpy(frag, QueryChrVec[QueryChrIdx].seq.c_str() + FragPairIter->qPos, FragPairIter->qLen);
 				aln1 += frag; aln2 += frag; delete[] frag;
 			}
 			else
 			{
-				idy += CountIdenticalPairs(FragPairIter->aln1, FragPairIter->aln2);
 				aln1 += FragPairIter->aln1;
 				aln2 += FragPairIter->aln2;
 			}
 		}
-		if ((n = (int)aln1.length()) >= MinAlnLength)
-		{
-			LocalAlignmentNum++; TotalAlignmentLength += n;
-			RefIdx = ABiter->coor.ChromosomeIdx;
-			QueryChrName = QueryChrVec[QueryChrIdx].name; RefChrName = ChromosomeVec[RefIdx].name;
-			if (QueryChrName.length() > RefChrName.length()) RefChrName += string().assign((QueryChrName.length() - RefChrName.length()), ' ');
-			else QueryChrName += string().assign((RefChrName.length() - QueryChrName.length()), ' ');
+		LocalAlignmentNum++; TotalAlignmentLength += ABiter->aln_len;
+		RefIdx = ABiter->coor.ChromosomeIdx;
+		QueryChrName = QueryChrVec[QueryChrIdx].name; RefChrName = ChromosomeVec[RefIdx].name;
+		if (QueryChrName.length() > RefChrName.length()) RefChrName += string().assign((QueryChrName.length() - RefChrName.length()), ' ');
+		else QueryChrName += string().assign((RefChrName.length() - QueryChrName.length()), ' ');
 
-			if (ABiter->coor.bDir)
-			{
-				fprintf(outFile, "a score=%d\n", idy);
-				fprintf(outFile, "s %s %lld %lld + %d %s\n", ChromosomeVec[RefIdx].name, ABiter->coor.gPos, (long long)aln1.length(), ChromosomeVec[RefIdx].len, (char*)aln1.c_str());
-				fprintf(outFile, "s %s %lld %lld + %d %s\n\n", (char*)QueryChrName.c_str(), ABiter->FragPairVec[0].qPos + 1, (long long)aln2.length(), (int)QueryChrVec[QueryChrIdx].seq.length(), (char*)aln2.c_str());
-			}
-			else
-			{
-				//ShowFragPairVec(ABiter->FragPairVec);
-				i = (int)ABiter->FragPairVec.size() - 1;
-				int64_t rPos = ABiter->FragPairVec[i].rPos + ABiter->FragPairVec[i].rLen - 1;
-				SelfComplementarySeq((int)aln1.length(), (char*)aln1.c_str());
-				SelfComplementarySeq((int)aln2.length(), (char*)aln2.c_str());
-				fprintf(outFile, "a score=%d\n", idy);
-				fprintf(outFile, "s %s %lld %lld + %d %s\n", ChromosomeVec[RefIdx].name, GenCoordinateInfo(rPos).gPos, (long long)aln1.length(), ChromosomeVec[RefIdx].len, (char*)aln1.c_str());
-				fprintf(outFile, "s %s %lld %lld - %d %s\n\n", (char*)QueryChrName.c_str(), (int)QueryChrVec[QueryChrIdx].seq.length() - (ABiter->FragPairVec[i].qPos + ABiter->FragPairVec[i].qLen - 1), (long long)aln2.length(), (int)QueryChrVec[QueryChrIdx].seq.length(), (char*)aln2.c_str());
-			}
+		if (ABiter->coor.bDir)
+		{
+			fprintf(outFile, "a score=%d\n", ABiter->score);
+			fprintf(outFile, "s %s %lld %lld + %d %s\n", ChromosomeVec[RefIdx].name, ABiter->coor.gPos, (long long)aln1.length(), ChromosomeVec[RefIdx].len, (char*)aln1.c_str());
+			fprintf(outFile, "s %s %lld %lld + %d %s\n\n", (char*)QueryChrName.c_str(), ABiter->FragPairVec[0].qPos + 1, (long long)aln2.length(), (int)QueryChrVec[QueryChrIdx].seq.length(), (char*)aln2.c_str());
+		}
+		else
+		{
+			//ShowFragPairVec(ABiter->FragPairVec);
+			i = (int)ABiter->FragPairVec.size() - 1;
+			int64_t rPos = ABiter->FragPairVec[i].rPos + ABiter->FragPairVec[i].rLen - 1;
+			SelfComplementarySeq((int)aln1.length(), (char*)aln1.c_str());
+			SelfComplementarySeq((int)aln2.length(), (char*)aln2.c_str());
+			fprintf(outFile, "a score=%d\n", ABiter->score);
+			fprintf(outFile, "s %s %lld %lld + %d %s\n", ChromosomeVec[RefIdx].name, GenCoordinateInfo(rPos).gPos, (long long)aln1.length(), ChromosomeVec[RefIdx].len, (char*)aln1.c_str());
+			fprintf(outFile, "s %s %lld %lld - %d %s\n\n", (char*)QueryChrName.c_str(), (int)QueryChrVec[QueryChrIdx].seq.length() - (ABiter->FragPairVec[i].qPos + ABiter->FragPairVec[i].qLen - 1), (long long)aln2.length(), (int)QueryChrVec[QueryChrIdx].seq.length(), (char*)aln2.c_str());
 		}
 	}
 	std::fclose(outFile);
@@ -572,7 +578,8 @@ void OutputVariantCallingFile()
 	outFile = fopen(vcfFileName, "a");
 	for (vector<AlnBlock_t>::iterator ABiter = AlnBlockVec.begin(); ABiter != AlnBlockVec.end(); ABiter++)
 	{
-		if (!ABiter->coor.bDir) continue;
+		if (!ABiter->coor.bDir || ABiter->score == 0) continue;
+
 		RefChrName = ChromosomeVec[ABiter->coor.ChromosomeIdx].name;
 
 		for (FragPairIter = ABiter->FragPairVec.begin(); FragPairIter != ABiter->FragPairVec.end(); FragPairIter++)
@@ -753,8 +760,10 @@ void OutputDotplot()
 	for (thr = i = 0; i < iChromsomeNum; i++) if (thr < ChrScoreVec[i]) thr = ChrScoreVec[i];
 	for (ABiter = AlnBlockVec.begin(); ABiter != AlnBlockVec.end(); ABiter++)
 	{
-		if (ABiter->score >= 100 && ChrScoreVec[ABiter->coor.ChromosomeIdx] == thr)
+		if (ChrScoreVec[ABiter->coor.ChromosomeIdx] == thr && ABiter->score > 0)
+		{
 			ChrClusterVec[ABiter->coor.ChromosomeIdx].push_back(ABiter);
+		}
 	}
 	for (iCluster = i = 0; i < iChromsomeNum; i++) if (ChrScoreVec[i] == thr) iCluster++;
 

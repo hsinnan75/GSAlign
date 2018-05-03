@@ -108,6 +108,7 @@ typedef struct
 typedef struct
 {
 	int score;
+	int aln_len;
 	Coordinate_t coor;
 	vector<FragPair_t> FragPairVec;
 } AlnBlock_t;
@@ -129,7 +130,7 @@ extern unsigned char nst_nt4_table[256];
 extern int64_t GenomeSize, TwoGenomeSize;
 extern vector<Chromosome_t> ChromosomeVec;
 extern bool bDebugMode, bShowSubstitution, bShowIndel, bShowPlot;
-extern int iThreadNum, iQueryChrNum, iChromsomeNum, MinSeedLength, MinAlnLength, MinClusterSize, MaxGapSize, OutputFormat;
+extern int iThreadNum, iQueryChrNum, iChromsomeNum, MinSeqIdy, MinSeedLength, MinAlnLength, MinClusterSize, MaxGapSize, OutputFormat;
 extern char *RefSequence, *RefSeqFileName, *IndexFileName, *QueryFileName, *OutputPrefix, *vcfFileName, *mafFileName, *alnFileName, *snpFileName, *indFileName, *svsFileName, *gpFileName, *GnuPlotPath;
 
 // bwt_index.cpp

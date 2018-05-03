@@ -6,9 +6,9 @@ string cmd_line;
 bwaidx_t *RefIdx;
 time_t StartProcessTime;
 vector<QueryChr_t> QueryChrVec;
-const char* VersionStr = "0.9.2";
+const char* VersionStr = "0.9.3";
 bool bDebugMode, bShowSubstitution, bShowIndel, bShowPlot;
-int iThreadNum = 4, iQueryChrNum, MinSeedLength, MinClusterSize, MinAlnLength, MaxGapSize, OutputFormat = 0;
+int iThreadNum = 4, iQueryChrNum, MinSeedLength, MinSeqIdy = 20, MinClusterSize, MinAlnLength, MaxGapSize, OutputFormat = 0;
 char *RefSequence, *RefSeqFileName, *IndexFileName, *QueryFileName, *OutputPrefix, *vcfFileName, *mafFileName, *alnFileName, *snpFileName, *indFileName, *svsFileName, *gpFileName, *GnuPlotPath;
 
 void ShowProgramUsage(const char* program)
@@ -20,6 +20,7 @@ void ShowProgramUsage(const char* program)
 	fprintf(stderr, "         -o     STR     Set the prefix of the output files [output]\n");
 	fprintf(stderr, "         -dp            Output Dot-plots\n");
 	fprintf(stderr, "         -fmt   INT     Set the output format 0:maf, 1:aln [%d]\n", OutputFormat);
+	fprintf(stderr, "         -idy   INT     Set the minimal sequence identity (0-100) of a local alignment [%d]\n", MinSeqIdy);
 	fprintf(stderr, "         -slen  INT     Set the minimal seed length [%d]\n", MinSeedLength);
 	fprintf(stderr, "         -alen  INT     Set the minimal alignment length [%d]\n", MinAlnLength);
 	fprintf(stderr, "         -clr   INT     Set the minimal cluster size [%d]\n", MinClusterSize);
@@ -209,11 +210,10 @@ int main(int argc, char* argv[])
 					exit(0);
 				}
 			}
+			else if (parameter == "-idy" && i + 1 < argc) MinSeqIdy = atoi(argv[++i]);
 			else if (parameter == "-alen" && i + 1 < argc) MinAlnLength = atoi(argv[++i]);
 			else if (parameter == "-clr" && i + 1 < argc) MinClusterSize = atoi(argv[++i]);
 			else if (parameter == "-gap" && i + 1 < argc) MaxGapSize = atoi(argv[++i]);
-			//else if (parameter == "-sub") bShowSubstitution = true;
-			//else if (parameter == "-ind") bShowIndel = true;
 			else if (parameter == "-dp") bShowPlot = true;
 			else if (parameter == "-fmt" && i + 1 < argc) OutputFormat = atoi(argv[++i]);
 			else if (parameter == "-o") OutputPrefix = argv[++i];
