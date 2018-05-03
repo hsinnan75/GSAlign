@@ -80,18 +80,18 @@ All above file formats are in text mode.
 
 -q STR query genome filename [fasta]
 
--sub output the identified SNPs
-
--ind output the identified indels
-
 -o STR prefix of output files
+
+-dp Output Dot-plots
 
 -fmt INT Set the output format [0]: 0:maf, 1:aln
 
 -slen set the minimal seed length [20]
 
+-alen set the minimal alignment length [200]
+
 -clr set the minimal cluster size [100]
 
--gap set the maximal gaps between adjacent seeds [100]
+-gap set the maximal gaps between adjacent seeds [200]
 
   ```

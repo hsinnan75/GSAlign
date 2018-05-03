@@ -18,10 +18,10 @@ void ShowProgramUsage(const char* program)
 	fprintf(stderr, "Usage: %s [-i IndexFile Prefix / -r Reference file] -q QueryFile[Fasta]\n\n", program);
 	fprintf(stderr, "Options: -t     INT     number of threads [%d]\n", iThreadNum);
 	fprintf(stderr, "         -o     STR     Set the prefix of the output files [output]\n");
-	fprintf(stderr, "         -dp            Output Dot-plot for each chromosome pair\n");
+	fprintf(stderr, "         -dp            Output Dot-plots\n");
 	fprintf(stderr, "         -fmt   INT     Set the output format 0:maf, 1:aln [%d]\n", OutputFormat);
 	fprintf(stderr, "         -slen  INT     Set the minimal seed length [%d]\n", MinSeedLength);
-	fprintf(stderr, "         -alen  INT     Set the minimal alignment length\n", MinAlnLength);
+	fprintf(stderr, "         -alen  INT     Set the minimal alignment length [%d]\n", MinAlnLength);
 	fprintf(stderr, "         -clr   INT     Set the minimal cluster size [%d]\n", MinClusterSize);
 	fprintf(stderr, "         -gap   INT     Set the maximal gaps between adjacent seeds [%d]\n", MaxGapSize);
 	fprintf(stderr, "\n");
