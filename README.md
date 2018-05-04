@@ -52,7 +52,7 @@ or with a pre-built index file
 # Datasets
 
 You may download the test datasets at http://bioapp.iis.sinica.edu.tw/~arith/GSAlign/ to test the performance of GSAlign.
-You can also use the evaulation tool (Evaluation.cpp) to measure the precision and recall of the resulting VCF files. 
+You may also use the evaulation tool (Evaluation.cpp) to measure the precision and recall of the resulting VCF files. 
 To compile Evaluation.cpp, just type 'g++ Evaluation.cpp -o eva'
 
 # File formats
