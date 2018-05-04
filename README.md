@@ -9,7 +9,7 @@ Personal genomics and comparative genomics are two fields that are more and more
 
 # Download
 
-Current version: 0.9.2 Please use the command 
+Please use the command 
   ```
   $ git clone https://github.com/hsinnan75/GSAlign.git
   ```
