@@ -650,13 +650,9 @@ void OutputSNPs()
 	outFile = fopen(snpFileName, "a");
 	for (vector<AlnBlock_t>::iterator ABiter = AlnBlockVec.begin(); ABiter != AlnBlockVec.end(); ABiter++)
 	{
-		RefIdx = ABiter->coor.ChromosomeIdx;
-		//QueryPos = ABiter->FragPairVec[0].qPos; RefPos = ABiter->coor.gPos;
+		if (ABiter->score == 0) continue;
 
-		QueryChrName = QueryChrVec[QueryChrIdx].name; RefChrName = ChromosomeVec[RefIdx].name;
-
-		//if (QueryChrName.length() > RefChrName.length()) RefChrName += string().assign((QueryChrName.length() - RefChrName.length()), ' ');
-		//else QueryChrName += string().assign((RefChrName.length() - QueryChrName.length()), ' ');
+		RefIdx = ABiter->coor.ChromosomeIdx; QueryChrName = QueryChrVec[QueryChrIdx].name; RefChrName = ChromosomeVec[RefIdx].name;
 
 		frag1.resize(21); frag2.resize(21);
 		for (FragPairIter = ABiter->FragPairVec.begin(); FragPairIter != ABiter->FragPairVec.end(); FragPairIter++)
@@ -714,8 +710,9 @@ void OutputIndeles()
 	outFile = fopen(indFileName, "a"); head.resize(10); tail.resize(10);
 	for (vector<AlnBlock_t>::iterator ABiter = AlnBlockVec.begin(); ABiter != AlnBlockVec.end(); ABiter++)
 	{
-		RefIdx = ABiter->coor.ChromosomeIdx;
-		QueryPos = ABiter->FragPairVec[0].qPos; RefPos = ABiter->coor.gPos;
+		if (ABiter->score == 0) continue;
+
+		RefIdx = ABiter->coor.ChromosomeIdx; QueryPos = ABiter->FragPairVec[0].qPos; RefPos = ABiter->coor.gPos;
 
 		QueryChrName = QueryChrVec[QueryChrIdx].name; RefChrName = ChromosomeVec[RefIdx].name;
 		if (QueryChrName.length() > RefChrName.length()) RefChrName += string().assign((QueryChrName.length() - RefChrName.length()), ' ');
