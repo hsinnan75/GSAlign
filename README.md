@@ -82,9 +82,9 @@ All above file formats are in text mode.
 
 -q STR query genome filename [fasta]
 
--o STR prefix of output files
+-o STR prefix of output files [output]
 
--dp Output Dot-plots
+-dp Output Dot-plots [false]
 
 -fmt INT Set the output format [0]: 0:maf, 1:aln
 

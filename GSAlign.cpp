@@ -658,20 +658,20 @@ void OutputDotplot()
 	outFile = fopen(gpFileName, "w"); DataFileName = (string)OutputPrefix + "." + QueryChrVec[QueryChrIdx].name;
 
 	for (ABiter = AlnBlockVec.begin(); ABiter != AlnBlockVec.end(); ABiter++) if (ABiter->score > 0) vec[ABiter->coor.ChromosomeIdx] += ABiter->score;
-	for (i = 0; i < iChromsomeNum; i++) if (vec[i] >= 10000) ChrScoreVec.push_back(make_pair(i, vec[i]));
-	sort(ChrScoreVec.begin(), ChrScoreVec.end(), CompByChrScore); if (ChrScoreVec.size() > 10) ChrScoreVec.resize(10); thr = ChrScoreVec.rbegin()->second;
+	for (i = 0; i < iChromsomeNum; i++) if (vec[i] >= 1000) ChrScoreVec.push_back(make_pair(i, vec[i])); sort(ChrScoreVec.begin(), ChrScoreVec.end(), CompByChrScore);
+	if (ChrScoreVec.size() > 10) ChrScoreVec.resize(10); thr = ChrScoreVec.rbegin()->second;
+	
 	for (i = 0; i < (int)ChrScoreVec.size(); i++)
 	{
 		ChrColorMap[ChrScoreVec[i].first] = i + 1;
 		ChrFileHandle[ChrScoreVec[i].first] = fopen((DataFileName + "vs" + (string)ChromosomeVec[ChrScoreVec[i].first].name).c_str(), "w");
 		fprintf(ChrFileHandle[ChrScoreVec[i].first], "0 0\n0 0\n\n");
 	}
-	fprintf(outFile, "set terminal postscript color solid 'Courier' 15\nset output '%s-%s.ps'\n", OutputPrefix, QueryChrVec[QueryChrIdx].name.c_str());
-	fprintf(outFile, "set grid\nset border 1\n");
+	fprintf(outFile, "set terminal postscript color solid 'Courier' 15\nset output '%s-%s.ps'\nset grid\nset border 1\n", OutputPrefix, QueryChrVec[QueryChrIdx].name.c_str());
 	for (i = 0; i < (int)ChrScoreVec.size(); i++) fprintf(outFile, "set style line %d lw 4 pt 0 ps 0.5 lc '%s'\n", i + 1, LineColorArr[i].c_str());
 	fprintf(outFile, "set xrange[1:*]\nset yrange[1:*]\nset xlabel 'Query (%s)'\nset ylabel 'Ref'\n", (char*)QueryChrVec[QueryChrIdx].name.c_str());
 	fprintf(outFile, "plot "); for (i = 0; i < (int)ChrScoreVec.size(); i++) fprintf(outFile, "'%s' title '%s' with lp ls %d%s", (DataFileName + "vs" + (string)ChromosomeVec[ChrScoreVec[i].first].name).c_str(), ChromosomeVec[ChrScoreVec[i].first].name, ChrColorMap[ChrScoreVec[i].first], (i != (int)ChrScoreVec.size() - 1 ? ", " : "\n\n"));
-	
+
 	for (ABiter = AlnBlockVec.begin(); ABiter != AlnBlockVec.end(); ABiter++)
 	{
 		if (ABiter->score > 0 && vec[ABiter->coor.ChromosomeIdx] >= thr)
