@@ -131,7 +131,7 @@ extern int64_t GenomeSize, TwoGenomeSize;
 extern vector<Chromosome_t> ChromosomeVec;
 extern bool bDebugMode, bShowSubstitution, bShowIndel, bShowPlot;
 extern int iThreadNum, iQueryChrNum, iChromsomeNum, MinSeqIdy, MinSeedLength, MinAlnLength, MinClusterSize, MaxGapSize, OutputFormat;
-extern char *RefSequence, *RefSeqFileName, *IndexFileName, *QueryFileName, *OutputPrefix, *vcfFileName, *mafFileName, *alnFileName, *snpFileName, *indFileName, *svsFileName, *gpFileName, *GnuPlotPath;
+extern char *RefSequence, *RefSeqFileName, *IndexFileName, *QueryFileName, *OutputPrefix, *vcfFileName, *mafFileName, *alnFileName, *gpFileName, *GnuPlotPath;
 
 // bwt_index.cpp
 extern void RestoreReferenceInfo();

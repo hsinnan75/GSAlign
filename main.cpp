@@ -9,7 +9,7 @@ vector<QueryChr_t> QueryChrVec;
 const char* VersionStr = "0.9.3";
 bool bDebugMode, bShowSubstitution, bShowIndel, bShowPlot;
 int iThreadNum = 4, iQueryChrNum, MinSeedLength, MinSeqIdy = 20, MinClusterSize, MinAlnLength, MaxGapSize, OutputFormat = 0;
-char *RefSequence, *RefSeqFileName, *IndexFileName, *QueryFileName, *OutputPrefix, *vcfFileName, *mafFileName, *alnFileName, *snpFileName, *indFileName, *svsFileName, *gpFileName, *GnuPlotPath;
+char *RefSequence, *RefSeqFileName, *IndexFileName, *QueryFileName, *OutputPrefix, *vcfFileName, *mafFileName, *alnFileName, *gpFileName, *GnuPlotPath;
 
 void ShowProgramUsage(const char* program)
 {
@@ -101,7 +101,7 @@ void InitializeOutputFiles()
 	FILE *outFile;
 	int len = strlen(OutputPrefix);
 
-	mafFileName = alnFileName = vcfFileName = snpFileName = indFileName = gpFileName = NULL;
+	mafFileName = alnFileName = vcfFileName = gpFileName = NULL;
 
 	if (OutputFormat == 0)
 	{
@@ -111,22 +111,11 @@ void InitializeOutputFiles()
 	{
 		alnFileName = new char[len + 5]; strcpy(alnFileName, OutputPrefix), strcpy(alnFileName + len, ".aln"); alnFileName[len + 4] = '\0'; outFile = fopen(alnFileName, "w"); fclose(outFile);
 	}
-	vcfFileName = new char[len + 5]; strcpy(vcfFileName, OutputPrefix), strcpy(vcfFileName + len, ".vcf"); vcfFileName[len + 4] = '\0'; outFile = fopen(vcfFileName, "w"); fclose(outFile);
-	if (bShowSubstitution)
-	{
-		snpFileName = new char[len + 5]; strcpy(snpFileName, OutputPrefix), strcpy(snpFileName + len, ".snp"); snpFileName[len + 4] = '\0'; outFile = fopen(snpFileName, "w"); fclose(outFile);
-	}
-
-	if (bShowIndel)
-	{
-		indFileName = new char[len + 5]; strcpy(indFileName, OutputPrefix), strcpy(indFileName + len, ".ind"); indFileName[len + 4] = '\0'; outFile = fopen(indFileName, "w"); fclose(outFile);
-	}
-
 	if (GnuPlotPath != NULL)
 	{
 		gpFileName = new char[len + 4];  strcpy(gpFileName, OutputPrefix); gpFileName[len + 3] = '\0'; strcpy(gpFileName + len, ".gp");
 	}
-	//svsFileName = new char[len + 5]; strcpy(svsFileName, OutputPrefix), strcpy(svsFileName + len, ".svs"); svsFileName[len + 4] = '\0';outFile = fopen(svsFileName, "w"); fclose(outFile);
+	vcfFileName = new char[len + 5]; strcpy(vcfFileName, OutputPrefix), strcpy(vcfFileName + len, ".vcf"); vcfFileName[len + 4] = '\0'; outFile = fopen(vcfFileName, "w"); fclose(outFile);
 }
 
 void DestroyOutputFileNames()
@@ -134,8 +123,6 @@ void DestroyOutputFileNames()
 	if (mafFileName != NULL) delete[] mafFileName;
 	if (alnFileName != NULL) delete[] alnFileName;
 	if (vcfFileName != NULL) delete[] vcfFileName;
-	if (snpFileName != NULL) delete[] snpFileName;
-	if (indFileName != NULL) delete[] indFileName;
 	if (gpFileName != NULL) delete[] gpFileName;
 }
 

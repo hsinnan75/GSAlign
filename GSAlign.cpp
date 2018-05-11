@@ -5,12 +5,11 @@
 #define SeedExplorationChunk 10000
 
 int QueryChrIdx;
-FILE *AlnFile = stdout;
 vector<FragPair_t> SeedVec;
 static pthread_mutex_t Lock;
 vector<AlnBlock_t> AlnBlockVec;
 int64_t TotalAlignmentLength = 0, LocalAlignmentNum = 0, SNP_num = 0, IND_num = 0, SVS_num = 0;
-
+string LineColorArr[10] = {"red", "blue", "web-green", "dark-magenta", "orange", "yellow", "turquoise", "dark-yellow", "violet", "dark-grey"};
 
 bool CompByPosDiff(const FragPair_t& p1, const FragPair_t& p2)
 {
@@ -28,6 +27,11 @@ bool CompByRefPos(const FragPair_t& p1, const FragPair_t& p2)
 {
 	if (p1.rPos == p2.rPos) return p1.qPos < p2.qPos;
 	else return p1.rPos < p2.rPos;
+}
+
+bool CompByChrScore(const pair<int, int64_t>& p1, const pair<int, int64_t>& p2)
+{
+	return p1.second > p2.second;
 }
 
 int CountIdenticalPairs(string& aln1, string& aln2)
@@ -638,163 +642,51 @@ void OutputVariantCallingFile()
 	std::fclose(outFile);
 }
 
-void OutputSNPs()
-{
-	char* frag;
-	FILE *outFile;
-	int64_t RefPos;
-	int i, snpPos, RefIdx, QueryPos;
-	vector<FragPair_t>::iterator FragPairIter;
-	string QueryChrName, RefChrName, frag1, frag2, aln;
-
-	outFile = fopen(snpFileName, "a");
-	for (vector<AlnBlock_t>::iterator ABiter = AlnBlockVec.begin(); ABiter != AlnBlockVec.end(); ABiter++)
-	{
-		if (ABiter->score == 0) continue;
-
-		RefIdx = ABiter->coor.ChromosomeIdx; QueryChrName = QueryChrVec[QueryChrIdx].name; RefChrName = ChromosomeVec[RefIdx].name;
-
-		frag1.resize(21); frag2.resize(21);
-		for (FragPairIter = ABiter->FragPairVec.begin(); FragPairIter != ABiter->FragPairVec.end(); FragPairIter++)
-		{
-			if (!FragPairIter->bSeed && FragPairIter->qLen == FragPairIter->rLen)
-			{
-				if (FragPairIter->qLen == 1)
-				{
-					QueryPos = FragPairIter->qPos - 10; RefPos = FragPairIter->rPos - 10;
-					strncpy((char*)frag1.c_str(), RefSequence + RefPos, 21);
-					strncpy((char*)frag2.c_str(), QueryChrVec[QueryChrIdx].seq.c_str() + QueryPos, 21);
-					fprintf(outFile, "SNP#%d\t%s%s:%d vs %s:%d\n", ++SNP_num, RefChrName.c_str(), (ABiter->coor.bDir ? "" : "_rev"), GenCoordinateInfo(RefPos).gPos, QueryChrName.c_str(), QueryPos + 1);
-					fprintf(outFile, "R: %s\nQ: %s\n             ^             \n\n", (char*)frag1.c_str(), (char*)frag2.c_str());
-				}
-				else if(FragPairIter->qLen == (int)FragPairIter->aln2.size())
-				{
-					aln.assign(FragPairIter->qLen, ' '); snpPos = -1;
-					for (i = 0; i < FragPairIter->qLen; i++)
-					{
-						if (FragPairIter->aln1[i] != FragPairIter->aln2[i])
-						{
-							aln[i] = '^';
-							if (snpPos == -1) snpPos = i;
-						}
-					}
-
-					QueryPos = FragPairIter->qPos - 10; RefPos = FragPairIter->rPos - 10;
-					fprintf(outFile, "SNP#%d\t%s%s:%d vs %s:%d\n", ++SNP_num, RefChrName.c_str(), (ABiter->coor.bDir ? "" : "_rev"), GenCoordinateInfo(RefPos).gPos, QueryChrName.c_str(), QueryPos + 1);
-
-					strncpy((char*)frag1.c_str(), RefSequence + RefPos, 10); frag1[10] = '\0';
-					strncpy((char*)frag2.c_str(), RefSequence + FragPairIter->rPos + FragPairIter->rLen, 10); frag2[10] = '\0';
-					fprintf(outFile, "R: %s%s%s\n", (char*)frag1.c_str(), (char*)FragPairIter->aln2.c_str(), (char*)frag2.c_str());
-
-					strncpy((char*)frag1.c_str(), QueryChrVec[QueryChrIdx].seq.c_str() + QueryPos, 10); frag1[10] = '\0';
-					strncpy((char*)frag2.c_str(), QueryChrVec[QueryChrIdx].seq.c_str() + FragPairIter->qPos + FragPairIter->qLen, 10); frag2[10] = '\0';
-					fprintf(outFile, "Q: %s%s%s\n", (char*)frag1.c_str(), (char*)FragPairIter->aln1.c_str(), (char*)frag2.c_str());
-
-					fprintf(outFile, "             %s          \n\n", (char*)aln.c_str());
-				}
-			}
-		}
-	}
-	std::fclose(outFile);
-}
-
-void OutputIndeles()
-{
-	char* frag;
-	FILE *outFile;
-	int64_t RefPos, TotalAlnLen = 0;
-	int i, p, q, n, RefIdx, QueryPos;
-	vector<FragPair_t>::iterator FragPairIter;
-	string QueryChrName, RefChrName, head, tail, frag1, frag2;
-
-	outFile = fopen(indFileName, "a"); head.resize(10); tail.resize(10);
-	for (vector<AlnBlock_t>::iterator ABiter = AlnBlockVec.begin(); ABiter != AlnBlockVec.end(); ABiter++)
-	{
-		if (ABiter->score == 0) continue;
-
-		RefIdx = ABiter->coor.ChromosomeIdx; QueryPos = ABiter->FragPairVec[0].qPos; RefPos = ABiter->coor.gPos;
-
-		QueryChrName = QueryChrVec[QueryChrIdx].name; RefChrName = ChromosomeVec[RefIdx].name;
-		if (QueryChrName.length() > RefChrName.length()) RefChrName += string().assign((QueryChrName.length() - RefChrName.length()), ' ');
-		else QueryChrName += string().assign((RefChrName.length() - QueryChrName.length()), ' ');
-
-		for (FragPairIter = ABiter->FragPairVec.begin(); FragPairIter != ABiter->FragPairVec.end(); FragPairIter++)
-		{
-			if (!FragPairIter->bSeed)
-			{
-				if (FragPairIter->qLen == 0 || FragPairIter->rLen == 0 || FragPairIter->qLen != FragPairIter->rLen)
-				{
-					QueryPos = FragPairIter->qPos - 10; RefPos = FragPairIter->rPos - 10;
-
-					strncpy((char*)head.c_str(), RefSequence + RefPos, 10);
-					strncpy((char*)tail.c_str(), RefSequence + FragPairIter->rPos + FragPairIter->rLen, 10);
-					frag1 = head + FragPairIter->aln2 + tail;
-
-					strncpy((char*)head.c_str(), QueryChrVec[QueryChrIdx].seq.c_str() + QueryPos, 10);
-					strncpy((char*)tail.c_str(), QueryChrVec[QueryChrIdx].seq.c_str() + FragPairIter->qPos + FragPairIter->qLen, 10);
-					frag2 = head + FragPairIter->aln1 + tail;
-
-					fprintf(outFile, "Ind#%d\t%s%s:%d vs %s:%d\n", ++IND_num, RefChrName.c_str(), (ABiter->coor.bDir ? "" : "_rev"), GenCoordinateInfo(RefPos).gPos, QueryChrName.c_str(), QueryPos + 1);
-					fprintf(outFile, "R: %s\nQ: %s\n\n", (char*)frag1.c_str(), (char*)frag2.c_str());
-				}
-			}
-		}
-	}
-	std::fclose(outFile);
-}
-
 void OutputDotplot()
 {
+	FILE *outFile;
+	vector<int> vec;
 	int64_t last_ref_end;
-	vector<int> ChrScoreVec;
+	string cmd, DataFileName;
+	map<int, int> ChrColorMap;
+	map<int, FILE*> ChrFileHandle;
 	vector<AlnBlock_t>::iterator ABiter;
-	FILE *dataFile1, *dataFile2, *outFile;
-	string QueryChrName, RefChrName, cmd, DataFileName;
-	vector<vector<vector<AlnBlock_t>::iterator> > ChrClusterVec;
-	int i, j, last_query_end, FragNum, num, iCluster, ChrIdx, thr;
+	vector<pair<int, int64_t> > ChrScoreVec;
+	int i, j, last_query_end, FragNum, num, ChrIdx, thr;
 
-	ChrScoreVec.resize(iChromsomeNum); ChrClusterVec.resize(iChromsomeNum);
-	for (ABiter = AlnBlockVec.begin(); ABiter != AlnBlockVec.end(); ABiter++) ChrScoreVec[ABiter->coor.ChromosomeIdx] += ABiter->score;
-	for (thr = i = 0; i < iChromsomeNum; i++) if (thr < ChrScoreVec[i]) thr = ChrScoreVec[i];
+	vec.resize(iChromsomeNum);
+	outFile = fopen(gpFileName, "w"); DataFileName = (string)OutputPrefix + "." + QueryChrVec[QueryChrIdx].name;
+
+	for (ABiter = AlnBlockVec.begin(); ABiter != AlnBlockVec.end(); ABiter++) if (ABiter->score > 0) vec[ABiter->coor.ChromosomeIdx] += ABiter->score;
+	for (i = 0; i < iChromsomeNum; i++) if (vec[i] >= 10000) ChrScoreVec.push_back(make_pair(i, vec[i]));
+	sort(ChrScoreVec.begin(), ChrScoreVec.end(), CompByChrScore); if (ChrScoreVec.size() > 10) ChrScoreVec.resize(10); thr = ChrScoreVec.rbegin()->second;
+	for (i = 0; i < (int)ChrScoreVec.size(); i++)
+	{
+		ChrColorMap[ChrScoreVec[i].first] = i + 1;
+		ChrFileHandle[ChrScoreVec[i].first] = fopen((DataFileName + "vs" + (string)ChromosomeVec[ChrScoreVec[i].first].name).c_str(), "w");
+		fprintf(ChrFileHandle[ChrScoreVec[i].first], "0 0\n0 0\n\n");
+	}
+	fprintf(outFile, "set terminal postscript color solid 'Courier' 15\nset output '%s-%s.ps'\n", OutputPrefix, QueryChrVec[QueryChrIdx].name.c_str());
+	fprintf(outFile, "set grid\nset border 1\n");
+	for (i = 0; i < (int)ChrScoreVec.size(); i++) fprintf(outFile, "set style line %d lw 4 pt 0 ps 0.5 lc '%s'\n", i + 1, LineColorArr[i].c_str());
+	fprintf(outFile, "set xrange[1:*]\nset yrange[1:*]\nset xlabel 'Query (%s)'\nset ylabel 'Ref'\n", (char*)QueryChrVec[QueryChrIdx].name.c_str());
+	//fprintf(outFile, "plot '%s' title 'Forward' with lp ls 1, '%s' title 'Reverse' with lp ls 2\n\n", (char*)(DataFileName + ".1").c_str(), (char*)(DataFileName + ".2").c_str());
+	fprintf(outFile, "plot "); for (i = 0; i < (int)ChrScoreVec.size(); i++) fprintf(outFile, "'%s' title '%s' with lp ls %d%s", (DataFileName + "vs" + (string)ChromosomeVec[ChrScoreVec[i].first].name).c_str(), ChromosomeVec[ChrScoreVec[i].first].name, ChrColorMap[ChrScoreVec[i].first], (i != (int)ChrScoreVec.size() - 1 ? ", " : "\n\n"));
+	
 	for (ABiter = AlnBlockVec.begin(); ABiter != AlnBlockVec.end(); ABiter++)
 	{
-		if (ChrScoreVec[ABiter->coor.ChromosomeIdx] == thr && ABiter->score > 0)
+		if (ABiter->score > 0 && vec[ABiter->coor.ChromosomeIdx] >= thr)
 		{
-			ChrClusterVec[ABiter->coor.ChromosomeIdx].push_back(ABiter);
+			FragNum = (int)ABiter->FragPairVec.size() - 1;
+			last_query_end = ABiter->FragPairVec[FragNum].qPos + ABiter->FragPairVec[FragNum].qLen - 1;
+			last_ref_end = ABiter->FragPairVec[FragNum].rPos + ABiter->FragPairVec[FragNum].rLen - 1;
+			if (ABiter->coor.bDir) fprintf(ChrFileHandle[ABiter->coor.ChromosomeIdx], "%d %d\n%d %d\n\n", ABiter->FragPairVec[0].qPos + 1, GenCoordinateInfo(ABiter->FragPairVec[0].rPos).gPos, last_query_end + 1, GenCoordinateInfo(last_ref_end).gPos);
+			else fprintf(ChrFileHandle[ABiter->coor.ChromosomeIdx], "%d %d\n%d %d\n\n", ABiter->FragPairVec[0].qPos + 1, GenCoordinateInfo(ABiter->FragPairVec[0].rPos).gPos, last_query_end + 1, GenCoordinateInfo(last_ref_end).gPos);
 		}
 	}
-	for (iCluster = i = 0; i < iChromsomeNum; i++) if (ChrScoreVec[i] == thr) iCluster++;
-
-	outFile = fopen(gpFileName, "w"); QueryChrName = QueryChrVec[QueryChrIdx].name;
-	fprintf(outFile, "set terminal postscript color solid 'Courier' 15\nset output '%s-%s.ps'\n", OutputPrefix, QueryChrVec[QueryChrIdx].name.c_str());
-	fprintf(outFile, "set multiplot layout %d,1\nset grid\nset border 1\n", iCluster);
-	fprintf(outFile, "set style line 1 lw 4 pt 0 ps 0.5 lc rgb 'red'\nset style line 2 lw 4 pt 0 ps 0.5 lc rgb 'blue'\n");
-
-	for (i = 0; i < iChromsomeNum; i++)
-	{
-		if ((num = (int)ChrClusterVec[i].size()) > 0)
-		{
-			DataFileName = (string)OutputPrefix + "." + QueryChrName + "-" + ChromosomeVec[i].name;
-			fprintf(outFile, "set xrange[1:*]\nset yrange[1:*]\nset xlabel 'Query (%s)'\nset ylabel 'Ref (%s)'\n", (char*)QueryChrName.c_str(), ChromosomeVec[i].name);
-			fprintf(outFile, "plot '%s' title 'Forward' with lp ls 1, '%s' title 'Reverse' with lp ls 2\n\n", (char*)(DataFileName + ".1").c_str(), (char*)(DataFileName + ".2").c_str());
-
-			dataFile1 = fopen((char*)(DataFileName + ".1").c_str(), "w"); dataFile2 = fopen((char*)(DataFileName + ".2").c_str(), "w");
-			fprintf(dataFile1, "0 0\n0 0\n\n"); fprintf(dataFile2, "0 0\n0 0\n\n");
-
-			for (j = 0; j < num; j++)
-			{
-				FragNum = (int)ChrClusterVec[i][j]->FragPairVec.size() - 1;
-				last_query_end = ChrClusterVec[i][j]->FragPairVec[FragNum].qPos + ChrClusterVec[i][j]->FragPairVec[FragNum].qLen - 1;
-				last_ref_end = ChrClusterVec[i][j]->FragPairVec[FragNum].rPos + ChrClusterVec[i][j]->FragPairVec[FragNum].rLen - 1;
-				if (ChrClusterVec[i][j]->coor.bDir) fprintf(dataFile1, "%d %d\n%d %d\n\n", ChrClusterVec[i][j]->FragPairVec[0].qPos + 1, GenCoordinateInfo(ChrClusterVec[i][j]->FragPairVec[0].rPos).gPos, last_query_end + 1, GenCoordinateInfo(last_ref_end).gPos);
-				else fprintf(dataFile2, "%d %d\n%d %d\n\n", ChrClusterVec[i][j]->FragPairVec[0].qPos + 1, GenCoordinateInfo(ChrClusterVec[i][j]->FragPairVec[0].rPos).gPos, last_query_end + 1, GenCoordinateInfo(last_ref_end).gPos);
-			}
-			std::fclose(dataFile1); std::fclose(dataFile2);
-		}
-	}
-	fprintf(outFile, "#unset multiplot\n"); std::fclose(outFile);
 	cmd = (string)GnuPlotPath + " " + (string)gpFileName; system((char*)cmd.c_str());
-	DataFileName = (string)OutputPrefix + "." + QueryChrName + "-*.*";
+	for (i = 0; i < (int)ChrScoreVec.size(); i++) fclose(ChrFileHandle[ChrScoreVec[i].first]); fclose(outFile);
+	DataFileName = (string)OutputPrefix + "." + QueryChrVec[QueryChrIdx].name + "*";
 	cmd = "rm " + DataFileName; system(cmd.c_str());
 }
 
@@ -880,8 +772,6 @@ void GenomeComparison()
 		if (OutputFormat == 0) fprintf(stderr, "\tOutput the MAF for query chromosome %s in the file: %s\n", QueryChrVec[QueryChrIdx].name.c_str(), mafFileName),OutputMAF();
 		if (OutputFormat == 1) fprintf(stderr, "\tOutput the alignment for query chromosome %s in the file: %s\n", QueryChrVec[QueryChrIdx].name.c_str(), alnFileName),OutputAlignment();
 		fprintf(stderr, "\tOutput the variants for query chromosome %s in the file: %s\n", QueryChrVec[QueryChrIdx].name.c_str(), vcfFileName); OutputVariantCallingFile();
-		if (bShowSubstitution) fprintf(stderr, "\tOutput the SNPs for query chromosome %s in the file: %s\n", QueryChrVec[QueryChrIdx].name.c_str(), snpFileName), OutputSNPs();
-		if (bShowIndel) fprintf(stderr, "\tOutput the indels for query chromosome %s in the file: %s\n", QueryChrVec[QueryChrIdx].name.c_str(), indFileName), OutputIndeles();
 		if (bShowPlot && GnuPlotPath != NULL) fprintf(stderr, "\tGenerate the dotplot for query chromosome %s in the file: %s-%s.ps\n", QueryChrVec[QueryChrIdx].name.c_str(), OutputPrefix, QueryChrVec[QueryChrIdx].name.c_str()), OutputDotplot();
 
 		iTotalQueryLength += (n = (int)QueryChrVec[QueryChrIdx].seq.length());
