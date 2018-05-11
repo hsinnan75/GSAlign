@@ -670,7 +670,6 @@ void OutputDotplot()
 	fprintf(outFile, "set grid\nset border 1\n");
 	for (i = 0; i < (int)ChrScoreVec.size(); i++) fprintf(outFile, "set style line %d lw 4 pt 0 ps 0.5 lc '%s'\n", i + 1, LineColorArr[i].c_str());
 	fprintf(outFile, "set xrange[1:*]\nset yrange[1:*]\nset xlabel 'Query (%s)'\nset ylabel 'Ref'\n", (char*)QueryChrVec[QueryChrIdx].name.c_str());
-	//fprintf(outFile, "plot '%s' title 'Forward' with lp ls 1, '%s' title 'Reverse' with lp ls 2\n\n", (char*)(DataFileName + ".1").c_str(), (char*)(DataFileName + ".2").c_str());
 	fprintf(outFile, "plot "); for (i = 0; i < (int)ChrScoreVec.size(); i++) fprintf(outFile, "'%s' title '%s' with lp ls %d%s", (DataFileName + "vs" + (string)ChromosomeVec[ChrScoreVec[i].first].name).c_str(), ChromosomeVec[ChrScoreVec[i].first].name, ChrColorMap[ChrScoreVec[i].first], (i != (int)ChrScoreVec.size() - 1 ? ", " : "\n\n"));
 	
 	for (ABiter = AlnBlockVec.begin(); ABiter != AlnBlockVec.end(); ABiter++)
@@ -684,10 +683,9 @@ void OutputDotplot()
 			else fprintf(ChrFileHandle[ABiter->coor.ChromosomeIdx], "%d %d\n%d %d\n\n", ABiter->FragPairVec[0].qPos + 1, GenCoordinateInfo(ABiter->FragPairVec[0].rPos).gPos, last_query_end + 1, GenCoordinateInfo(last_ref_end).gPos);
 		}
 	}
-	cmd = (string)GnuPlotPath + " " + (string)gpFileName; system((char*)cmd.c_str());
 	for (i = 0; i < (int)ChrScoreVec.size(); i++) fclose(ChrFileHandle[ChrScoreVec[i].first]); fclose(outFile);
-	DataFileName = (string)OutputPrefix + "." + QueryChrVec[QueryChrIdx].name + "*";
-	cmd = "rm " + DataFileName; system(cmd.c_str());
+	cmd = (string)GnuPlotPath + " " + (string)gpFileName; system((char*)cmd.c_str());
+	cmd = "rm " + DataFileName + "*"; system(cmd.c_str());
 }
 
 void CheckOverlaps(vector<FragPair_t>& FragPairVec)
