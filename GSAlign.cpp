@@ -97,7 +97,6 @@ void *IdentifyLocalMEM(void *arg)
 {
 	FragPair_t seed;
 	vector<FragPair_t> vec;
-	map<int, int> myRepeatMap;
 	bwtSearchResult_t bwtSearchResult;
 	int i, pos, start, stop, num, len, *my_id = (int*)arg;
 
@@ -148,14 +147,11 @@ void *IdentifyLocalMEM(void *arg)
 
 int CalAlnBlockScore(vector<FragPair_t>& FragPairVec)
 {
-	int range;
-
-	if ((range = FragPairVec.rbegin()->qPos + FragPairVec.rbegin()->qLen - FragPairVec.begin()->qPos) < MinAlnLength) return 0;
+	if ((FragPairVec.rbegin()->qPos + FragPairVec.rbegin()->qLen - FragPairVec.begin()->qPos) < MinAlnLength) return 0;
 	else
 	{
 		int score = 0;
 		for (vector<FragPair_t>::iterator iter = FragPairVec.begin(); iter != FragPairVec.end(); iter++) score += iter->qLen;
-		//if (!bLowSimilarity && (int)(range * 0.25) > score) score = 0;
 		return score;
 	}
 }
@@ -179,15 +175,11 @@ bool CalGapSimilarity(int qPos1, int qPos2, int64_t rPos1, int64_t rPos2)
 		KmerVec1 = CreateKmerVecFromReadSeq(q_len, (char*)query_frag.c_str());
 		KmerVec2 = CreateKmerVecFromReadSeq(r_len, (char*)ref_frag.c_str());
 		set_intersection(KmerVec1.begin(), KmerVec1.end(), KmerVec2.begin(), KmerVec2.end(), back_inserter(vec));
-		//printf("CommonNum=%d\n", vec.size());
-		//if (qPos2 == 159053 && rPos2 == 159010)
-		//{
-		//	printf("CalGapSimilarity: Num1=%d Num2=%d, InterSet=%d\n", (int)KmerVec1.size(), (int)KmerVec2.size(), (int)vec.size());
-		//	printf("CheckSimilarity\nqry:%s\nref:%s\n\n", query_frag.c_str(), ref_frag.c_str());
-		//}
-		if ((bLowSimilarity && (int)vec.size() > (q_len + r_len)*0.05)
-			|| (int)vec.size() > (q_len + r_len)*0.25) 
-			bSimilar = true;
+
+		//if ((bLowSimilarity && (int)vec.size() > (q_len + r_len)*0.1)
+		//	|| (int)vec.size() > (q_len + r_len)*0.25) 
+		//	bSimilar = true;
+		if ((int)vec.size() > (q_len + r_len)*0.25) bSimilar = true;
 	}
 	return bSimilar;
 }
@@ -276,6 +268,31 @@ void RemoveRedundantAlnBlocksByQueryPos()
 	AlnBlockVec.swap(NewVec);
 }
 
+void RemoveRedundantAlnBlocksByQueryPos2()
+{
+	int i, j, num, overlap_size;
+
+	sort(AlnBlockVec.begin(), AlnBlockVec.end(), CompByAlnBlockQueryPos);
+	num = (int)AlnBlockVec.size();
+	for (i = 0; i < num; i++)
+	{
+		if (AlnBlockVec[i].score == 0) continue;
+
+		for (j = i + 1; j < num; j++)
+		{
+			if (AlnBlockVec[j].score == 0) continue;
+
+			overlap_size = AlnBlockVec[i].FragPairVec.rbegin()->qPos + AlnBlockVec[i].FragPairVec.rbegin()->qLen - AlnBlockVec[j].FragPairVec.begin()->qPos;
+			if (overlap_size <= 0) break;
+			else if (overlap_size >= AlnBlockVec[j].score) AlnBlockVec[j].score = 0;
+		}
+	}
+	vector<AlnBlock_t> NewVec;
+	for (vector<AlnBlock_t>::iterator ABiter = AlnBlockVec.begin(); ABiter != AlnBlockVec.end(); ABiter++) if (ABiter->score > 0) NewVec.push_back(*ABiter);
+	AlnBlockVec.swap(NewVec);
+}
+
+
 void RemoveRedundantAlnBlocksByRefPos()
 {
 	int i, j, num;
@@ -295,6 +312,30 @@ void RemoveRedundantAlnBlocksByRefPos()
 			{
 				if (AlnBlockVec[i].score > AlnBlockVec[j].score*1.5) AlnBlockVec[j].score = 0;
 			}
+		}
+	}
+	vector<AlnBlock_t> NewVec;
+	for (vector<AlnBlock_t>::iterator ABiter = AlnBlockVec.begin(); ABiter != AlnBlockVec.end(); ABiter++) if (ABiter->score > 0) NewVec.push_back(*ABiter);
+	AlnBlockVec.swap(NewVec);
+}
+
+void RemoveRedundantAlnBlocksByRefPos2()
+{
+	int i, j, num;
+	int64_t overlap_size;
+
+	sort(AlnBlockVec.begin(), AlnBlockVec.end(), CompByAlnBlockRefPos);
+
+	num = (int)AlnBlockVec.size();
+	for (i = 0; i < num; i++)
+	{
+		if (AlnBlockVec[i].score == 0) continue;
+		for (j = i + 1; j < num; j++)
+		{
+			if (AlnBlockVec[j].score == 0) continue;
+
+			overlap_size = AlnBlockVec[i].FragPairVec.rbegin()->rPos - AlnBlockVec[j].FragPairVec.begin()->rPos;
+			if (overlap_size < 0) break;
 		}
 	}
 	vector<AlnBlock_t> NewVec;
@@ -851,7 +892,8 @@ void GenomeComparison()
 		for (i = 0; i < iThreadNum; i++) pthread_join(ThreadArr[i], NULL);
 
 		AlignmentBlockClustering();
-		RemoveRedundantAlnBlocksByQueryPos(); RemoveRedundantAlnBlocksByRefPos();
+		if (bLowSimilarity) { RemoveRedundantAlnBlocksByQueryPos2(); RemoveRedundantAlnBlocksByRefPos2(); }
+		else { RemoveRedundantAlnBlocksByQueryPos(); RemoveRedundantAlnBlocksByRefPos(); }
 		for (ABiter = AlnBlockVec.begin(); ABiter != AlnBlockVec.end(); ABiter++) RemoveOverlaps(ABiter->FragPairVec);
 		for (ABiter = AlnBlockVec.begin(); ABiter != AlnBlockVec.end(); ABiter++) IdentifyNormalPairs(ABiter->FragPairVec);
 		//for (ABiter = AlnBlockVec.begin(); ABiter != AlnBlockVec.end(); ABiter++) ShowFragPairVec(ABiter->FragPairVec);

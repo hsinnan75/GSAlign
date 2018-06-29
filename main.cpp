@@ -19,7 +19,7 @@ void ShowProgramUsage(const char* program)
 	fprintf(stderr, "Options: -t     INT     number of threads [%d]\n", iThreadNum);
 	fprintf(stderr, "         -o     STR     Set the prefix of the output files [output]\n");
 	fprintf(stderr, "         -dp            Output Dot-plots\n");
-	fprintf(stderr, "         -dis           Compare low similarity genomes [False]\n");
+	fprintf(stderr, "         -low_sim       Compare low similarity genomes [False]\n");
 	fprintf(stderr, "         -fmt   INT     Set the output format 0:maf, 1:aln [%d]\n", OutputFormat);
 	fprintf(stderr, "         -idy   INT     Set the minimal sequence identity (0-100) of a local alignment [%d]\n", MinSeqIdy);
 	fprintf(stderr, "         -slen  INT     Set the minimal seed length [%d]\n", MinSeedLength);
@@ -157,7 +157,7 @@ int main(int argc, char* argv[])
 	MinSeedLength = 20;
 	MinClusterSize = 50;
 	MinAlnLength = 200;
-	MinSeqIdy = 20;
+	MinSeqIdy = 30;
 	RefSequence = RefSeqFileName = IndexFileName = QueryFileName = OutputPrefix = NULL;
 
 	if (argc == 1 || strcmp(argv[1], "-h") == 0)
@@ -197,7 +197,7 @@ int main(int argc, char* argv[])
 					exit(0);
 				}
 			}
-			else if (parameter == "-dis") bLowSimilarity = true;
+			else if (parameter == "-low_sim") bLowSimilarity = true;
 			else if (parameter == "-idy" && i + 1 < argc) MinSeqIdy = atoi(argv[++i]);
 			else if (parameter == "-alen" && i + 1 < argc) MinAlnLength = atoi(argv[++i]);
 			else if (parameter == "-clr" && i + 1 < argc) MinClusterSize = atoi(argv[++i]);
