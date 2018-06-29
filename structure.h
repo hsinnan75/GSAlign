@@ -129,8 +129,8 @@ extern vector<QueryChr_t> QueryChrVec;
 extern unsigned char nst_nt4_table[256];
 extern int64_t GenomeSize, TwoGenomeSize;
 extern vector<Chromosome_t> ChromosomeVec;
-extern bool bDebugMode, bShowSubstitution, bShowIndel, bShowPlot;
-extern int iThreadNum, iQueryChrNum, iChromsomeNum, MinSeqIdy, MinSeedLength, MinAlnLength, MinClusterSize, MaxGapSize, OutputFormat;
+extern bool bDebugMode, bLowSimilarity, bShowPlot;
+extern int iThreadNum, iQueryChrNum, iChromsomeNum, MinSeqIdy, MinSeedLength, MinAlnLength, MinClusterSize, OutputFormat;
 extern char *RefSequence, *RefSeqFileName, *IndexFileName, *QueryFileName, *OutputPrefix, *vcfFileName, *mafFileName, *alnFileName, *gpFileName, *GnuPlotPath;
 
 // bwt_index.cpp
@@ -141,8 +141,13 @@ extern bwaidx_t *bwa_idx_load(const char *hint);
 // bwt_search.cpp
 extern bwtSearchResult_t BWT_Search(string& seq, int start, int stop);
 
-// GenomeComparison.cpp
+// GSAlign.cpp
+extern void myTest();
 extern void GenomeComparison();
+
+// KmerAnalysis.cpp
+extern vector<uint32_t> CreateKmerVecFromReadSeq(int len, char* seq);
+//extern vector<FragPair_t> PartitionNormalPair(int len1, char* frag1, int len2, char* frag2);
 
 // GetData.cpp
 extern void GetQueryGenomeSeq();

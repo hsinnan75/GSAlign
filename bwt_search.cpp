@@ -1,6 +1,6 @@
 #include "structure.h"
 
-#define MaxSeedFreq 30
+#define MaxSeedFreq 100
 
 #define OCC_INTV_SHIFT 7
 #define OCC_INTERVAL   (1LL<<OCC_INTV_SHIFT)
@@ -175,6 +175,52 @@ bwtSearchResult_t BWT_Search(string& seq, int start, int stop)
 	else
 	{
 		if ((bwtSearchResult.freq = (int)ik.x[2]) <= MaxSeedFreq)
+		{
+			bwtSearchResult.LocArr = new bwtint_t[bwtSearchResult.freq];
+			for (i = 0; i < bwtSearchResult.freq; i++) bwtSearchResult.LocArr[i] = bwt_sa(ik.x[0] + i);
+		}
+		else bwtSearchResult.freq = 0;
+	}
+	return bwtSearchResult;
+}
+
+bwtSearchResult_t BWT_Search2(string& seq, int start, int stop)
+{
+	uint8_t nt;
+	int i, pos, p;
+	bwtintv_t ik, ok[4];
+	bwtint_t tk[4], tl[4];
+	bwtSearchResult_t bwtSearchResult;
+
+	p = (int)nst_nt4_table[(int)seq[start]];
+	ik.x[0] = Refbwt->L2[p] + 1;
+	ik.x[1] = Refbwt->L2[3 - p] + 1;
+	ik.x[2] = Refbwt->L2[p + 1] - Refbwt->L2[p];
+
+	bwtSearchResult.freq = 0;
+	for (pos = start + 1; pos < stop; pos++)
+	{
+		if ((nt = nst_nt4_table[(int)seq[pos]]) > 3) break;// ambiguous base
+
+		bwt_2occ4(Refbwt, ik.x[1] - 1, ik.x[1] - 1 + ik.x[2], tk, tl);
+		for (i = 0; i != 4; ++i) {
+			ok[i].x[1] = Refbwt->L2[i] + 1 + tk[i];
+			ok[i].x[2] = tl[i] - tk[i];
+		}
+		ok[3].x[0] = ik.x[0] + (ik.x[1] <= Refbwt->primary && ik.x[1] + ik.x[2] - 1 >= Refbwt->primary);
+		ok[2].x[0] = ok[3].x[0] + ok[3].x[2];
+		ok[1].x[0] = ok[2].x[0] + ok[2].x[2];
+		ok[0].x[0] = ok[1].x[0] + ok[1].x[2];
+
+		i = 3 - nt;
+		if (ok[i].x[2] == 0) break; // extension ends
+		else ik = ok[i];
+	}
+
+	if ((bwtSearchResult.len = pos - start) < MinSeedLength) bwtSearchResult.freq = 0;
+	else
+	{
+		if (bwtSearchResult.len >= 30 || (bwtSearchResult.freq = (int)ik.x[2]) <= MaxSeedFreq)
 		{
 			bwtSearchResult.LocArr = new bwtint_t[bwtSearchResult.freq];
 			for (i = 0; i < bwtSearchResult.freq; i++) bwtSearchResult.LocArr[i] = bwt_sa(ik.x[0] + i);

@@ -1,9 +1,9 @@
 #include "structure.h"
 
 const float MaxPenalty = -65536;
-const float OPEN_GAP = -1.5;
-const float EXTEND_GAP = -0.5;
-const float NEW_GAP = -2.0; //OPEN_GAP + EXTEND_GAP;
+const float OPEN_GAP = -2.0;
+const float EXTEND_GAP = -0.1;
+const float NEW_GAP = -2.1; //OPEN_GAP + EXTEND_GAP;
 
 double max(float x, float y)
 {
@@ -54,7 +54,7 @@ void nw_alignment(int m, string& s1, int n, string& s2)
 			r[i][j] = max(r[i][j - 1] + EXTEND_GAP, s[i][j - 1] + NEW_GAP);
 			t[i][j] = max(t[i - 1][j] + EXTEND_GAP, s[i - 1][j] + NEW_GAP);
 			if (s1[i - 1] == 'N' || s2[j - 1] == 'N') s[i][j] = max(s[i - 1][j - 1] + 1, r[i][j], t[i][j]);
-			else s[i][j] = max(s[i - 1][j - 1] + (nst_nt4_table[s1[i - 1]] == nst_nt4_table[s2[j - 1]] ? 1.5 : -1.5), r[i][j], t[i][j]);
+			else s[i][j] = max(s[i - 1][j - 1] + (nst_nt4_table[s1[i - 1]] == nst_nt4_table[s2[j - 1]] ? 1.0 : -1.0), r[i][j], t[i][j]);
 		}
 	}
 	// back tracking

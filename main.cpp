@@ -7,8 +7,8 @@ bwaidx_t *RefIdx;
 time_t StartProcessTime;
 vector<QueryChr_t> QueryChrVec;
 const char* VersionStr = "0.9.3";
-bool bDebugMode, bShowSubstitution, bShowIndel, bShowPlot;
-int iThreadNum = 4, iQueryChrNum, MinSeedLength, MinSeqIdy = 20, MinClusterSize, MinAlnLength, MaxGapSize, OutputFormat = 0;
+bool bDebugMode, bLowSimilarity, bShowPlot;
+int iThreadNum, iQueryChrNum, MinSeedLength, MinSeqIdy, MinClusterSize, MinAlnLength, OutputFormat = 0;
 char *RefSequence, *RefSeqFileName, *IndexFileName, *QueryFileName, *OutputPrefix, *vcfFileName, *mafFileName, *alnFileName, *gpFileName, *GnuPlotPath;
 
 void ShowProgramUsage(const char* program)
@@ -19,12 +19,12 @@ void ShowProgramUsage(const char* program)
 	fprintf(stderr, "Options: -t     INT     number of threads [%d]\n", iThreadNum);
 	fprintf(stderr, "         -o     STR     Set the prefix of the output files [output]\n");
 	fprintf(stderr, "         -dp            Output Dot-plots\n");
+	fprintf(stderr, "         -dis           Compare low similarity genomes [False]\n");
 	fprintf(stderr, "         -fmt   INT     Set the output format 0:maf, 1:aln [%d]\n", OutputFormat);
 	fprintf(stderr, "         -idy   INT     Set the minimal sequence identity (0-100) of a local alignment [%d]\n", MinSeqIdy);
 	fprintf(stderr, "         -slen  INT     Set the minimal seed length [%d]\n", MinSeedLength);
 	fprintf(stderr, "         -alen  INT     Set the minimal alignment length [%d]\n", MinAlnLength);
 	fprintf(stderr, "         -clr   INT     Set the minimal cluster size [%d]\n", MinClusterSize);
-	fprintf(stderr, "         -gap   INT     Set the maximal gaps between adjacent seeds [%d]\n", MaxGapSize);
 	fprintf(stderr, "\n");
 }
 
@@ -150,14 +150,14 @@ int main(int argc, char* argv[])
 	int i;
 	string parameter, str;
 
+	iThreadNum = 12;
+	bLowSimilarity = false;
 	bShowPlot = false;
 	bDebugMode = false;
 	MinSeedLength = 20;
 	MinClusterSize = 50;
-	bShowSubstitution = false;
-	bShowIndel = false;
-	MaxGapSize = 200;
 	MinAlnLength = 200;
+	MinSeqIdy = 20;
 	RefSequence = RefSeqFileName = IndexFileName = QueryFileName = OutputPrefix = NULL;
 
 	if (argc == 1 || strcmp(argv[1], "-h") == 0)
@@ -191,16 +191,16 @@ int main(int argc, char* argv[])
 			else if (parameter == "-slen" && i + 1 < argc)
 			{
 				MinSeedLength = atoi(argv[++i]);
-				if (MinSeedLength <= 10 || MinSeedLength >= 26)
+				if (MinSeedLength < 10 || MinSeedLength > 20)
 				{
-					fprintf(stderr, "Warning! minimal seed length is between 11~25!\n");
+					fprintf(stderr, "Warning! minimal seed length is between 10~20!\n");
 					exit(0);
 				}
 			}
+			else if (parameter == "-dis") bLowSimilarity = true;
 			else if (parameter == "-idy" && i + 1 < argc) MinSeqIdy = atoi(argv[++i]);
 			else if (parameter == "-alen" && i + 1 < argc) MinAlnLength = atoi(argv[++i]);
 			else if (parameter == "-clr" && i + 1 < argc) MinClusterSize = atoi(argv[++i]);
-			else if (parameter == "-gap" && i + 1 < argc) MaxGapSize = atoi(argv[++i]);
 			else if (parameter == "-dp") bShowPlot = true;
 			else if (parameter == "-fmt" && i + 1 < argc) OutputFormat = atoi(argv[++i]);
 			else if (parameter == "-o") OutputPrefix = argv[++i];
@@ -235,7 +235,7 @@ int main(int argc, char* argv[])
 	{
 		Refbwt = RefIdx->bwt;
 		RestoreReferenceInfo();
-
+		if (bLowSimilarity) MinSeedLength = 10;
 		if (bShowPlot) FindGnuPlotPath();
 		InitializeOutputFiles();
 		GenomeComparison();

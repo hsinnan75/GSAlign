@@ -256,10 +256,10 @@ void RestoreReferenceInfo()
 	RestoreReferenceSequences();
 	fprintf(stderr, "\t(Current memory consumption: %d MB)\n\n", CheckMemoryUsage());
 
-	if (bDebugMode)
-	{
-		printf("Reference sequences:\n");
-		for (map<int64_t, int>::iterator iter = ChrLocMap.begin(); iter != ChrLocMap.end(); iter++)
-			printf("\t%s [%lld -- %lld]\n", ChromosomeVec[iter->second].name, iter->first - ChromosomeVec[iter->second].len + 1, iter->first);
-	}
+	//if (bDebugMode)
+	//{
+	//	printf("Reference sequences:\n");
+	//	for (map<int64_t, int>::iterator iter = ChrLocMap.begin(); iter != ChrLocMap.end(); iter++)
+	//		printf("\t%s [%lld -- %lld]\n", ChromosomeVec[iter->second].name, iter->first - ChromosomeVec[iter->second].len + 1, iter->first);
+	//}
 }
