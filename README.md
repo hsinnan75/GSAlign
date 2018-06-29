@@ -20,6 +20,8 @@ to download the package of Kart.
 To compile GSAlign and the index tool, please change to GSAlign's folder and just type 'make' to compile GSAlign and bwt_index. If the compilation or the programs fail, please contact me (arith@iis.sinica.edu.tw), Thanks.
 
 # Changes
+version 0.9.4: Modified the seed clustering strategy and improved the accuracy/sensitivity on variant calling
+
 version 0.9.3: Added an option to set the minimal sequence identity
 
 version 0.9.2: Fixed a bug in removing overlaps between seed pairs, and fixed a bug in reporting alignment coordinates.

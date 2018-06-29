@@ -6,7 +6,7 @@ string cmd_line;
 bwaidx_t *RefIdx;
 time_t StartProcessTime;
 vector<QueryChr_t> QueryChrVec;
-const char* VersionStr = "0.9.3";
+const char* VersionStr = "0.9.4";
 bool bDebugMode, bLowSimilarity, bShowPlot;
 int iThreadNum, iQueryChrNum, MinSeedLength, MinSeqIdy, MinClusterSize, MinAlnLength, OutputFormat = 0;
 char *RefSequence, *RefSeqFileName, *IndexFileName, *QueryFileName, *OutputPrefix, *vcfFileName, *mafFileName, *alnFileName, *gpFileName, *GnuPlotPath;
