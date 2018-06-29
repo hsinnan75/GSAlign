@@ -6,7 +6,6 @@
 #define SeedExplorationChunk 10000
 
 int QueryChrIdx;
-vector<int> NWSizeVec;
 vector<FragPair_t> SeedVec;
 static pthread_mutex_t Lock;
 vector<AlnBlock_t> AlnBlockVec;
@@ -878,8 +877,6 @@ void GenomeComparison()
 		delete[] CoverageArr;
 	}
 	if (LocalAlignmentNum > 0 && iTotalQueryLength > 0) fprintf(stderr, "\nAlignment # = %lld, Total alignment length = %lld (avgLen=%lld), coverage = %.2f%%\n", (long long)LocalAlignmentNum, (long long)TotalAlignmentLength, (long long)(TotalAlignmentLength/ LocalAlignmentNum), 100*(1.0*iCoverage / iTotalQueryLength));
-
-	sort(NWSizeVec.begin(), NWSizeVec.end()); for (vector<int>::iterator iter = NWSizeVec.begin(); iter != NWSizeVec.end(); iter++) printf("%d\n", *iter);
 
 	delete[] ThreadArr;
 }
