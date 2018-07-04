@@ -20,6 +20,8 @@ to download the package of Kart.
 To compile GSAlign and the index tool, please change to GSAlign's folder and just type 'make' to compile GSAlign and bwt_index. If the compilation or the programs fail, please contact me (arith@iis.sinica.edu.tw), Thanks.
 
 # Changes
+version 0.9.5: Added an option to run GSAlign for duplication detection
+
 version 0.9.4: Modified the seed clustering strategy and improved the accuracy/sensitivity on variant calling
 
 version 0.9.3: Added an option to set the minimal sequence identity
@@ -86,6 +88,10 @@ All above file formats are in text mode.
 
 -o STR prefix of output files [output]
 
+-dup Duplication detection mode [false]
+
+-low_sim Compare low similarity genomes [False]
+
 -dp Output Dot-plots [false]
 
 -fmt INT Set the output format [0]: 0:maf, 1:aln
@@ -96,8 +102,6 @@ All above file formats are in text mode.
 
 -alen set the minimal alignment length [200]
 
--clr set the minimal cluster size [100]
-
--gap set the maximal gaps between adjacent seeds [200]
+-clr set the minimal cluster size [50]
 
   ```

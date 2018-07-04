@@ -1,14 +1,12 @@
 #include <cmath>
 #include "structure.h"
 
-#define WindowSize 80
 #define MaxPosDiffGap 50
 #define SeedExplorationChunk 10000
 
-int QueryChrIdx;
-vector<FragPair_t> SeedVec;
+static int QryChrLength;
 static pthread_mutex_t Lock;
-vector<AlnBlock_t> AlnBlockVec;
+static vector<FragPair_t> SeedVec;
 int64_t TotalAlignmentLength = 0, LocalAlignmentNum = 0, SNP_num = 0, IND_num = 0, SVS_num = 0;
 string LineColorArr[10] = {"red", "blue", "web-green", "dark-magenta", "orange", "yellow", "turquoise", "dark-yellow", "violet", "dark-grey"};
 
@@ -18,13 +16,13 @@ bool CompByPosDiff(const FragPair_t& p1, const FragPair_t& p2)
 	else return p1.PosDiff < p2.PosDiff;
 }
 
-bool CompByQueryPos(const FragPair_t& p1, const FragPair_t& p2)
+static bool CompByQueryPos(const FragPair_t& p1, const FragPair_t& p2)
 {
 	if (p1.qPos == p2.qPos) return p1.rPos < p2.rPos;
 	else return p1.qPos < p2.qPos;
 }
 
-bool CompByRefPos(const FragPair_t& p1, const FragPair_t& p2)
+static bool CompByRefPos(const FragPair_t& p1, const FragPair_t& p2)
 {
 	if (p1.rPos == p2.rPos) return p1.qPos < p2.qPos;
 	else return p1.rPos < p2.rPos;
@@ -56,54 +54,17 @@ int CountIdenticalPairs(string& aln1, string& aln2)
 	return n;
 }
 
-void ShowFragSeqs(FragPair_t& FragPair)
-{
-	char *frag1, *frag2;
-
-	frag1 = new char[FragPair.qLen + 1]; strncpy(frag1, QueryChrVec[QueryChrIdx].seq.c_str() + FragPair.qPos, FragPair.qLen); frag1[FragPair.qLen] = '\0';
-	frag2 = new char[FragPair.rLen + 1]; strncpy(frag2, RefSequence + FragPair.rPos, FragPair.rLen); frag2[FragPair.rLen] = '\0';
-
-	printf("q[%d-%d]=%d r[%lld-%lld]=%d\n%s\n%s\n\n", FragPair.qPos, FragPair.qPos + FragPair.qLen - 1, FragPair.qLen, FragPair.rPos, FragPair.rPos + FragPair.rLen - 1, FragPair.rLen, frag1, frag2);
-}
-
-void ShowFragPair(FragPair_t& FragPair)
-{
-	printf("q[%d-%d]=%d r[%lld-%lld]=%d PD=%lld\n", FragPair.qPos, FragPair.qPos + FragPair.qLen - 1, FragPair.qLen, FragPair.rPos, FragPair.rPos + FragPair.rLen - 1, FragPair.rLen, FragPair.PosDiff);
-}
-
-void ShowFragPairVec(vector<FragPair_t>& FragPairVec)
-{
-	printf("FragPairVec (N=%d)\n", (int)FragPairVec.size());
-	for (vector<FragPair_t>::iterator iter = FragPairVec.begin(); iter != FragPairVec.end(); iter++)
-	{
-		if(iter->bSeed)
-		{
-			printf("\t\tq[%d-%d] r[%lld-%lld] PosDiff=%lld, len=%d\n", iter->qPos, iter->qPos + iter->qLen - 1, iter->rPos, iter->rPos + iter->rLen - 1, iter->PosDiff, iter->qLen);
-			//char *frag = new char[iter->qLen + 1];
-			//strncpy(frag, QueryChrVec[QueryChrIdx].seq.c_str() + iter->qPos, iter->qLen); frag[iter->qLen] = '\0';
-			//printf("\t\t%s\n", frag);
-			//delete[] frag;
-		}
-		else
-		{
-			printf("\t\tq[%d-%d]=%d r[%lld-%lld]=%d\n", iter->qPos, iter->qPos + iter->qLen - 1, iter->qLen, iter->rPos, iter->rPos + iter->rLen - 1, iter->rLen);
-			printf("\t\t%s\n\t\t%s\n", iter->aln1.c_str(), iter->aln2.c_str());
-		}
-	}
-	printf("\n\n");
-}
-
 void *IdentifyLocalMEM(void *arg)
 {
 	FragPair_t seed;
 	vector<FragPair_t> vec;
 	bwtSearchResult_t bwtSearchResult;
-	int i, pos, start, stop, num, len, *my_id = (int*)arg;
+	int i, pos, start, stop, num, *my_id = (int*)arg;
 
-	string& seq = QueryChrVec[QueryChrIdx].seq; len = (int)seq.length(); seed.bSeed = true;
-	for (pos = (*my_id*SeedExplorationChunk); pos < len; pos += (iThreadNum * SeedExplorationChunk))
+	string& seq = QueryChrVec[QueryChrIdx].seq; seed.bSeed = true;
+	for (pos = (*my_id*SeedExplorationChunk); pos < QryChrLength; pos += (iThreadNum * SeedExplorationChunk))
 	{
-		start = pos; if ((stop = start + SeedExplorationChunk) > len) stop = len;
+		start = pos; if ((stop = start + SeedExplorationChunk) > QryChrLength) stop = QryChrLength;
 		while (start < stop)
 		{
 			if (nst_nt4_table[(int)seq[start]] > 3) start++;
@@ -127,9 +88,9 @@ void *IdentifyLocalMEM(void *arg)
 				else start++;
 			}
 		}
-		if (*my_id == 0) fprintf(stderr, "\r\t\tSeed exploration: %d / %d (%d%%)...", stop, len, (int)(100 * ((1.0*stop / len))));
+		if (*my_id == 0) fprintf(stderr, "\r\t\tSeed exploration: %d / %d (%d%%)...", stop, QryChrLength, (int)(100 * ((1.0*stop / QryChrLength))));
 	}
-	if (*my_id == 0) fprintf(stderr, "\r\t\tSeed exploration: %d / %d (100%%)...done!\n", len, len);
+	if (*my_id == 0) fprintf(stderr, "\r\t\tSeed exploration: %d / %d (100%%)...done!\n", QryChrLength, QryChrLength);
 	sort(vec.begin(), vec.end(), CompByPosDiff);
 
 	if (iThreadNum == 1) SeedVec.swap(vec);
@@ -144,10 +105,10 @@ void *IdentifyLocalMEM(void *arg)
 	return (void*)(1);
 }
 
-
 int CalAlnBlockScore(vector<FragPair_t>& FragPairVec)
 {
-	if ((FragPairVec.rbegin()->qPos + FragPairVec.rbegin()->qLen - FragPairVec.begin()->qPos) < MinAlnLength) return 0;
+	if (FragPairVec.size() == 0) return 0;
+	else if ((FragPairVec.rbegin()->qPos + FragPairVec.rbegin()->qLen - FragPairVec.begin()->qPos) < MinAlnLength) return 0;
 	else
 	{
 		int score = 0;
@@ -491,7 +452,6 @@ void CheckFragPairContinuity(vector<FragPair_t>& FragPairVec)
 	{
 		if (FragPairVec[i].qPos != qPos || FragPairVec[i].rPos != rPos)
 		{
-			printf("Stop!\n"); ShowFragSeqs(FragPairVec[i]);
 			bChecked = false;
 			break;
 		}
@@ -601,148 +561,9 @@ void *GenerateFragAlignment(void *arg)
 			}
 		}
 		if (AlnBlockVec[i].aln_len < MinAlnLength || (int)(100 * (1.0*AlnBlockVec[i].score / AlnBlockVec[i].aln_len)) < MinSeqIdy) AlnBlockVec[i].score = 0;
+		else AlnBlockVec[i].coor = GenCoordinateInfo(AlnBlockVec[i].FragPairVec[0].rPos);
 	}
 	return (void*)(1);
-}
-
-Coordinate_t GenCoordinateInfo(int64_t rPos)
-{
-	Coordinate_t coordinate;
-	map<int64_t, int>::iterator iter;
-
-	if (rPos < GenomeSize)
-	{
-		coordinate.bDir = true;
-
-		iter = ChrLocMap.lower_bound(rPos);
-		coordinate.ChromosomeIdx = iter->second;
-		coordinate.gPos = rPos + 1 - ChromosomeVec[iter->second].FowardLocation;
-	}
-	else
-	{
-		coordinate.bDir = false;
-
-		iter = ChrLocMap.lower_bound(rPos);
-		coordinate.ChromosomeIdx = iter->second;
-		coordinate.gPos = iter->first - rPos + 1;
-	}
-	return coordinate;
-}
-
-int CountBaseNum(string& frag)
-{
-	int n = (int)frag.length();
-
-	for (string::iterator iter = frag.begin(); iter != frag.end(); iter++) if (*iter == '-') n--;
-
-	return n;
-}
-
-void OutputAlignment()
-{
-	char* frag;
-	FILE *outFile;
-	int64_t RefPos;
-	int i, p, q, RefIdx, QueryPos;
-	vector<FragPair_t>::iterator FragPairIter;
-	string QueryChrName, RefChrName, aln1, aln2, frag1, frag2;
-
-	outFile = fopen(alnFileName, "a"); 
-	for (vector<AlnBlock_t>::iterator ABiter = AlnBlockVec.begin(); ABiter != AlnBlockVec.end(); ABiter++)
-	{
-		if (ABiter->score == 0) continue;
-
-		aln1.clear(); aln2.clear();
-		for (FragPairIter = ABiter->FragPairVec.begin(); FragPairIter != ABiter->FragPairVec.end(); FragPairIter++)
-		{
-			if (FragPairIter->bSeed)
-			{
-				frag = new char[FragPairIter->qLen + 1]; frag[FragPairIter->qLen] = '\0';
-				strncpy(frag, QueryChrVec[QueryChrIdx].seq.c_str() + FragPairIter->qPos, FragPairIter->qLen);
-				aln1 += frag; aln2 += frag; delete[] frag;
-			}
-			else
-			{
-				aln1 += FragPairIter->aln1;
-				aln2 += FragPairIter->aln2;
-			}
-		}
-		LocalAlignmentNum++; TotalAlignmentLength += ABiter->aln_len;
-		RefIdx = ABiter->coor.ChromosomeIdx;
-		QueryChrName = QueryChrVec[QueryChrIdx].name; RefChrName = ChromosomeVec[RefIdx].name;
-		if (QueryChrName.length() > RefChrName.length()) RefChrName += string().assign((QueryChrName.length() - RefChrName.length()), ' ');
-		else QueryChrName += string().assign((RefChrName.length() - QueryChrName.length()), ' ');
-
-		fprintf(outFile, "#Identity = %d / %d (%.2f%%) Orientation = %s\n\n", ABiter->score, ABiter->aln_len, (int)(10000 * (1.0*ABiter->score / ABiter->aln_len)) / 100.0, ABiter->coor.bDir? "Forward":"Reverse");
-		//ShowFragPairVec(ABiter->FragPairVec); printf("\n\n");
-		i = 0; QueryPos = ABiter->FragPairVec[0].qPos + 1; RefPos = ABiter->coor.gPos;
-		while (i < ABiter->aln_len)
-		{
-			frag1 = aln1.substr(i, WindowSize); frag2 = aln2.substr(i, WindowSize);
-			p = CountBaseNum(frag1); q = CountBaseNum(frag2);
-
-			fprintf(outFile, "%s\t%12d\t%s\n%s\t%12d\t%s\n\n", RefChrName.c_str(), RefPos, frag1.c_str(), QueryChrName.c_str(), QueryPos, frag2.c_str());
-			i += WindowSize; RefPos += (ABiter->coor.bDir ? p : 0 - p); QueryPos += q;
-		}
-		fprintf(outFile, "%s\n", string().assign(100, '*').c_str());
-	}
-	std::fclose(outFile);
-	//printf("Total alignment length = %lld\n", TotalAlnLen);
-}
-
-void OutputMAF()
-{
-	char* frag;
-	FILE *outFile;
-	int i, p, q, RefIdx, ns;
-	vector<FragPair_t>::iterator FragPairIter;
-	string QueryChrName, RefChrName, aln1, aln2, frag1, frag2;
-
-	outFile = fopen(mafFileName, "a");
-	for (vector<AlnBlock_t>::iterator ABiter = AlnBlockVec.begin(); ABiter != AlnBlockVec.end(); ABiter++)
-	{
-		if (ABiter->score == 0) continue;
-
-		aln1.clear(); aln2.clear();
-		for (FragPairIter = ABiter->FragPairVec.begin(); FragPairIter != ABiter->FragPairVec.end(); FragPairIter++)
-		{
-			if (FragPairIter->bSeed)
-			{
-				frag = new char[FragPairIter->qLen + 1]; frag[FragPairIter->qLen] = '\0';
-				strncpy(frag, QueryChrVec[QueryChrIdx].seq.c_str() + FragPairIter->qPos, FragPairIter->qLen);
-				aln1 += frag; aln2 += frag; delete[] frag;
-			}
-			else
-			{
-				aln1 += FragPairIter->aln1;
-				aln2 += FragPairIter->aln2;
-			}
-		}
-		LocalAlignmentNum++; TotalAlignmentLength += ABiter->aln_len;
-		RefIdx = ABiter->coor.ChromosomeIdx;
-		QueryChrName = QueryChrVec[QueryChrIdx].name; RefChrName = ChromosomeVec[RefIdx].name;
-		if (QueryChrName.length() > RefChrName.length()) RefChrName += string().assign((QueryChrName.length() - RefChrName.length()), ' ');
-		else QueryChrName += string().assign((RefChrName.length() - QueryChrName.length()), ' ');
-
-		if (ABiter->coor.bDir)
-		{
-			fprintf(outFile, "a score=%d\n", ABiter->score);
-			fprintf(outFile, "s %s %lld %lld + %d %s\n", ChromosomeVec[RefIdx].name, ABiter->coor.gPos, (long long)aln1.length(), ChromosomeVec[RefIdx].len, (char*)aln1.c_str());
-			fprintf(outFile, "s %s %lld %lld + %d %s\n\n", (char*)QueryChrName.c_str(), ABiter->FragPairVec[0].qPos + 1, (long long)aln2.length(), (int)QueryChrVec[QueryChrIdx].seq.length(), (char*)aln2.c_str());
-		}
-		else
-		{
-			//ShowFragPairVec(ABiter->FragPairVec);
-			i = (int)ABiter->FragPairVec.size() - 1;
-			int64_t rPos = ABiter->FragPairVec[i].rPos + ABiter->FragPairVec[i].rLen - 1;
-			SelfComplementarySeq((int)aln1.length(), (char*)aln1.c_str());
-			SelfComplementarySeq((int)aln2.length(), (char*)aln2.c_str());
-			fprintf(outFile, "a score=%d\n", ABiter->score);
-			fprintf(outFile, "s %s %lld %lld + %d %s\n", ChromosomeVec[RefIdx].name, GenCoordinateInfo(rPos).gPos, (long long)aln1.length(), ChromosomeVec[RefIdx].len, (char*)aln1.c_str());
-			fprintf(outFile, "s %s %lld %lld - %d %s\n\n", (char*)QueryChrName.c_str(), (int)QueryChrVec[QueryChrIdx].seq.length() - (ABiter->FragPairVec[i].qPos + ABiter->FragPairVec[i].qLen - 1), (long long)aln2.length(), (int)QueryChrVec[QueryChrIdx].seq.length(), (char*)aln2.c_str());
-		}
-	}
-	std::fclose(outFile);
 }
 
 void OutputVariantCallingFile()
@@ -886,6 +707,7 @@ void GenomeComparison()
 	for (QueryChrIdx = 0; QueryChrIdx != iQueryChrNum; QueryChrIdx++)
 	{
 		fprintf(stderr, "\tProcess query chromsomoe: %s...\n", QueryChrVec[QueryChrIdx].name.c_str());
+		QryChrLength = QueryChrVec[QueryChrIdx].seq.length();
 
 		SeedVec.clear(); AlnBlockVec.clear();
 		for (i = 0; i < iThreadNum; i++) pthread_create(&ThreadArr[i], NULL, IdentifyLocalMEM, &vec[i]);
@@ -907,7 +729,7 @@ void GenomeComparison()
 		{
 			n = (int)ABiter->FragPairVec.size() - 1;
 			memset((CoverageArr + ABiter->FragPairVec[0].qPos), true, (int)(ABiter->FragPairVec[n].qPos + ABiter->FragPairVec[n].qLen - ABiter->FragPairVec[0].qPos));
-			ABiter->coor = GenCoordinateInfo(ABiter->FragPairVec[0].rPos);
+			//ABiter->coor = GenCoordinateInfo(ABiter->FragPairVec[0].rPos);
 		}
 		if (OutputFormat == 0) fprintf(stderr, "\tOutput the MAF for query chromosome %s in the file: %s\n", QueryChrVec[QueryChrIdx].name.c_str(), mafFileName), OutputMAF();
 		if (OutputFormat == 1) fprintf(stderr, "\tOutput the alignment for query chromosome %s in the file: %s\n", QueryChrVec[QueryChrIdx].name.c_str(), alnFileName), OutputAlignment();

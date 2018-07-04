@@ -95,6 +95,12 @@ typedef struct
 
 typedef struct
 {
+	int qPos;
+	int64_t rPos;
+} SeedFragPair_t;
+
+typedef struct
+{
 	bool bSeed;
 	int qPos; // query position
 	int64_t rPos; // reference position
@@ -125,12 +131,13 @@ extern bwaidx_t *RefIdx;
 extern const char* VersionStr;
 extern time_t StartProcessTime;
 extern map<int64_t, int> ChrLocMap;
+extern vector<AlnBlock_t> AlnBlockVec;
 extern vector<QueryChr_t> QueryChrVec;
 extern unsigned char nst_nt4_table[256];
-extern int64_t GenomeSize, TwoGenomeSize;
 extern vector<Chromosome_t> ChromosomeVec;
 extern bool bDebugMode, bLowSimilarity, bShowPlot;
-extern int iThreadNum, iQueryChrNum, iChromsomeNum, MinSeqIdy, MinSeedLength, MinAlnLength, MinClusterSize, OutputFormat;
+extern int64_t GenomeSize, TwoGenomeSize, TotalAlignmentLength, LocalAlignmentNum;
+extern int QueryChrIdx, iThreadNum, iQueryChrNum, iChromsomeNum, MinSeqIdy, MinSeedLength, MinAlnLength, MinClusterSize, OutputFormat;
 extern char *RefSequence, *RefSeqFileName, *IndexFileName, *QueryFileName, *OutputPrefix, *vcfFileName, *mafFileName, *alnFileName, *gpFileName, *GnuPlotPath;
 
 // bwt_index.cpp
@@ -142,8 +149,16 @@ extern bwaidx_t *bwa_idx_load(const char *hint);
 extern bwtSearchResult_t BWT_Search(string& seq, int start, int stop);
 
 // GSAlign.cpp
-extern void myTest();
 extern void GenomeComparison();
+extern void *GenerateFragAlignment(void *arg);
+extern void RemoveOverlaps(vector<FragPair_t>& FragPairVec);
+extern void ShowFragPairVec(vector<FragPair_t>& FragPairVec);
+extern int CalAlnBlockScore(vector<FragPair_t>& FragPairVec);
+extern void IdentifyNormalPairs(vector<FragPair_t>& FragPairVec);
+extern bool CompByPosDiff(const FragPair_t& p1, const FragPair_t& p2);
+
+// dupDetection.cpp
+extern void dupDetection();
 
 // KmerAnalysis.cpp
 extern vector<uint32_t> CreateKmerVecFromReadSeq(int len, char* seq);
@@ -154,9 +169,13 @@ extern void GetQueryGenomeSeq();
 extern bool CheckBWAIndexFiles(string IndexPrefix);
 
 // tools.cpp
+extern void OutputMAF();
+extern void OutputAlignment();
 extern int CheckMemoryUsage();
 extern void ShowSeedLocationInfo(int64_t MyPos);
+extern Coordinate_t GenCoordinateInfo(int64_t rPos);
 extern void SelfComplementarySeq(int len, char* seq);
+extern void ShowFragPairVec(vector<FragPair_t>& FragPairVec);
 
 // nw_alignment.cpp
 extern void nw_alignment(int m, string& s1, int n, string& s2);
