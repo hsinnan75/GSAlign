@@ -22,7 +22,7 @@ To compile GSAlign and the index tool, please change to GSAlign's folder and jus
 # Changes
 version 0.9.5: Added an option to run GSAlign for duplication detection
 
-version 0.9.4: Modified the seed clustering strategy and improved the accuracy/sensitivity on variant calling
+version 0.9.4: Modified the seed clustering implementation and improved the accuracy/sensitivity on variant calling
 
 version 0.9.3: Added an option to set the minimal sequence identity
 
