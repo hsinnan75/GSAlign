@@ -6,12 +6,12 @@
 #include <sstream>
 #include <map>
 #include <cstdio>
+#include <ctype.h>
 #include <cmath>
 #include <vector>
 #include <iterator>
 #include <algorithm>
 #include <ctime>
-#include <ctype.h>
 #include <pthread.h>
 #include <sys/time.h>
 
