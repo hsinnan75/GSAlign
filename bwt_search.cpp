@@ -33,7 +33,7 @@ unsigned char nst_nt4_table[256] = {
 #define bwt_bwt(b, k) ((b)->bwt[((k)>>7<<4) + sizeof(bwtint_t) + (((k)&0x7f)>>4)])
 #define bwt_B0(b, k) (bwt_bwt(b, k)>>((~(k)&0xf)<<1)&3)
 
-static inline int __occ_aux(uint64_t y, int c)
+static inline int __occ_aux(bwtint_t y, int c)
 {
 	// reduce nucleotide counting to bits counting
 	y = ((c&2)? y : ~y) >> 1 & ((c&1)? y : ~y) & 0x5555555555555555ull;
@@ -57,10 +57,10 @@ bwtint_t bwt_occ(const bwt_t *bwt, bwtint_t k, ubyte_t c)
 
 	// calculate Occ up to the last k/32
 	end = p + (((k>>5) - ((k&~OCC_INTV_MASK)>>5))<<1);
-	for (; p < end; p += 2) n += __occ_aux((uint64_t)p[0]<<32 | p[1], c);
+	for (; p < end; p += 2) n += __occ_aux((bwtint_t)p[0]<<32 | p[1], c);
 
 	// calculate Occ
-	n += __occ_aux(((uint64_t)p[0]<<32 | p[1]) & ~((1ull<<((~k&31)<<1)) - 1), c);
+	n += __occ_aux(((bwtint_t)p[0]<<32 | p[1]) & ~((1ull<<((~k&31)<<1)) - 1), c);
 	if (c == 0) n -= ~k&31; // corrected for the masked bits
 
 	return n;
