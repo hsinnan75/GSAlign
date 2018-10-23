@@ -167,7 +167,8 @@ bwtSearchResult_t BWT_Search(string& seq, int start, int stop)
 		ok[0].x[0] = ok[1].x[0] + ok[1].x[2];
 
 		i = 3 - nt;
-		if (ok[i].x[2] == 0) break; // extension ends
+		if (pos - start == MaxSeedLength) break;
+		else if (ok[i].x[2] == 0) break; // extension ends
 		else ik = ok[i];
 	}
 

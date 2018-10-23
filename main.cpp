@@ -9,7 +9,7 @@ vector<AlnBlock_t> AlnBlockVec;
 vector<QueryChr_t> QueryChrVec;
 const char* VersionStr = "0.9.5";
 bool bDebugMode, bDUPmode, bLowSimilarity, bShowPlot;
-int QueryChrIdx, iThreadNum, iQueryChrNum, MinSeedLength, MinSeqIdy, MinClusterSize, MinAlnLength, OutputFormat = 0;
+int QueryChrIdx, iThreadNum, iQueryChrNum, MinSeedLength, MaxSeedLength, MinSeqIdy, MinClusterSize, MinAlnLength, OutputFormat = 0;
 char *RefSequence, *RefSeqFileName, *IndexFileName, *QueryFileName, *OutputPrefix, *vcfFileName, *mafFileName, *alnFileName, *gpFileName, *GnuPlotPath;
 
 void ShowProgramUsage(const char* program)
@@ -25,6 +25,7 @@ void ShowProgramUsage(const char* program)
 	fprintf(stderr, "         -fmt   INT     Set the output format 0:maf, 1:aln [%d]\n", OutputFormat);
 	fprintf(stderr, "         -idy   INT     Set the minimal sequence identity (0-100) of a local alignment [%d]\n", MinSeqIdy);
 	fprintf(stderr, "         -slen  INT     Set the minimal seed length [%d]\n", MinSeedLength);
+	fprintf(stderr, "         -mlen  INT     Set the maximal seed length [%d]\n", MaxSeedLength);
 	fprintf(stderr, "         -alen  INT     Set the minimal alignment length [%d]\n", MinAlnLength);
 	fprintf(stderr, "         -clr   INT     Set the minimal cluster size [%d]\n", MinClusterSize);
 	fprintf(stderr, "\n");
@@ -37,8 +38,8 @@ string TrimChromosomeName(string name)
 
 	for (i = 0; i < len; i++)
 	{
-		if (isalnum(name[i]) == 0) break;
-		//if (name[i] == ' ' || name[i] == '|' || name[i] == ':' || name[i] == '=' || name[i] == '\t') break;
+		//if (isalnum(name[i]) == 0) break;
+		if (name[i] == ' ' || name[i] == '|' || name[i] == '#' || name[i] == ':' || name[i] == '=' || name[i] == '\t') break;
 	}
 	return name.substr(0, i);
 }
@@ -158,6 +159,7 @@ int main(int argc, char* argv[])
 	bShowPlot = false;
 	bDebugMode = false;
 	MinSeedLength = 20;
+	MaxSeedLength = 100000000;
 	MinClusterSize = 50;
 	MinAlnLength = 200;
 	MinSeqIdy = 30;
@@ -201,6 +203,7 @@ int main(int argc, char* argv[])
 					exit(0);
 				}
 			}
+			else if (parameter == "-mlen" && i + 1 < argc) MaxSeedLength = atoi(argv[++i]);
 			else if (parameter == "-low_sim") bLowSimilarity = true;
 			else if (parameter == "-idy" && i + 1 < argc) MinSeqIdy = atoi(argv[++i]);
 			else if (parameter == "-alen" && i + 1 < argc) MinAlnLength = atoi(argv[++i]);
@@ -237,6 +240,8 @@ int main(int argc, char* argv[])
 	if (RefIdx == 0) fprintf(stderr, "\n\nError! Please check your input!\n");
 	else
 	{
+		if (MaxSeedLength < MinSeedLength) MaxSeedLength = MinSeedLength;
+
 		Refbwt = RefIdx->bwt;
 		RestoreReferenceInfo();
 		if (bLowSimilarity) MinSeedLength = 10;
