@@ -681,8 +681,8 @@ void OutputDotplot()
 		}
 	}
 	for (i = 0; i < (int)ChrScoreVec.size(); i++) fclose(ChrFileHandle[ChrScoreVec[i].first]); fclose(outFile);
-	cmd = (string)GnuPlotPath + " " + (string)gpFileName; system((char*)cmd.c_str());
-	cmd = "rm " + DataFileName + "*"; system(cmd.c_str());
+	cmd = (string)GnuPlotPath + " " + (string)gpFileName; i = system((char*)cmd.c_str());
+	cmd = "rm " + DataFileName + "*"; i = system(cmd.c_str());
 }
 
 void GenomeComparison()

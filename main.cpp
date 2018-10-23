@@ -7,7 +7,7 @@ bwaidx_t *RefIdx;
 time_t StartProcessTime;
 vector<AlnBlock_t> AlnBlockVec;
 vector<QueryChr_t> QueryChrVec;
-const char* VersionStr = "0.9.5";
+const char* VersionStr = "0.9.6";
 bool bDebugMode, bDUPmode, bLowSimilarity, bShowPlot;
 int QueryChrIdx, iThreadNum, iQueryChrNum, MinSeedLength, MaxSeedLength, MinSeqIdy, MinClusterSize, MinAlnLength, OutputFormat = 0;
 char *RefSequence, *RefSeqFileName, *IndexFileName, *QueryFileName, *OutputPrefix, *vcfFileName, *mafFileName, *alnFileName, *gpFileName, *GnuPlotPath;
@@ -136,7 +136,7 @@ void FindGnuPlotPath()
 	stringstream ss;
 	string fullpath, cmd, str, tmp;
 
-	cmd = "/usr/bin/whereis gnuplot > GnuPlotPath"; system(cmd.c_str());
+	cmd = "/usr/bin/whereis gnuplot > GnuPlotPath"; int i = system(cmd.c_str());
 	file.open("GnuPlotPath"); getline(file, str); file.close();
 	ss.clear(); ss.str(str);
 
@@ -172,7 +172,7 @@ int main(int argc, char* argv[])
 	}
 	else if (strcmp(argv[1], "update") == 0)
 	{
-		system("git fetch; git merge origin/master master;make");
+		i = system("git fetch; git merge origin/master master;make");
 		exit(0);
 	}
 	else
@@ -233,7 +233,7 @@ int main(int argc, char* argv[])
 	{
 		string cmd(argv[0]), prefix(RefSeqFileName); prefix.resize(prefix.find_first_of('.'));
 		cmd = cmd.substr(0, cmd.find_last_of('/') + 1) + "bwt_index " + RefSeqFileName + " " + prefix ;
-		system((char*)cmd.c_str()); RefIdx = bwa_idx_load(prefix.c_str());
+		i = system((char*)cmd.c_str()); RefIdx = bwa_idx_load(prefix.c_str());
 	}
 	else fprintf(stderr, "Please specify a reference genome\n"), exit(0);
 
