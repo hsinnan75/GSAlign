@@ -7,6 +7,7 @@
 #include <map>
 #include <cstdio>
 #include <ctype.h>
+#include <stdint.h>
 #include <cmath>
 #include <vector>
 #include <iterator>
@@ -18,9 +19,6 @@
 using namespace std;
 
 typedef unsigned char ubyte_t;
-typedef unsigned char uint8_t;
-typedef unsigned int uint32_t;
-typedef unsigned short uint16_t;
 typedef unsigned long long bwtint_t;
 
 typedef struct {
