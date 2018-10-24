@@ -152,7 +152,7 @@ void AlignmentBlockClustering()
 	vector<pair<int, int> > GroupVec;
 	int headIdx, i, j, ci, num, qTailPos;
 
-	num = (int)SeedVec.size(); 
+	if ((num = (int)SeedVec.size()) == 0) return;
 	
 	for (headIdx = i = 0, j = 1; j < num; i++, j++)
 	{
@@ -714,6 +714,7 @@ void GenomeComparison()
 		for (i = 0; i < iThreadNum; i++) pthread_join(ThreadArr[i], NULL);
 
 		AlignmentBlockClustering();
+		if ((int)AlnBlockVec.size() == 0) continue;
 		if (bLowSimilarity) { RemoveRedundantAlnBlocksByQueryPos2(); RemoveRedundantAlnBlocksByRefPos2(); }
 		else { RemoveRedundantAlnBlocksByQueryPos(); RemoveRedundantAlnBlocksByRefPos(); }
 		for (ABiter = AlnBlockVec.begin(); ABiter != AlnBlockVec.end(); ABiter++) RemoveOverlaps(ABiter->FragPairVec);
