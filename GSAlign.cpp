@@ -714,7 +714,11 @@ void GenomeComparison()
 		for (i = 0; i < iThreadNum; i++) pthread_join(ThreadArr[i], NULL);
 
 		AlignmentBlockClustering();
-		if ((int)AlnBlockVec.size() == 0) continue;
+		if ((int)AlnBlockVec.size() == 0)
+		{
+			fprintf(stderr, "\tGSAlign did not find any similarity between the reference and query (%s).\n", QueryChrVec[QueryChrIdx].name.c_str());
+			continue;
+		}
 		if (bLowSimilarity) { RemoveRedundantAlnBlocksByQueryPos2(); RemoveRedundantAlnBlocksByRefPos2(); }
 		else { RemoveRedundantAlnBlocksByQueryPos(); RemoveRedundantAlnBlocksByRefPos(); }
 		for (ABiter = AlnBlockVec.begin(); ABiter != AlnBlockVec.end(); ABiter++) RemoveOverlaps(ABiter->FragPairVec);

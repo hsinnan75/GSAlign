@@ -20,6 +20,8 @@ to download the package of Kart.
 To compile GSAlign and the index tool, please change to GSAlign's folder and just type 'make' to compile GSAlign and bwt_index. If the compilation or the programs fail, please contact me (arith@iis.sinica.edu.tw), Thanks.
 
 # Changes
+version 0.9.7: Fixed a bug when there is no similarity between the input sequences
+
 version 0.9.6: Added an option (mlen) to set the maximal seed length
 
 version 0.9.5: Added an option to run GSAlign for duplication detection
