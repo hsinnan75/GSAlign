@@ -137,6 +137,8 @@ extern int64_t GenomeSize, TwoGenomeSize, TotalAlignmentLength, LocalAlignmentNu
 extern int QueryChrIdx, iThreadNum, iQueryChrNum, iChromsomeNum, MinSeqIdy, MinSeedLength, MaxSeedLength, MinAlnLength, MinClusterSize, OutputFormat;
 extern char *RefSequence, *RefSeqFileName, *IndexFileName, *QueryFileName, *OutputPrefix, *vcfFileName, *mafFileName, *alnFileName, *gpFileName, *GnuPlotPath;
 
+extern string TrimChromosomeName(string name);
+
 // bwt_index.cpp
 extern void RestoreReferenceInfo();
 extern void bwa_idx_destroy(bwaidx_t *idx);
