@@ -657,14 +657,23 @@ void OutputDotplot()
 
 	vec.clear(); vec.resize(iChromsomeNum);
 	outFile = fopen(gpFileName, "w"); DataFileName = (string)OutputPrefix + "." + QueryChrVec[QueryChrIdx].name;
-	for (ABiter = AlnBlockVec.begin(); ABiter != AlnBlockVec.end(); ABiter++) if (ABiter->score > 0) vec[ABiter->coor.ChromosomeIdx] += ABiter->score;
-	for (i = 0; i < iChromsomeNum; i++) if (vec[i] >= 1000) ChrScoreVec.push_back(make_pair(i, vec[i]));
+	for (ABiter = AlnBlockVec.begin(); ABiter != AlnBlockVec.end(); ABiter++)
+	{
+		if (ABiter->score > 0) vec[ABiter->coor.ChromosomeIdx] += ABiter->score;
+	}
+	for (i = 0; i < iChromsomeNum; i++)
+	{
+		if (vec[i] >= 1000) ChrScoreVec.push_back(make_pair(i, vec[i]));
+	}
 	if (ChrScoreVec.size() == 0) return;
 	sort(ChrScoreVec.begin(), ChrScoreVec.end(), CompByChrScore);
-	if (ChrScoreVec.size() > 5) ChrScoreVec.resize(5); thr = ChrScoreVec.rbegin()->second;
+	if (ChrScoreVec.size() > 5) ChrScoreVec.resize(5);
+	thr = ChrScoreVec.rbegin()->second; if (thr < ChrScoreVec.begin()->second / 10) thr = ChrScoreVec.begin()->second / 10;
+
 	for (i = 0; i < (int)ChrScoreVec.size(); i++)
 	{
 		ChrColorMap[ChrScoreVec[i].first] = i + 1;
+		//printf("first=%d, name=%s\n", ChrScoreVec[i].first, ChromosomeVec[ChrScoreVec[i].first].name); fflush(stdout);
 		sprintf(tmpFileName, "%svs%s", DataFileName.c_str(), ChromosomeVec[ChrScoreVec[i].first].name);
 		ChrFileHandle[ChrScoreVec[i].first] = fopen(tmpFileName, "w");
 		fprintf(ChrFileHandle[ChrScoreVec[i].first], "0 0\n0 0\n\n");
@@ -680,7 +689,7 @@ void OutputDotplot()
 	}
 	for (ABiter = AlnBlockVec.begin(); ABiter != AlnBlockVec.end(); ABiter++)
 	{
-		if (ABiter->score > 0 && ABiter->coor.ChromosomeIdx >= 0 && vec[ABiter->coor.ChromosomeIdx] >= thr)
+		if (ABiter->score > 0 && ChrFileHandle.find(ABiter->coor.ChromosomeIdx) != ChrFileHandle.end())
 		{
 			//FragNum = (int)ABiter->FragPairVec.size() - 1;
 			last_query_end = ABiter->FragPairVec.rbegin()->qPos + ABiter->FragPairVec.rbegin()->qLen - 1;
