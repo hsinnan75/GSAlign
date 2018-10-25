@@ -658,7 +658,7 @@ void OutputDotplot()
 	vec.clear(); vec.resize(iChromsomeNum);
 	outFile = fopen(gpFileName, "w"); DataFileName = (string)OutputPrefix + "." + QueryChrVec[QueryChrIdx].name;
 	for (ABiter = AlnBlockVec.begin(); ABiter != AlnBlockVec.end(); ABiter++) if (ABiter->score > 0) vec[ABiter->coor.ChromosomeIdx] += ABiter->score;
-	for (i = 0; i < iChromsomeNum; i++) if (vec[i] > 1000) ChrScoreVec.push_back(make_pair(i, vec[i]));
+	for (i = 0; i < iChromsomeNum; i++) if (vec[i] >= 1000) ChrScoreVec.push_back(make_pair(i, vec[i]));
 	if (ChrScoreVec.size() == 0) return;
 	sort(ChrScoreVec.begin(), ChrScoreVec.end(), CompByChrScore);
 	if (ChrScoreVec.size() > 5) ChrScoreVec.resize(5); thr = ChrScoreVec.rbegin()->second;
@@ -666,6 +666,7 @@ void OutputDotplot()
 	{
 		ChrColorMap[ChrScoreVec[i].first] = i + 1;
 		sprintf(tmpFileName, "%svs%s", DataFileName.c_str(), ChromosomeVec[ChrScoreVec[i].first].name);
+		ChrFileHandle[ChrScoreVec[i].first] = fopen(tmpFileName, "w");
 		fprintf(ChrFileHandle[ChrScoreVec[i].first], "0 0\n0 0\n\n");
 	}
 	fprintf(outFile, "set terminal postscript color solid 'Courier' 15\nset output '%s-%s.ps'\nset grid\nset border 1\n", OutputPrefix, QueryChrVec[QueryChrIdx].name.c_str());
