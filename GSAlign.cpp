@@ -652,10 +652,15 @@ void OutputDotplot()
 	vector<pair<int, int64_t> > ChrScoreVec;
 	int i, j, last_query_end, FragNum, num, ChrIdx, thr;
 
+	if (AlnBlockVec.size() == 0) return;
+
 	vec.resize(iChromsomeNum);
 	outFile = fopen(gpFileName, "w"); DataFileName = (string)OutputPrefix + "." + QueryChrVec[QueryChrIdx].name;
 
-	for (ABiter = AlnBlockVec.begin(); ABiter != AlnBlockVec.end(); ABiter++) if (ABiter->score > 0) vec[ABiter->coor.ChromosomeIdx] += ABiter->score;
+	for (ABiter = AlnBlockVec.begin(); ABiter != AlnBlockVec.end(); ABiter++)
+	{
+		if (ABiter->score > 0) vec[ABiter->coor.ChromosomeIdx] += ABiter->score;
+	}
 	for (i = 0; i < iChromsomeNum; i++) if (vec[i] >= 20000) ChrScoreVec.push_back(make_pair(i, vec[i])); sort(ChrScoreVec.begin(), ChrScoreVec.end(), CompByChrScore);
 	if (ChrScoreVec.size() > 10) ChrScoreVec.resize(10); thr = ChrScoreVec.rbegin()->second;
 	
@@ -733,8 +738,8 @@ void GenomeComparison()
 		CoverageArr = new bool[QueryChrVec[QueryChrIdx].seq.length()]();
 		for (ABiter = AlnBlockVec.begin(); ABiter != AlnBlockVec.end(); ABiter++)
 		{
-			n = (int)ABiter->FragPairVec.size() - 1;
-			memset((CoverageArr + ABiter->FragPairVec[0].qPos), true, (int)(ABiter->FragPairVec[n].qPos + ABiter->FragPairVec[n].qLen - ABiter->FragPairVec[0].qPos));
+			if (ABiter->score == 0) continue;
+			memset((CoverageArr + ABiter->FragPairVec.begin()->qPos), true, (int)(ABiter->FragPairVec.rbegin()->qPos + ABiter->FragPairVec.rbegin()->qLen - ABiter->FragPairVec.begin()->qPos));
 			//ABiter->coor = GenCoordinateInfo(ABiter->FragPairVec[0].rPos);
 		}
 		if (OutputFormat == 0) fprintf(stderr, "\tOutput the MAF for query chromosome %s in the file: %s\n", QueryChrVec[QueryChrIdx].name.c_str(), mafFileName), OutputMAF();
