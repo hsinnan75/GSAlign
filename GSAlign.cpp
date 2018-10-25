@@ -342,8 +342,9 @@ void RemoveOverlaps(vector<FragPair_t>& FragPairVec)
 {
 	bool bNullPair;
 	bool bOverlap = false;
-	int i, j, q_overlap_size, r_overlap_size, num = (int)FragPairVec.size();
+	int i, j, q_overlap_size, r_overlap_size, num;
 
+	if ((num = (int)FragPairVec.size()) == 1) return;
 	for (i = 0; i < num; i++)
 	{
 		if (FragPairVec[i].qLen == 0) continue;
