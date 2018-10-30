@@ -49,7 +49,7 @@ int CountIdenticalPairs(string& aln1, string& aln2)
 
 	for (n = len, i = 0; i < len; i++)
 	{
-		if (nst_nt4_table[aln1[i]] != nst_nt4_table[aln2[i]]) n--;
+		if (nst_nt4_table[aln2[i]] != 4 && nst_nt4_table[aln1[i]] != nst_nt4_table[aln2[i]]) n--;
 	}
 	return n;
 }
@@ -472,7 +472,7 @@ int CheckFragPairMismatch(FragPair_t* FragPair)
 
 	for (i = 0; i < FragPair->qLen; i++)
 	{
-		if (QuerySeq[i] != TemplateSeq[i] && QuerySeq[i] != 'N' && TemplateSeq[i] != 'N') mismatch++;
+		if (QuerySeq[i] != TemplateSeq[i] && QuerySeq[i] != 'N') mismatch++;
 	}
 	return mismatch;
 }
