@@ -22,11 +22,11 @@ static bool CompByQueryPos(const FragPair_t& p1, const FragPair_t& p2)
 	else return p1.qPos < p2.qPos;
 }
 
-static bool CompByRefPos(const FragPair_t& p1, const FragPair_t& p2)
-{
-	if (p1.rPos == p2.rPos) return p1.qPos < p2.qPos;
-	else return p1.rPos < p2.rPos;
-}
+//static bool CompByRefPos(const FragPair_t& p1, const FragPair_t& p2)
+//{
+//	if (p1.rPos == p2.rPos) return p1.qPos < p2.qPos;
+//	else return p1.rPos < p2.rPos;
+//}
 
 bool CompByAlnBlockQueryPos(const AlnBlock_t& p1, const AlnBlock_t& p2)
 {
@@ -49,7 +49,7 @@ int CountIdenticalPairs(string& aln1, string& aln2)
 
 	for (n = len, i = 0; i < len; i++)
 	{
-		if (nst_nt4_table[aln2[i]] != 4 && nst_nt4_table[aln1[i]] != nst_nt4_table[aln2[i]]) n--;
+		if (nst_nt4_table[(int)aln2[i]] != 4 && nst_nt4_table[(int)aln1[i]] != nst_nt4_table[(int)aln2[i]]) n--;
 	}
 	return n;
 }
@@ -119,8 +119,8 @@ int CalAlnBlockScore(vector<FragPair_t>& FragPairVec)
 
 bool CalGapSimilarity(int qPos1, int qPos2, int64_t rPos1, int64_t rPos2)
 {
+	int q_len, r_len;
 	bool bSimilar = false;
-	int q_len, r_len, n = 0;
 	string query_frag, ref_frag;
 	vector<unsigned int> KmerVec1, KmerVec2, vec;
 
@@ -257,7 +257,7 @@ void RemoveRedundantAlnBlocksByQueryPos2()
 void RemoveRedundantAlnBlocksByRefPos()
 {
 	int i, j, num;
-	int64_t HeadPos, TailPos, overlap_size;
+	int64_t HeadPos, TailPos;
 
 	num = (int)AlnBlockVec.size();  sort(AlnBlockVec.begin(), AlnBlockVec.end(), CompByAlnBlockRefPos);
 	for (i = 0; i < num; i++)
@@ -306,10 +306,10 @@ void RemoveRedundantAlnBlocksByRefPos2()
 
 void CheckOverlaps(vector<FragPair_t>& FragPairVec)
 {
-	bool bOverlap = false;
+	int i, qPos;
 	int64_t rPos;
-	int i, qPos, len;
 	map<int, bool> qMap;
+	bool bOverlap = false;
 	map<int64_t, bool> rMap;
 
 	for (vector<FragPair_t>::iterator iter = FragPairVec.begin(); iter != FragPairVec.end(); iter++)
@@ -551,7 +551,7 @@ void *GenerateFragAlignment(void *arg)
 					else if (FragPair->aln2[k] == '-') qGaps++;
 					else break;
 				}
-				if (++k < FragPair->aln1.length())
+				if (++k < (int)FragPair->aln1.length())
 				{
 					FragPair->aln1.resize(k);
 					FragPair->aln2.resize(k);
@@ -571,8 +571,8 @@ void OutputVariantCallingFile()
 {
 	int64_t rPos;
 	FILE *outFile;
+	int i, qPos, aln_len, ind_len;
 	string RefChrName, frag1, frag2;
-	int i, j, qPos, aln_len, ind_len;
 	vector<FragPair_t>::iterator FragPairIter;
 
 	outFile = fopen(vcfFileName, "a");
@@ -599,7 +599,7 @@ void OutputVariantCallingFile()
 				}
 				else if (FragPairIter->qLen == 1 && FragPairIter->rLen == 1) // substitution
 				{
-					if (nst_nt4_table[FragPairIter->aln1[0]] != nst_nt4_table[FragPairIter->aln2[0]] && nst_nt4_table[FragPairIter->aln1[0]] != 4 && nst_nt4_table[FragPairIter->aln2[0]] != 4)
+					if (nst_nt4_table[(int)FragPairIter->aln1[0]] != nst_nt4_table[(int)FragPairIter->aln2[0]] && nst_nt4_table[(int)FragPairIter->aln1[0]] != 4 && nst_nt4_table[(int)FragPairIter->aln2[0]] != 4)
 						fprintf(outFile, "%s\t%d\t.\t%c\t%c\t100\tPASS\tmt=SUBSTITUTE\n", RefChrName.c_str(), GenCoordinateInfo(FragPairIter->rPos).gPos, FragPairIter->aln1[0], FragPairIter->aln2[0]);
 				}
 				else
@@ -626,9 +626,9 @@ void OutputVariantCallingFile()
 							fprintf(outFile, "%s\t%d\t.\t%s\t%c\t100\tPASS\tmt=DELETE\n", RefChrName.c_str(), GenCoordinateInfo(rPos - 1).gPos, (char*)frag1.c_str(), frag1[0]);
 							rPos += ind_len; i += ind_len - 1;
 						}
-						else if (nst_nt4_table[FragPairIter->aln1[i]] != nst_nt4_table[FragPairIter->aln2[i]])// substitute
+						else if (nst_nt4_table[(int)FragPairIter->aln1[i]] != nst_nt4_table[(int)FragPairIter->aln2[i]])// substitute
 						{
-							if (nst_nt4_table[FragPairIter->aln1[i]] != 4 && nst_nt4_table[FragPairIter->aln2[i]] != 4)
+							if (nst_nt4_table[(int)FragPairIter->aln1[i]] != 4 && nst_nt4_table[(int)FragPairIter->aln2[i]] != 4)
 								fprintf(outFile, "%s\t%d\t.\t%c\t%c\t100\tPASS\tmt=SUBSTITUTE\n", RefChrName.c_str(), GenCoordinateInfo(rPos).gPos, FragPairIter->aln1[i], FragPairIter->aln2[i]);
 							rPos++; qPos++;
 						}
@@ -648,10 +648,10 @@ void OutputDotplot()
 	char tmpFileName[256];
 	string cmd, DataFileName;
 	map<int, int> ChrColorMap;
+	int i, last_query_end, thr;
 	map<int, FILE*> ChrFileHandle;
 	vector<AlnBlock_t>::iterator ABiter;
 	vector<pair<int, int64_t> > ChrScoreVec;
-	int i, j, last_query_end, FragNum, num, ChrIdx, thr;
 
 	if (AlnBlockVec.size() == 0) return;
 
@@ -709,7 +709,7 @@ void GenomeComparison()
 	bool* CoverageArr;
 	vector<AlnBlock_t>::iterator ABiter;
 	pthread_t *ThreadArr = new pthread_t[iThreadNum];
-	int64_t obs_pos, iTotalQueryLength = 0, iCoverage = 0;
+	int64_t iTotalQueryLength = 0, iCoverage = 0;
 	
 	vector<int> vec(iThreadNum); for (i = 0; i < iThreadNum; i++) vec[i] = i;
 

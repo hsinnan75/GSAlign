@@ -72,7 +72,7 @@ void *IdentifyRepetitiveMEM(void *arg)
 
 void Identify_VarDup_Seeds()
 {
-	int i, j, num, m, n;
+	int i, j, num, m;
 	FragPair_t FragPair;
 	vector<SeedFragPair_t>::iterator iter;
 
@@ -105,7 +105,7 @@ void ExtendLeftEnd(FragPair_t& FragPair)
 	int64_t rPos = FragPair.rPos;
 	string& seq = QueryChrVec[QueryChrIdx].seq;
 
-	while (qPos > 0 && rPos > 0 && nst_nt4_table[seq[qPos - 1]] == nst_nt4_table[RefSequence[rPos - 1]])
+	while (qPos > 0 && rPos > 0 && nst_nt4_table[(int)seq[qPos - 1]] == nst_nt4_table[(int)RefSequence[rPos - 1]])
 	{
 		qPos--; rPos--;
 	}
@@ -119,7 +119,7 @@ void ExtendRightEnd(FragPair_t& FragPair)
 	string& seq = QueryChrVec[QueryChrIdx].seq;
 
 	qStop = QryChrLength - 1; rStop = ChrLocMap.lower_bound(rPos)->first - 1;
-	while (qPos < QryChrLength && rPos < rStop && nst_nt4_table[seq[qPos + 1]] == nst_nt4_table[RefSequence[rPos + 1]])
+	while (qPos < QryChrLength && rPos < rStop && nst_nt4_table[(int)seq[qPos + 1]] == nst_nt4_table[(int)RefSequence[rPos + 1]])
 	{
 		qPos++; rPos++;
 	}
@@ -128,8 +128,8 @@ void ExtendRightEnd(FragPair_t& FragPair)
 
 void Cluster_VarDup_Seeds()
 {
+	int i, j, num;
 	AlnBlock_t AlnBlock;
-	int i, j, num, headIdx;
 
 	num = (int)VarDupSeedVec.size();
 	for (i = 0, j = 1; j < num; i++, j++)
@@ -154,7 +154,6 @@ void dupDetection()
 	int i;
 	vector<AlnBlock_t>::iterator ABiter;
 	pthread_t *ThreadArr = new pthread_t[iThreadNum];
-	int64_t obs_pos, iTotalQueryLength = 0, iCoverage = 0;
 
 	vector<int> vec(iThreadNum); for (i = 0; i < iThreadNum; i++) vec[i] = i;
 

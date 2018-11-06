@@ -129,7 +129,7 @@ void OutputMAF()
 {
 	char* frag;
 	FILE *outFile;
-	int i, p, q, RefIdx, ns;
+	int i, RefIdx;
 	vector<FragPair_t>::iterator FragPairIter;
 	string QueryChrName, RefChrName, aln1, aln2, frag1, frag2;
 
