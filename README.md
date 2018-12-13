@@ -96,7 +96,7 @@ All above file formats are in text mode.
 
 -dup Duplication detection mode [false]
 
--low_sim Compare low similarity genomes [False]
+-low_sim Sensitive mode or compare low similarity genomes [False]
 
 -dp Output Dot-plots [false]
 
