@@ -8,7 +8,7 @@ time_t StartProcessTime;
 vector<AlnBlock_t> AlnBlockVec;
 vector<QueryChr_t> QueryChrVec;
 const char* VersionStr = "0.9.8";
-bool bDebugMode, bDUPmode, bLowSimilarity, bShowPlot;
+bool bDebugMode, bDUPmode, bSensitive, bShowPlot;
 int QueryChrIdx, iThreadNum, iQueryChrNum, MinSeedLength, MaxSeedLength, MinSeqIdy, MinClusterSize, MinAlnLength, OutputFormat = 0;
 char *RefSequence, *RefSeqFileName, *IndexFileName, *QueryFileName, *OutputPrefix, *vcfFileName, *mafFileName, *alnFileName, *gpFileName, *GnuPlotPath;
 
@@ -21,7 +21,7 @@ void ShowProgramUsage(const char* program)
 	fprintf(stderr, "         -dup           Duplication detection mode [false]\n");
 	fprintf(stderr, "         -o     STR     Set the prefix of the output files [output]\n");
 	fprintf(stderr, "         -dp            Output Dot-plots\n");
-	fprintf(stderr, "         -low_sim       Compare low similarity genomes [False]\n");
+	fprintf(stderr, "         -sensitive     Sensitive mode [False]\n");
 	fprintf(stderr, "         -fmt   INT     Set the output format 0:maf, 1:aln [%d]\n", OutputFormat);
 	fprintf(stderr, "         -idy   INT     Set the minimal sequence identity (0-100) of a local alignment [%d]\n", MinSeqIdy);
 	fprintf(stderr, "         -slen  INT     Set the minimal seed length [%d]\n", MinSeedLength);
@@ -155,7 +155,7 @@ int main(int argc, char* argv[])
 	string parameter, str;
 
 	iThreadNum = 12;
-	bLowSimilarity = false;
+	bSensitive = false;
 	bShowPlot = false;
 	bDebugMode = false;
 	MinSeedLength = 20;
@@ -204,7 +204,7 @@ int main(int argc, char* argv[])
 				}
 			}
 			else if (parameter == "-mlen" && i + 1 < argc) MaxSeedLength = atoi(argv[++i]);
-			else if (parameter == "-low_sim") bLowSimilarity = true;
+			else if (parameter == "-sensitive") bSensitive = true;
 			else if (parameter == "-idy" && i + 1 < argc) MinSeqIdy = atoi(argv[++i]);
 			else if (parameter == "-alen" && i + 1 < argc) MinAlnLength = atoi(argv[++i]);
 			else if (parameter == "-clr" && i + 1 < argc) MinClusterSize = atoi(argv[++i]);
@@ -244,7 +244,7 @@ int main(int argc, char* argv[])
 
 		Refbwt = RefIdx->bwt;
 		RestoreReferenceInfo();
-		if (bLowSimilarity) MinSeedLength = 10;
+		if (bSensitive) MinSeedLength = 10;
 		if (bShowPlot) FindGnuPlotPath();
 		InitializeOutputFiles();
 		if (bDUPmode) dupDetection();

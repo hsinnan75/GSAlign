@@ -82,7 +82,7 @@ void *IdentifyLocalMEM(void *arg)
 						vec.push_back(seed);
 					}
 					delete[] bwtSearchResult.LocArr;
-					if (bLowSimilarity) start+=5;
+					if (bSensitive) start+=5;
 					else start += (bwtSearchResult.len + 1);
 				}
 				else start++;
@@ -737,7 +737,7 @@ void GenomeComparison()
 			fprintf(stderr, "\tGSAlign did not find any similarity between the reference and query (%s).\n", QueryChrVec[QueryChrIdx].name.c_str());
 			continue;
 		}
-		if (bLowSimilarity) { RemoveRedundantAlnBlocksByQueryPos2(); RemoveRedundantAlnBlocksByRefPos2(); }
+		if (bSensitive) { RemoveRedundantAlnBlocksByQueryPos2(); RemoveRedundantAlnBlocksByRefPos2(); }
 		else { RemoveRedundantAlnBlocksByQueryPos(); RemoveRedundantAlnBlocksByRefPos(); }
 		for (ABiter = AlnBlockVec.begin(); ABiter != AlnBlockVec.end(); ABiter++) RemoveOverlaps(ABiter->FragPairVec);
 		for (ABiter = AlnBlockVec.begin(); ABiter != AlnBlockVec.end(); ABiter++) IdentifyNormalPairs(ABiter->FragPairVec);
@@ -756,7 +756,7 @@ void GenomeComparison()
 		}
 		if (OutputFormat == 0) fprintf(stderr, "\tOutput the MAF for query chromosome %s in the file: %s\n", QueryChrVec[QueryChrIdx].name.c_str(), mafFileName), OutputMAF();
 		if (OutputFormat == 1) fprintf(stderr, "\tOutput the alignment for query chromosome %s in the file: %s\n", QueryChrVec[QueryChrIdx].name.c_str(), alnFileName), OutputAlignment();
-		if (bLowSimilarity == false) fprintf(stderr, "\tOutput the variants for query chromosome %s in the file: %s\n", QueryChrVec[QueryChrIdx].name.c_str(), vcfFileName), OutputVariantCallingFile();
+		fprintf(stderr, "\tOutput the variants for query chromosome %s in the file: %s\n", QueryChrVec[QueryChrIdx].name.c_str(), vcfFileName), OutputVariantCallingFile();
 		if (bShowPlot && GnuPlotPath != NULL) fprintf(stderr, "\tGenerate the dotplot for query chromosome %s in the file: %s-%s.ps\n", QueryChrVec[QueryChrIdx].name.c_str(), OutputPrefix, QueryChrVec[QueryChrIdx].name.c_str()), OutputDotplot();
 
 		iTotalQueryLength += (n = (int)QueryChrVec[QueryChrIdx].seq.length());
