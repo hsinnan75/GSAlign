@@ -1,4 +1,4 @@
-GSAlign: an ultra-fast genome sequence alignment tool
+GSAlign: an ultra-fast variant calling algorithm for intra-species genome comparison
 ===================
 
 Developers: Dr. Hsin-Nan Lin and Dr. Wen-Lian Hsu Institute of Information Science, Academia Sinica, Taiwan.
@@ -13,7 +13,7 @@ Please use the command
   ```
   $ git clone https://github.com/hsinnan75/GSAlign.git
   ```
-to download the package of Kart.
+to download the package of GSAlign.
 
 # Compiling
 
