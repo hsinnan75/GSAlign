@@ -39,7 +39,8 @@ string TrimChromosomeName(string name)
 	for (i = 0; i < len; i++)
 	{
 		//if (isalnum(name[i]) == 0) break;
-		if (name[i] == ' ' || name[i] == '|' || name[i] == '#' || name[i] == ':' || name[i] == '=' || name[i] == '\t') break;
+		if (name[i] == '|') name[i] = '-';
+		else if (name[i] == ' ' || name[i] == '#' || name[i] == ':' || name[i] == '=' || name[i] == '\t') break;
 	}
 	return name.substr(0, i);
 }
