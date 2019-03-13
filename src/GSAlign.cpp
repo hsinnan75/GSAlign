@@ -1,7 +1,7 @@
 #include <cmath>
 #include "structure.h"
 
-#define MaxPosDiffGap 50
+#define MaxGapSize 300
 #define SeedExplorationChunk 10000
 
 static int QryChrLength;
@@ -156,7 +156,7 @@ void AlignmentBlockClustering()
 	
 	for (headIdx = i = 0, j = 1; j < num; i++, j++)
 	{
-		if (abs(SeedVec[j].PosDiff - SeedVec[i].PosDiff) > MaxPosDiffGap)
+		if (abs(SeedVec[j].PosDiff - SeedVec[i].PosDiff) > MaxIndelSize)
 		{
 			GroupVec.push_back(make_pair(headIdx, j));
 			headIdx = j;
@@ -182,12 +182,12 @@ void AlignmentBlockClustering()
 				{
 					if (!VisitSeedArr[j])
 					{
-						if (SeedVec[j].qPos - qTailPos > 300 && SeedVec[j].rPos - rTailPos > 300 && CalGapSimilarity(qTailPos, SeedVec[j].qPos, rTailPos, SeedVec[j].rPos) == false)
+						if (SeedVec[j].qPos - qTailPos > MaxGapSize && SeedVec[j].rPos - rTailPos > MaxGapSize && CalGapSimilarity(qTailPos, SeedVec[j].qPos, rTailPos, SeedVec[j].rPos) == false)
 						{
 							//printf("Break:   "); ShowFragPair(SeedVec[j]); printf("qGaps=%d, rGaps=%d\n", SeedVec[j].qPos - qTailPos, SeedVec[j].rPos - rTailPos);
 							break;
 						}
-						if (abs(SeedVec[j].PosDiff - SeedVec[ci].PosDiff) < 35)
+						if (abs(SeedVec[j].PosDiff - SeedVec[ci].PosDiff) < MaxIndelSize)
 						{
 							//printf("\t "); ShowFragPair(SeedVec[j]);
 							AlnBlock.FragPairVec.push_back(SeedVec[j]); VisitSeedArr[j] = true;
@@ -509,7 +509,7 @@ void *GenerateFragAlignment(void *arg)
 				FragPair->aln1.assign(FragPair->qLen, '-');
 				FragPair->aln2.resize(FragPair->qLen); strncpy((char*)FragPair->aln2.c_str(), QueryChrVec[QueryChrIdx].seq.c_str() + FragPair->qPos, FragPair->qLen);
 			}
-			else if (FragPair->qLen == FragPair->rLen && ((mismatch = CheckFragPairMismatch(FragPair)) <= 5 || 1.0* mismatch / FragPair->qLen >= 0.85))
+			else if (FragPair->qLen == FragPair->rLen && ((mismatch = CheckFragPairMismatch(FragPair)) <= 5 || 1.0* mismatch / FragPair->qLen < 0.15))
 			{
 				FragPair->aln1.resize(FragPair->rLen); strncpy((char*)FragPair->aln1.c_str(), RefSequence + FragPair->rPos, FragPair->rLen);
 				FragPair->aln2.resize(FragPair->qLen); strncpy((char*)FragPair->aln2.c_str(), QueryChrVec[QueryChrIdx].seq.c_str() + FragPair->qPos, FragPair->qLen);

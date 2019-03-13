@@ -110,6 +110,8 @@ All above file formats are in text mode.
 
 -alen set the minimal alignment length [200]
 
+-ind set the maximal indel size [35]
+
 -clr set the minimal cluster size [50]
 
   ```

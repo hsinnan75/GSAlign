@@ -134,7 +134,7 @@ extern unsigned char nst_nt4_table[256];
 extern vector<Chromosome_t> ChromosomeVec;
 extern bool bDebugMode, bSensitive, bShowPlot;
 extern int64_t GenomeSize, TwoGenomeSize, TotalAlignmentLength, LocalAlignmentNum;
-extern int QueryChrIdx, iThreadNum, iQueryChrNum, iChromsomeNum, MinSeqIdy, MinSeedLength, MaxSeedLength, MinAlnLength, MinClusterSize, OutputFormat;
+extern int QueryChrIdx, iThreadNum, iQueryChrNum, iChromsomeNum, MinSeqIdy, MaxIndelSize, MinSeedLength, MaxSeedLength, MinAlnLength, MinClusterSize, OutputFormat;
 extern char *RefSequence, *RefSeqFileName, *IndexFileName, *QueryFileName, *OutputPrefix, *vcfFileName, *mafFileName, *alnFileName, *gpFileName, *GnuPlotPath;
 
 extern string TrimChromosomeName(string name);

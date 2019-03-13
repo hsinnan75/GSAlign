@@ -9,7 +9,7 @@ vector<AlnBlock_t> AlnBlockVec;
 vector<QueryChr_t> QueryChrVec;
 const char* VersionStr = "0.9.8";
 bool bDebugMode, bDUPmode, bSensitive, bShowPlot;
-int QueryChrIdx, iThreadNum, iQueryChrNum, MinSeedLength, MaxSeedLength, MinSeqIdy, MinClusterSize, MinAlnLength, OutputFormat = 0;
+int QueryChrIdx, iThreadNum, iQueryChrNum, MaxIndelSize, MinSeedLength, MaxSeedLength, MinSeqIdy, MinClusterSize, MinAlnLength, OutputFormat = 0;
 char *RefSequence, *RefSeqFileName, *IndexFileName, *QueryFileName, *OutputPrefix, *vcfFileName, *mafFileName, *alnFileName, *gpFileName, *GnuPlotPath;
 
 void ShowProgramUsage(const char* program)
@@ -18,16 +18,17 @@ void ShowProgramUsage(const char* program)
 	fprintf(stderr, "GenAlign v%s\n", VersionStr);
 	fprintf(stderr, "Usage: %s [-i IndexFile Prefix / -r Reference file] -q QueryFile[Fasta]\n\n", program);
 	fprintf(stderr, "Options: -t     INT     number of threads [%d]\n", iThreadNum);
-	fprintf(stderr, "         -dup           Duplication detection mode [false]\n");
 	fprintf(stderr, "         -o     STR     Set the prefix of the output files [output]\n");
-	fprintf(stderr, "         -dp            Output Dot-plots\n");
 	fprintf(stderr, "         -sensitive     Sensitive mode [False]\n");
 	fprintf(stderr, "         -fmt   INT     Set the output format 0:maf, 1:aln [%d]\n", OutputFormat);
 	fprintf(stderr, "         -idy   INT     Set the minimal sequence identity (0-100) of a local alignment [%d]\n", MinSeqIdy);
 	fprintf(stderr, "         -slen  INT     Set the minimal seed length [%d]\n", MinSeedLength);
 	fprintf(stderr, "         -mlen  INT     Set the maximal seed length [%d]\n", MaxSeedLength);
 	fprintf(stderr, "         -alen  INT     Set the minimal alignment length [%d]\n", MinAlnLength);
+	fprintf(stderr, "         -ind   INT     Set the maximal indel size [%d]\n", MaxIndelSize);
 	fprintf(stderr, "         -clr   INT     Set the minimal cluster size [%d]\n", MinClusterSize);
+	fprintf(stderr, "         -dp            Output Dot-plots\n");
+	fprintf(stderr, "         -dup           Duplication detection mode [false]\n");
 	fprintf(stderr, "\n");
 }
 
@@ -164,6 +165,7 @@ int main(int argc, char* argv[])
 	MinClusterSize = 50;
 	MinAlnLength = 200;
 	MinSeqIdy = 30;
+	MaxIndelSize = 35;
 	RefSequence = RefSeqFileName = IndexFileName = QueryFileName = OutputPrefix = NULL;
 
 	if (argc == 1 || strcmp(argv[1], "-h") == 0)
@@ -201,6 +203,15 @@ int main(int argc, char* argv[])
 				if (MinSeedLength < 10 || MinSeedLength > 20)
 				{
 					fprintf(stderr, "Warning! minimal seed length is between 10~20!\n");
+					exit(0);
+				}
+			}
+			else if (parameter == "-ind" && i + 1 < argc)
+			{
+				MaxIndelSize = atoi(argv[++i]);
+				if (MaxIndelSize < 10 || MaxIndelSize > 100)
+				{
+					fprintf(stderr, "Warning! maximal indel size is between 10~100!\n");
 					exit(0);
 				}
 			}
