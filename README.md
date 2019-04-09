@@ -1,4 +1,4 @@
-GSAlign: an ultra-fast variant calling algorithm for intra-species genome comparison
+GSAlign: an ultra-fast sequence alignment algorithm for intra-species genome comparison
 ===================
 
 Developers: Dr. Hsin-Nan Lin and Dr. Wen-Lian Hsu Institute of Information Science, Academia Sinica, Taiwan.
