@@ -47,9 +47,9 @@ int CountIdenticalPairs(string& aln1, string& aln2)
 {
 	int i, n, len = (int)aln1.length();
 
-	for (n = len, i = 0; i < len; i++)
+	for (n = 0, i = 0; i < len; i++)
 	{
-		if (nst_nt4_table[(int)aln2[i]] != 4 && nst_nt4_table[(int)aln1[i]] != nst_nt4_table[(int)aln2[i]]) n--;
+		if (nst_nt4_table[(int)aln1[i]] == nst_nt4_table[(int)aln2[i]]) n++;
 	}
 	return n;
 }
