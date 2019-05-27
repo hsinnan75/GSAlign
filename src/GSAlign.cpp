@@ -522,6 +522,9 @@ void *GenerateFragAlignment(void *arg)
 				FragPair->aln1.resize(FragPair->rLen); strncpy((char*)FragPair->aln1.c_str(), RefSequence + FragPair->rPos, FragPair->rLen);
 				FragPair->aln2.resize(FragPair->qLen); strncpy((char*)FragPair->aln2.c_str(), QueryChrVec[QueryChrIdx].seq.c_str() + FragPair->qPos, FragPair->qLen);
 				nw_alignment(FragPair->rLen, FragPair->aln1, FragPair->qLen, FragPair->aln2);
+
+				AlnBlockVec[i].score += CountIdenticalPairs(FragPair->aln1, FragPair->aln2);
+				AlnBlockVec[i].aln_len += FragPair->aln1.length();
 			}
 
 			if (j == 0 && !AlnBlockVec[i].FragPairVec[j].bSeed)
