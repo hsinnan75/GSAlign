@@ -7,7 +7,7 @@ bwaidx_t *RefIdx;
 time_t StartProcessTime;
 vector<AlnBlock_t> AlnBlockVec;
 vector<QueryChr_t> QueryChrVec;
-const char* VersionStr = "0.9.8";
+const char* VersionStr = "0.9.9";
 bool bDebugMode, bDUPmode, bSensitive, bShowPlot;
 int QueryChrIdx, iThreadNum, iQueryChrNum, MaxIndelSize, MinSeedLength, MaxSeedLength, MinSeqIdy, MinClusterSize, MinAlnLength, OutputFormat = 0;
 char *RefSequence, *RefSeqFileName, *IndexFileName, *QueryFileName, *OutputPrefix, *vcfFileName, *mafFileName, *alnFileName, *gpFileName, *GnuPlotPath;
