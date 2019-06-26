@@ -20,25 +20,7 @@ to download the package of GSAlign.
 To compile GSAlign and the index tool, please change to GSAlign's folder and just type 'make' to compile GSAlign and bwt_index. If the compilation or the programs fail, please contact me (arith@iis.sinica.edu.tw), Thanks.
 
 # Changes
-version 0.9.9: Fixed a bug in similarity estimation.
-
-version 0.9.8: Fixed a bug in the dot-plotting.
-
-version 0.9.7: Fixed a bug when there is no similarity between the input sequences
-
-version 0.9.6: Added an option (mlen) to set the maximal seed length
-
-version 0.9.5: Added an option to run GSAlign for duplication detection
-
-version 0.9.4: Modified the seed clustering implementation and improved the accuracy/sensitivity on variant calling
-
-version 0.9.3: Added an option to set the minimal sequence identity
-
-version 0.9.2: Fixed a bug in removing overlaps between seed pairs, and fixed a bug in reporting alignment coordinates.
-
-version 0.9.1: Added MAF output.
-
-version 0.9.0: First release version.
+version 1.0.0: First release version
 
 # Instructions
 
