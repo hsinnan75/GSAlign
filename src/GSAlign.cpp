@@ -5,6 +5,7 @@
 #define SeedExplorationChunk 10000
 
 static int QryChrLength;
+vector<Variant_t> VarVec;
 static pthread_mutex_t Lock;
 static vector<FragPair_t> SeedVec;
 int64_t TotalAlignmentLength = 0, LocalAlignmentNum = 0, SNP_num = 0, IND_num = 0, SVS_num = 0;
@@ -36,6 +37,12 @@ bool CompByAlnBlockQueryPos(const AlnBlock_t& p1, const AlnBlock_t& p2)
 bool CompByAlnBlockRefPos(const AlnBlock_t& p1, const AlnBlock_t& p2)
 {
 	return p1.FragPairVec.begin()->rPos < p2.FragPairVec.begin()->rPos;
+}
+
+bool CompByVariantPos(const Variant_t& p1, const Variant_t& p2)
+{
+	if(p1.chr_idx == p2.chr_idx) return p1.pos < p2.pos;
+	else return p1.chr_idx < p2.chr_idx;
 }
 
 bool CompByChrScore(const pair<int, int64_t>& p1, const pair<int, int64_t>& p2)
@@ -521,6 +528,7 @@ void *GenerateFragAlignment(void *arg)
 				//if (bDebugMode) printf("GenAln: %d vs %d\n", FragPair->qLen, FragPair->rLen), fflush(stdout);
 				FragPair->aln1.resize(FragPair->rLen); strncpy((char*)FragPair->aln1.c_str(), RefSequence + FragPair->rPos, FragPair->rLen);
 				FragPair->aln2.resize(FragPair->qLen); strncpy((char*)FragPair->aln2.c_str(), QueryChrVec[QueryChrIdx].seq.c_str() + FragPair->qPos, FragPair->qLen);
+				
 				nw_alignment(FragPair->rLen, FragPair->aln1, FragPair->qLen, FragPair->aln2);
 
 				AlnBlockVec[i].score += CountIdenticalPairs(FragPair->aln1, FragPair->aln2);
@@ -570,10 +578,11 @@ void *GenerateFragAlignment(void *arg)
 	return (void*)(1);
 }
 
-void OutputVariantCallingFile()
+void VariantIdentification()
 {
 	int64_t rPos;
 	FILE *outFile;
+	Variant_t Variant;
 	int i, qPos, aln_len, ind_len;
 	string RefChrName, frag1, frag2;
 	vector<FragPair_t>::iterator FragPairIter;
@@ -583,8 +592,10 @@ void OutputVariantCallingFile()
 	{
 		if (!ABiter->coor.bDir || ABiter->score == 0) continue;
 
-		RefChrName = ChromosomeVec[ABiter->coor.ChromosomeIdx].name;
+		Variant.chr_idx = ABiter->coor.ChromosomeIdx;
+		//RefChrName = ChromosomeVec[ABiter->coor.ChromosomeIdx].name;
 
+		//if (RefChrName == "chr1" && ABiter->coor.gPos < 896732 && ABiter->coor.gPos + ABiter->aln_len > 896732) OutputDesiredAlignment(*ABiter);
 		for (FragPairIter = ABiter->FragPairVec.begin(); FragPairIter != ABiter->FragPairVec.end(); FragPairIter++)
 		{
 			if (!FragPairIter->bSeed)
@@ -593,52 +604,110 @@ void OutputVariantCallingFile()
 				else if (FragPairIter->qLen == 0) // delete
 				{
 					frag1.resize(FragPairIter->rLen + 1); strncpy((char*)frag1.c_str(), RefSequence + FragPairIter->rPos - 1, FragPairIter->rLen + 1);
-					fprintf(outFile, "%s\t%d\t.\t%s\t%c\t100\tPASS\tmt=DELETE\n", RefChrName.c_str(), GenCoordinateInfo(FragPairIter->rPos - 1).gPos, (char*)frag1.c_str(), QueryChrVec[QueryChrIdx].seq[FragPairIter->qPos - 1]);
+					Variant.type = 2;
+					Variant.pos = GenCoordinateInfo(FragPairIter->rPos - 1).gPos;
+					Variant.ref_frag = frag1;
+					Variant.alt_frag.resize(1); Variant.alt_frag[0] = QueryChrVec[QueryChrIdx].seq[FragPairIter->qPos - 1];
+					VarVec.push_back(Variant);
+					//if (GenCoordinateInfo(rPos - 1).gPos == 1238929) OutputDesiredAlignment(*ABiter);
+					//fprintf(outFile, "%s\t%d\t.\t%s\t%c\t100\tPASS\tmt=DELETE\n", RefChrName.c_str(), GenCoordinateInfo(FragPairIter->rPos - 1).gPos, (char*)frag1.c_str(), QueryChrVec[QueryChrIdx].seq[FragPairIter->qPos - 1]);
 				}
 				else if (FragPairIter->rLen == 0) // insert
 				{
 					frag2.resize(FragPairIter->qLen + 1); strncpy((char*)frag2.c_str(), QueryChrVec[QueryChrIdx].seq.c_str() + FragPairIter->qPos - 1, FragPairIter->qLen + 1);
-					fprintf(outFile, "%s\t%d\t.\t%c\t%s\t100\tPASS\tmt=INSERT\n", RefChrName.c_str(), GenCoordinateInfo(FragPairIter->rPos - 1).gPos, RefSequence[FragPairIter->rPos - 1], (char*)frag2.c_str());
+					Variant.type = 1;
+					Variant.pos = GenCoordinateInfo(FragPairIter->rPos - 1).gPos;
+					Variant.ref_frag.resize(1); Variant.ref_frag[0] = RefSequence[FragPairIter->rPos - 1];
+					Variant.alt_frag = frag2;
+					VarVec.push_back(Variant);
+					//fprintf(outFile, "%s\t%d\t.\t%c\t%s\t100\tPASS\tmt=INSERT\n", RefChrName.c_str(), GenCoordinateInfo(FragPairIter->rPos - 1).gPos, RefSequence[FragPairIter->rPos - 1], (char*)frag2.c_str());
 				}
 				else if (FragPairIter->qLen == 1 && FragPairIter->rLen == 1) // substitution
 				{
 					if (nst_nt4_table[(int)FragPairIter->aln1[0]] != nst_nt4_table[(int)FragPairIter->aln2[0]] && nst_nt4_table[(int)FragPairIter->aln1[0]] != 4 && nst_nt4_table[(int)FragPairIter->aln2[0]] != 4)
-						fprintf(outFile, "%s\t%d\t.\t%c\t%c\t100\tPASS\tmt=SUBSTITUTE\n", RefChrName.c_str(), GenCoordinateInfo(FragPairIter->rPos).gPos, FragPairIter->aln1[0], FragPairIter->aln2[0]);
+					{
+						Variant.type = 0;
+						Variant.pos = GenCoordinateInfo(FragPairIter->rPos).gPos;
+						Variant.ref_frag = FragPairIter->aln1;
+						Variant.alt_frag = FragPairIter->aln2;
+						VarVec.push_back(Variant);
+						//fprintf(outFile, "%s\t%d\t.\t%c\t%c\t100\tPASS\tmt=SUBSTITUTE\n", RefChrName.c_str(), GenCoordinateInfo(FragPairIter->rPos).gPos, FragPairIter->aln1[0], FragPairIter->aln2[0]);
+					}
 				}
 				else
 				{
 					//fprintf(stdout, "ref=%s\nqry=%s\n", FragPairIter->aln2.c_str(), FragPairIter->aln1.c_str());
 					for (aln_len = (int)FragPairIter->aln1.length(), rPos = FragPairIter->rPos, qPos = FragPairIter->qPos, i = 0; i < aln_len; i++)
 					{
-						if (FragPairIter->aln1[i] == FragPairIter->aln2[i])
-						{
-							rPos++; qPos++;
-						}
-						else if (FragPairIter->aln1[i] == '-') // insert
+						if (FragPairIter->aln1[i] == '-') // insert
 						{
 							ind_len = 1; while (FragPairIter->aln1[i + ind_len] == '-') ind_len++;
 							frag2 = QueryChrVec[QueryChrIdx].seq.substr(qPos - 1, ind_len + 1);
-							fprintf(outFile, "%s\t%d\t.\t%c\t%s\t100\tPASS\tmt=INSERT\n", RefChrName.c_str(), GenCoordinateInfo(rPos - 1).gPos, frag2[0], (char*)frag2.c_str());
+							//fprintf(outFile, "%s\t%d\t.\t%c\t%s\t100\tPASS\tmt=INSERT\n", RefChrName.c_str(), GenCoordinateInfo(rPos - 1).gPos, frag2[0], (char*)frag2.c_str());
+							Variant.type = 1;
+							Variant.pos = GenCoordinateInfo(rPos - 1).gPos;
+							Variant.ref_frag.resize(1); Variant.ref_frag[0] = frag2[0];
+							Variant.alt_frag = frag2;
+							VarVec.push_back(Variant);
+
 							qPos += ind_len; i += ind_len - 1;
 						}
 						else if (FragPairIter->aln2[i] == '-') // delete
 						{
+							//if (GenCoordinateInfo(rPos - 1).gPos == 1238929) OutputDesiredAlignment(*ABiter);
 							ind_len = 1; while (FragPairIter->aln2[i + ind_len] == '-') ind_len++;
 							frag1.resize(ind_len + 2); frag1[ind_len + 1] = '\0';
 							strncpy((char*)frag1.c_str(), RefSequence + rPos - 1, ind_len + 1);
-							fprintf(outFile, "%s\t%d\t.\t%s\t%c\t100\tPASS\tmt=DELETE\n", RefChrName.c_str(), GenCoordinateInfo(rPos - 1).gPos, (char*)frag1.c_str(), frag1[0]);
+							//fprintf(outFile, "%s\t%d\t.\t%s\t%c\t100\tPASS\tmt=DELETE\n", RefChrName.c_str(), GenCoordinateInfo(rPos - 1).gPos, (char*)frag1.c_str(), frag1[0]);
+							Variant.type = 2;
+							Variant.pos = GenCoordinateInfo(rPos - 1).gPos;
+							Variant.ref_frag = frag1;
+							Variant.alt_frag.resize(1); Variant.alt_frag[0] = frag1[0];
+							VarVec.push_back(Variant);
+
 							rPos += ind_len; i += ind_len - 1;
 						}
 						else if (nst_nt4_table[(int)FragPairIter->aln1[i]] != nst_nt4_table[(int)FragPairIter->aln2[i]])// substitute
 						{
 							if (nst_nt4_table[(int)FragPairIter->aln1[i]] != 4 && nst_nt4_table[(int)FragPairIter->aln2[i]] != 4)
-								fprintf(outFile, "%s\t%d\t.\t%c\t%c\t100\tPASS\tmt=SUBSTITUTE\n", RefChrName.c_str(), GenCoordinateInfo(rPos).gPos, FragPairIter->aln1[i], FragPairIter->aln2[i]);
+							{
+								//fprintf(outFile, "%s\t%d\t.\t%c\t%c\t100\tPASS\tmt=SUBSTITUTE\n", RefChrName.c_str(), GenCoordinateInfo(rPos).gPos, FragPairIter->aln1[i], FragPairIter->aln2[i]);
+								Variant.type = 0;
+								Variant.pos = GenCoordinateInfo(rPos).gPos;
+								Variant.ref_frag.resize(1); Variant.ref_frag[0] = FragPairIter->aln1[i];
+								Variant.alt_frag.resize(1); Variant.alt_frag[0] = FragPairIter->aln2[i];
+								VarVec.push_back(Variant);
+							}
+							rPos++; qPos++;
+						}
+						else
+						{
 							rPos++; qPos++;
 						}
 					}
 				}
 			}
 		}
+	}
+	std::fclose(outFile);
+}
+
+void OutputSequenceVariants()
+{
+	FILE *outFile;
+	const char *MutType[3] = { "SUBSTITUTE", "INSERT", "DELETE" };
+	
+	sort(VarVec.begin(), VarVec.end(), CompByVariantPos);
+	
+	outFile = fopen(vcfFileName, "w");
+	fprintf(outFile, "##fileformat=VCFv4.3\n");
+	if(IndexFileName != NULL) fprintf(outFile, "##reference=%s\n", IndexFileName);
+	else fprintf(outFile, "##reference=%s\n", RefSeqFileName);
+	fprintf(outFile, "##source=GSAlign %s\n", VersionStr);
+	fprintf(outFile, "##INFO=<ID=TYPE,Type=String,Description=\"The type of allele, either SUBSTITUTE, INSERT, DELETE, or BND.\">\n");
+	for (vector<Variant_t>::iterator iter = VarVec.begin(); iter != VarVec.end(); iter++)
+	{
+		fprintf(outFile, "%s\t%d\t.\t%s\t%s\t100\tPASS\tTYPE=%s\n", ChromosomeVec[iter->chr_idx].name, iter->pos, (char*)iter->ref_frag.c_str(), (char*)iter->alt_frag.c_str(), MutType[iter->type]);
 	}
 	std::fclose(outFile);
 }
@@ -757,10 +826,11 @@ void GenomeComparison()
 			memset((CoverageArr + ABiter->FragPairVec.begin()->qPos), true, (int)(ABiter->FragPairVec.rbegin()->qPos + ABiter->FragPairVec.rbegin()->qLen - ABiter->FragPairVec.begin()->qPos));
 			//ABiter->coor = GenCoordinateInfo(ABiter->FragPairVec[0].rPos);
 		}
-		if (OutputFormat == 0) fprintf(stderr, "\tOutput the MAF for query chromosome %s in the file: %s\n", QueryChrVec[QueryChrIdx].name.c_str(), mafFileName), OutputMAF();
-		if (OutputFormat == 1) fprintf(stderr, "\tOutput the alignment for query chromosome %s in the file: %s\n", QueryChrVec[QueryChrIdx].name.c_str(), alnFileName), OutputAlignment();
-		fprintf(stderr, "\tOutput the variants for query chromosome %s in the file: %s\n", QueryChrVec[QueryChrIdx].name.c_str(), vcfFileName), OutputVariantCallingFile();
-		if (bShowPlot && GnuPlotPath != NULL) fprintf(stderr, "\tGenerate the dotplot for query chromosome %s in the file: %s-%s.ps\n", QueryChrVec[QueryChrIdx].name.c_str(), OutputPrefix, QueryChrVec[QueryChrIdx].name.c_str()), OutputDotplot();
+		//sort(AlnBlockVec.begin(), AlnBlockVec.end(), CompByAlnBlockCoordinate);
+		//if (OutputFormat == 0) fprintf(stderr, "\tOutput the MAF for query chromosome %s in the file: %s\n", QueryChrVec[QueryChrIdx].name.c_str(), mafFileName), OutputMAF();
+		//if (OutputFormat == 1) fprintf(stderr, "\tOutput the alignment for query chromosome %s in the file: %s\n", QueryChrVec[QueryChrIdx].name.c_str(), alnFileName), OutputAlignment();
+		if (bVCF) fprintf(stderr, "\t\tIdentify sequence variants for query chromosome %s\n", QueryChrVec[QueryChrIdx].name.c_str()), VariantIdentification();
+		if (bShowPlot && GnuPlotPath != NULL) fprintf(stderr, "\t\tGenerate the dotplot for query chromosome %s in the file: %s-%s.ps\n", QueryChrVec[QueryChrIdx].name.c_str(), OutputPrefix, QueryChrVec[QueryChrIdx].name.c_str()), OutputDotplot();
 
 		iTotalQueryLength += (n = (int)QueryChrVec[QueryChrIdx].seq.length());
 		for (i = 0; i < n; i++) if (CoverageArr[i]) iCoverage++;

@@ -240,3 +240,44 @@ void OutputAlignment()
 	std::fclose(outFile);
 	//printf("Total alignment length = %lld\n", TotalAlnLen);
 }
+
+void OutputDesiredAlignment(AlnBlock_t AlnBlock)
+{
+	char* frag;
+	int64_t RefPos;
+	int i, p, q, RefIdx, QueryPos;
+	vector<FragPair_t>::iterator FragPairIter;
+	string QueryChrName, RefChrName, aln1, aln2, frag1, frag2;
+
+	for (FragPairIter = AlnBlock.FragPairVec.begin(); FragPairIter != AlnBlock.FragPairVec.end(); FragPairIter++)
+	{
+		if (FragPairIter->bSeed)
+		{
+			frag = new char[FragPairIter->qLen + 1]; frag[FragPairIter->qLen] = '\0';
+			strncpy(frag, QueryChrVec[QueryChrIdx].seq.c_str() + FragPairIter->qPos, FragPairIter->qLen);
+			aln1 += frag; aln2 += frag; delete[] frag;
+		}
+		else
+		{
+			aln1 += FragPairIter->aln1;
+			aln2 += FragPairIter->aln2;
+		}
+	}
+	RefIdx = AlnBlock.coor.ChromosomeIdx;
+	QueryChrName = QueryChrVec[QueryChrIdx].name; RefChrName = ChromosomeVec[RefIdx].name;
+	if (QueryChrName.length() > RefChrName.length()) RefChrName += string().assign((QueryChrName.length() - RefChrName.length()), ' ');
+	else QueryChrName += string().assign((RefChrName.length() - QueryChrName.length()), ' ');
+
+	fprintf(stdout, "#Identity = %d / %d (%.2f%%) Orientation = %s\n\n", AlnBlock.score, AlnBlock.aln_len, (int)(10000 * (1.0*AlnBlock.score / AlnBlock.aln_len)) / 100.0, AlnBlock.coor.bDir ? "Forward" : "Reverse");
+	//ShowFragPairVec(ABiter->FragPairVec); printf("\n\n");
+	i = 0; QueryPos = AlnBlock.FragPairVec[0].qPos + 1; RefPos = AlnBlock.coor.gPos;
+	while (i < AlnBlock.aln_len)
+	{
+		frag1 = aln1.substr(i, WindowSize); frag2 = aln2.substr(i, WindowSize);
+		p = CountBaseNum(frag1); q = CountBaseNum(frag2);
+
+		fprintf(stdout, "%s\t%12d\t%s\n%s\t%12d\t%s\n\n", RefChrName.c_str(), RefPos, frag1.c_str(), QueryChrName.c_str(), QueryPos, frag2.c_str());
+		i += WindowSize; RefPos += (AlnBlock.coor.bDir ? p : 0 - p); QueryPos += q;
+	}
+	fprintf(stdout, "%s\n", string().assign(100, '*').c_str());
+}

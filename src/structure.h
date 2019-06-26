@@ -118,6 +118,15 @@ typedef struct
 
 typedef struct
 {
+	int pos;
+	int chr_idx;
+	string ref_frag;
+	string alt_frag;
+	int type;
+} Variant_t;
+
+typedef struct
+{
 	string name;  // chromosome name
 	string seq; // chromosome sequence
 } QueryChr_t;
@@ -132,7 +141,7 @@ extern vector<AlnBlock_t> AlnBlockVec;
 extern vector<QueryChr_t> QueryChrVec;
 extern unsigned char nst_nt4_table[256];
 extern vector<Chromosome_t> ChromosomeVec;
-extern bool bDebugMode, bSensitive, bShowPlot;
+extern bool bDebugMode, bSensitive, bVCF, bShowPlot;
 extern int64_t GenomeSize, TwoGenomeSize, TotalAlignmentLength, LocalAlignmentNum;
 extern int QueryChrIdx, iThreadNum, iQueryChrNum, iChromsomeNum, MinSeqIdy, MaxIndelSize, MinSeedLength, MaxSeedLength, MinAlnLength, MinClusterSize, OutputFormat;
 extern char *RefSequence, *RefSeqFileName, *IndexFileName, *QueryFileName, *OutputPrefix, *vcfFileName, *mafFileName, *alnFileName, *gpFileName, *GnuPlotPath;
@@ -149,6 +158,7 @@ extern bwtSearchResult_t BWT_Search(string& seq, int start, int stop);
 
 // GSAlign.cpp
 extern void GenomeComparison();
+extern void OutputSequenceVariants();
 extern void *GenerateFragAlignment(void *arg);
 extern void RemoveOverlaps(vector<FragPair_t>& FragPairVec);
 extern void ShowFragPairVec(vector<FragPair_t>& FragPairVec);
@@ -174,6 +184,7 @@ extern int CheckMemoryUsage();
 extern void ShowSeedLocationInfo(int64_t MyPos);
 extern Coordinate_t GenCoordinateInfo(int64_t rPos);
 extern void SelfComplementarySeq(int len, char* seq);
+extern void OutputDesiredAlignment(AlnBlock_t AlnBlock);
 extern void ShowFragPairVec(vector<FragPair_t>& FragPairVec);
 
 // nw_alignment.cpp
