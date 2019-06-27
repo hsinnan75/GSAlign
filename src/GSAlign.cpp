@@ -5,10 +5,10 @@
 #define SeedExplorationChunk 10000
 
 int64_t *RefChrScoreArr;
-static int QryChrLength;
 vector<Variant_t> VarVec;
 static pthread_mutex_t Lock;
 static vector<FragPair_t> SeedVec;
+static int QrySeqPos, QryChrLength;
 int64_t TotalAlignmentLength = 0, LocalAlignmentNum = 0, SNP_num = 0, IND_num = 0, SVS_num = 0;
 string LineColorArr[10] = {"red", "blue", "web-green", "dark-magenta", "orange", "yellow", "turquoise", "dark-yellow", "violet", "dark-grey"};
 
@@ -66,13 +66,20 @@ void *IdentifyLocalMEM(void *arg)
 {
 	FragPair_t seed;
 	vector<FragPair_t> vec;
+	int i, start, stop, num;
 	bwtSearchResult_t bwtSearchResult;
-	int i, pos, start, stop, num, *my_id = (int*)arg;
 
 	string& seq = QueryChrVec[QueryChrIdx].seq; seed.bSeed = true;
-	for (pos = (*my_id*SeedExplorationChunk); pos < QryChrLength; pos += (iThreadNum * SeedExplorationChunk))
+
+	while (true)
 	{
-		start = pos; if ((stop = start + SeedExplorationChunk) > QryChrLength) stop = QryChrLength;
+		pthread_mutex_lock(&Lock);
+		start = QrySeqPos; stop = (QrySeqPos += SeedExplorationChunk);
+		if (stop > QryChrLength) stop = QryChrLength;
+		fprintf(stderr, "\r\t\tSeed exploration: %d / %d (%d%%)...", stop, QryChrLength, (int)(100 * ((1.0*stop / QryChrLength))));
+		pthread_mutex_unlock(&Lock);
+
+		if (start >= QryChrLength) break;
 		while (start < stop)
 		{
 			if (nst_nt4_table[(int)seq[start]] > 3) start++;
@@ -90,15 +97,13 @@ void *IdentifyLocalMEM(void *arg)
 						vec.push_back(seed);
 					}
 					delete[] bwtSearchResult.LocArr;
-					if (bSensitive) start+=5;
+					if (bSensitive) start += 5;
 					else start += (bwtSearchResult.len + 1);
 				}
 				else start++;
 			}
 		}
-		if (*my_id == 0) fprintf(stderr, "\r\t\tSeed exploration: %d / %d (%d%%)...", stop, QryChrLength, (int)(100 * ((1.0*stop / QryChrLength))));
 	}
-	if (*my_id == 0) fprintf(stderr, "\r\t\tSeed exploration: %d / %d (100%%)...done!\n", QryChrLength, QryChrLength);
 	sort(vec.begin(), vec.end(), CompByPosDiff);
 
 	if (iThreadNum == 1) SeedVec.swap(vec);
@@ -828,13 +833,13 @@ void GenomeComparison()
 	fprintf(stderr, "Step2. Sequence analysis for all query chromosomes\n");
 	for (QueryChrIdx = 0; QueryChrIdx != iQueryChrNum; QueryChrIdx++)
 	{
-		//if (QueryChrVec[QueryChrIdx].name != "chr19_mut") continue;
 		fprintf(stderr, "\tProcess query chromsomoe: %s...\n", QueryChrVec[QueryChrIdx].name.c_str());
-		QryChrLength = QueryChrVec[QueryChrIdx].seq.length();
+		QrySeqPos = 0; QryChrLength = QueryChrVec[QueryChrIdx].seq.length();
 
 		SeedVec.clear(); AlnBlockVec.clear();
 		for (i = 0; i < iThreadNum; i++) pthread_create(&ThreadArr[i], NULL, IdentifyLocalMEM, &vec[i]);
 		for (i = 0; i < iThreadNum; i++) pthread_join(ThreadArr[i], NULL);
+		fprintf(stderr, "\n");
 		//fprintf(stderr, "\t\tChaining...\n");
 		AlignmentBlockClustering();
 		if ((int)AlnBlockVec.size() == 0)
@@ -870,7 +875,7 @@ void GenomeComparison()
 		for (i = 0; i < n; i++) if (CoverageArr[i]) iCoverage++;
 		delete[] CoverageArr;
 	}
-	if (LocalAlignmentNum > 0 && iTotalQueryLength > 0) fprintf(stderr, "\nAlignment # = %lld, Total alignment length = %lld (avgLen=%lld), coverage = %.2f%%\n", (long long)LocalAlignmentNum, (long long)TotalAlignmentLength, (long long)(TotalAlignmentLength/ LocalAlignmentNum), 100*(1.0*iCoverage / iTotalQueryLength));
+	if (LocalAlignmentNum > 0 && iTotalQueryLength > 0) fprintf(stderr, "\n\tAlignment # = %lld, Total alignment length = %lld (avgLen=%lld), coverage = %.2f%%\n", (long long)LocalAlignmentNum, (long long)TotalAlignmentLength, (long long)(TotalAlignmentLength/ LocalAlignmentNum), 100*(1.0*iCoverage / iTotalQueryLength));
 
 	delete[] RefChrScoreArr; delete[] ThreadArr;
 }
