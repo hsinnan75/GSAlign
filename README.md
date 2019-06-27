@@ -98,4 +98,6 @@ All above file formats are in text mode.
 
 -clr set the minimal cluster size [50]
 
+-no_vcf No VCF output [false]
+
   ```

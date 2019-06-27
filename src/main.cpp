@@ -218,6 +218,7 @@ int main(int argc, char* argv[])
 			}
 			else if (parameter == "-mlen" && i + 1 < argc) MaxSeedLength = atoi(argv[++i]);
 			else if (parameter == "-sensitive") bSensitive = true;
+			else if (parameter == "-no_vcf") bVCF = false;
 			else if (parameter == "-idy" && i + 1 < argc) MinSeqIdy = atoi(argv[++i]);
 			else if (parameter == "-alen" && i + 1 < argc) MinAlnLength = atoi(argv[++i]);
 			else if (parameter == "-clr" && i + 1 < argc) MinClusterSize = atoi(argv[++i]);
