@@ -262,11 +262,7 @@ int main(int argc, char* argv[])
 		InitializeOutputFiles();
 		if (bDUPmode) dupDetection();
 		else GenomeComparison();
-		if (bVCF)
-		{
-			fprintf(stderr, "\tOutput all identified sequence variants to %s...\n", vcfFileName);
-			OutputSequenceVariants();
-		}
+		if (bVCF) fprintf(stderr, "\tOutput all identified sequence variants to %s...\n", vcfFileName), OutputSequenceVariants();
 		bwa_idx_destroy(RefIdx);
 		if (RefSequence != NULL) delete[] RefSequence;
 		DestroyOutputFileNames();

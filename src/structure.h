@@ -186,6 +186,7 @@ extern Coordinate_t GenCoordinateInfo(int64_t rPos);
 extern void SelfComplementarySeq(int len, char* seq);
 extern void OutputDesiredAlignment(AlnBlock_t AlnBlock);
 extern void ShowFragPairVec(vector<FragPair_t>& FragPairVec);
+extern void ShowAlnBlockBoundary(int score, vector<FragPair_t>& FragPairVec);
 
 // nw_alignment.cpp
 extern void nw_alignment(int m, string& s1, int n, string& s2);

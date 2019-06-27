@@ -79,6 +79,12 @@ void ShowFragPair(FragPair_t& FragPair)
 	printf("q[%d-%d]=%d r[%lld-%lld]=%d PD=%lld\n", FragPair.qPos, FragPair.qPos + FragPair.qLen - 1, FragPair.qLen, FragPair.rPos, FragPair.rPos + FragPair.rLen - 1, FragPair.rLen, FragPair.PosDiff);
 }
 
+void ShowAlnBlockBoundary(int score, vector<FragPair_t>& FragPairVec)
+{
+	int chr_idx = ChrLocMap.lower_bound(FragPairVec.begin()->rPos)->second;
+	printf("AlnBlockBoundary Q[%d-%d] R[%lld-%lld] chr=%s score = %d size = %d\n", FragPairVec.begin()->qPos, FragPairVec.rbegin()->qPos + FragPairVec.rbegin()->qLen - 1, FragPairVec.begin()->rPos, FragPairVec.rbegin()->rPos + FragPairVec.rbegin()->rLen - 1, ChromosomeVec[chr_idx].name, score, FragPairVec.rbegin()->qPos + FragPairVec.rbegin()->qLen - FragPairVec.begin()->qPos);
+}
+
 void ShowFragPairVec(vector<FragPair_t>& FragPairVec)
 {
 	printf("FragPairVec (N=%d)\n", (int)FragPairVec.size());
