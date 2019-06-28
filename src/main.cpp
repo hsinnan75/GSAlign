@@ -226,6 +226,7 @@ int main(int argc, char* argv[])
 			else if (parameter == "-fmt" && i + 1 < argc) OutputFormat = atoi(argv[++i]);
 			else if (parameter == "-o") OutputPrefix = argv[++i];
 			else if (parameter == "-d" || parameter == "-debug") bDebugMode = true;
+			else if (parameter == "-obr") ObrPos = atoi(argv[++i]);
 			else fprintf(stderr, "Warning! Unknow parameter: %s\n", argv[i]);
 		}
 	}
@@ -263,7 +264,7 @@ int main(int argc, char* argv[])
 		InitializeOutputFiles();
 		if (bDUPmode) dupDetection();
 		else GenomeComparison();
-		if (bVCF) fprintf(stderr, "\tOutput all identified sequence variants to %s...\n", vcfFileName), OutputSequenceVariants();
+		if (bVCF) fprintf(stderr, "\tOutput all identified sequence variants to [%s].\n", vcfFileName), OutputSequenceVariants();
 		bwa_idx_destroy(RefIdx);
 		if (RefSequence != NULL) delete[] RefSequence;
 		DestroyOutputFileNames();
