@@ -72,3 +72,48 @@ vector<uint32_t> CreateKmerVecFromReadSeq(int len, char* seq)
 	}
 	return vec;
 }
+
+bool CalGapSimilarity(int qPos1, int qPos2, int64_t rPos1, int64_t rPos2)
+{
+	int8_t nt1, nt2;
+	int64_t r, PD1, PD2;
+	bool bSimilar = false;
+	int q, idy, q_len, r_len;
+	string query_frag, ref_frag;
+	vector<unsigned int> KmerVec1, KmerVec2, vec;
+
+	q_len = qPos2 - qPos1; r_len = rPos2 - rPos1;
+
+	if ((PD1 = rPos1 - qPos1) == (PD2 = rPos2 - qPos2))
+	{
+		//printf("q_len=%d (%d-%d) r_len=%d (%lld-%lld)\n", q_len, qPos1, qPos2 - 1, r_len, rPos1, rPos2 - 1); fflush(stdout);
+		for (idy = 0, q = qPos1, r = rPos1; q < qPos2; q++, r++)
+		{
+			nt1 = nst_nt4_table[RefSequence[r]];
+			nt2 = nst_nt4_table[QueryChrVec[QueryChrIdx].seq[q]];
+			if (nt1 == nt2 || nt1 == 4 || nt2 == 4) idy++;
+		}
+		//printf("linear scan similarity = %.4f\n", 1.0*idy / q_len);
+		if (idy >= q_len*0.5) bSimilar = true;
+	}
+	if (!bSimilar && q_len <= MaxSeedGap && r_len <= MaxSeedGap)
+	{
+		query_frag = QueryChrVec[QueryChrIdx].seq.substr(qPos1, q_len);
+		ref_frag.resize(r_len); strncpy((char*)ref_frag.c_str(), RefSequence + rPos1, r_len);
+		KmerVec1 = CreateKmerVecFromReadSeq(q_len, (char*)query_frag.c_str());
+		KmerVec2 = CreateKmerVecFromReadSeq(r_len, (char*)ref_frag.c_str());
+		set_intersection(KmerVec1.begin(), KmerVec1.end(), KmerVec2.begin(), KmerVec2.end(), back_inserter(vec));
+		if ((int)vec.size() > (q_len + r_len)*0.15) bSimilar = true;
+
+		//if (!bSimilar)
+		//{
+		//	printf("CommonKmer# = %d (%.5f)\n", (int)vec.size(), 1.0*(int)vec.size() / (q_len + r_len));
+		//	string str1, str2;
+		//	str1 = ref_frag; str2 = query_frag; ksw2_alignment(r_len, str1, q_len, str2);
+		//	printf("ksw2\n%s\n%s\n\n", str1.c_str(), str2.c_str());
+		//	//str1 = ref_frag; str2 = query_frag; nw_alignment(str1, str2);
+		//	//printf("nw\n%s\n%s\n\n", str1.c_str(), str2.c_str());
+		//}
+	}
+	return bSimilar;
+}

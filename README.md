@@ -19,6 +19,8 @@ to download the package of GSAlign.
 
 To compile GSAlign and the index tool, please change to GSAlign's folder and just type 'make' to compile GSAlign and bwt_index. If the compilation or the programs fail, please contact me (arith@iis.sinica.edu.tw), Thanks.
 
+You may run ./run_test.sh to test GSAlign with two E.coli strains.
+
 # Changes
 version 1.0.0: First release version
 
@@ -78,23 +80,19 @@ All above file formats are in text mode.
 
 -o STR prefix of output files [output]
 
--dup Duplication detection mode [false]
-
--sensitive Sensitive mode [False]
+-sen Sensitive mode [False]
 
 -dp Output Dot-plots [false]
 
--fmt INT Set the output format [0]: 0:maf, 1:aln
+-fmt INT Set the output format [1]: 1:maf, 2:aln
 
 -idy  set the minimal sequnce identity [20]
 
--slen set the minimal seed length [20]
-
--mlen set the maximal seed length [100000000]
+-slen set the minimal seed length [15]
 
 -alen set the minimal alignment length [200]
 
--ind set the maximal indel size [35]
+-ind set the maximal indel size [25]
 
 -clr set the minimal cluster size [50]
 

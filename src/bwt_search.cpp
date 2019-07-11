@@ -167,8 +167,7 @@ bwtSearchResult_t BWT_Search(string& seq, int start, int stop)
 		ok[0].x[0] = ok[1].x[0] + ok[1].x[2];
 
 		i = 3 - nt;
-		if (pos - start == MaxSeedLength) break;
-		else if (ok[i].x[2] == 0) break; // extension ends
+		if (ok[i].x[2] == 0) break; // extension ends
 		else ik = ok[i];
 	}
 
@@ -185,20 +184,21 @@ bwtSearchResult_t BWT_Search(string& seq, int start, int stop)
 	return bwtSearchResult;
 }
 
-bwtSearchResult_t BWT_Search2(string& seq, int start, int stop)
+FragPair_t Specific_BWT_Search(string& seq, int start, int stop, int64_t rPos1, int64_t rPos2)
 {
 	uint8_t nt;
-	int i, pos, p;
+	int64_t rPos;
+	FragPair_t FraPair;
 	bwtintv_t ik, ok[4];
 	bwtint_t tk[4], tl[4];
-	bwtSearchResult_t bwtSearchResult;
+	int i, len, pos, p, freq;
 
 	p = (int)nst_nt4_table[(int)seq[start]];
 	ik.x[0] = Refbwt->L2[p] + 1;
 	ik.x[1] = Refbwt->L2[3 - p] + 1;
 	ik.x[2] = Refbwt->L2[p + 1] - Refbwt->L2[p];
 
-	bwtSearchResult.freq = 0;
+	FraPair.qLen = FraPair.rLen = 0;
 	for (pos = start + 1; pos < stop; pos++)
 	{
 		if ((nt = nst_nt4_table[(int)seq[pos]]) > 3) break;// ambiguous base
@@ -217,16 +217,25 @@ bwtSearchResult_t BWT_Search2(string& seq, int start, int stop)
 		if (ok[i].x[2] == 0) break; // extension ends
 		else ik = ok[i];
 	}
-
-	if ((bwtSearchResult.len = pos - start) < MinSeedLength) bwtSearchResult.freq = 0;
+	if ((len = pos - start) < MinSeedLength) freq = 0;
 	else
 	{
-		if (bwtSearchResult.len >= 30 || (bwtSearchResult.freq = (int)ik.x[2]) <= MaxSeedFreq)
+		if ((freq = (int)ik.x[2]) <= MaxSeedFreq)
 		{
-			bwtSearchResult.LocArr = new bwtint_t[bwtSearchResult.freq];
-			for (i = 0; i < bwtSearchResult.freq; i++) bwtSearchResult.LocArr[i] = bwt_sa(ik.x[0] + i);
+			for (i = 0; i < freq; i++)
+			{
+				rPos = (int64_t)bwt_sa(ik.x[0] + i);
+				if (rPos >= rPos1 && rPos < rPos2)
+				{
+					FraPair.qPos = start;
+					FraPair.rPos = rPos;
+					FraPair.PosDiff = rPos - start;
+					FraPair.qLen = FraPair.rLen = len;
+					ShowFragPair(FraPair);
+					break;
+				}
+			}
 		}
-		else bwtSearchResult.freq = 0;
 	}
-	return bwtSearchResult;
+	return FraPair;
 }

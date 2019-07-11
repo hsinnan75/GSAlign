@@ -15,8 +15,12 @@
 #include <ctime>
 #include <pthread.h>
 #include <sys/time.h>
+#include "../seq-align/src/alignment_cmdline.h"
+#include "../seq-align/src/needleman_wunsch.h"
 
 using namespace std;
+
+#define MaxSeedGap 5000
 
 typedef unsigned char ubyte_t;
 typedef unsigned long long bwtint_t;
@@ -134,8 +138,10 @@ typedef struct
 // Global variables
 extern bwt_t *Refbwt;
 extern bwaidx_t *RefIdx;
+extern scoring_t scoring;
 extern const char* VersionStr;
 extern time_t StartProcessTime;
+extern vector<Variant_t> VarVec;
 extern map<int64_t, int> ChrLocMap;
 extern vector<AlnBlock_t> AlnBlockVec;
 extern vector<QueryChr_t> QueryChrVec;
@@ -143,8 +149,8 @@ extern unsigned char nst_nt4_table[256];
 extern vector<Chromosome_t> ChromosomeVec;
 extern bool bDebugMode, bSensitive, bVCF, bShowPlot;
 extern int64_t GenomeSize, TwoGenomeSize, TotalAlignmentLength, LocalAlignmentNum;
-extern int ObrPos, QueryChrIdx, iThreadNum, iQueryChrNum, iChromsomeNum, MinSeqIdy, MaxIndelSize, MinSeedLength, MaxSeedLength, MinAlnLength, MinClusterSize, OutputFormat;
 extern char *RefSequence, *RefSeqFileName, *IndexFileName, *QueryFileName, *OutputPrefix, *vcfFileName, *mafFileName, *alnFileName, *gpFileName, *GnuPlotPath;
+extern int ObrPos, QueryChrIdx, iThreadNum, iQueryChrNum, iChromsomeNum, AlnBlockNum, MinSeqIdy, MaxIndelSize, MinSeedLength, MinAlnLength, MinAlnBlockScore, OutputFormat;
 
 extern string TrimChromosomeName(string name);
 
@@ -155,33 +161,58 @@ extern bwaidx_t *bwa_idx_load(const char *hint);
 
 // bwt_search.cpp
 extern bwtSearchResult_t BWT_Search(string& seq, int start, int stop);
+extern FragPair_t Specific_BWT_Search(string& seq, int start, int stop, int64_t rPos1, int64_t rPos2);
 
 // GSAlign.cpp
 extern void GenomeComparison();
 extern void OutputSequenceVariants();
 extern void *GenerateFragAlignment(void *arg);
-extern void RemoveOverlaps(vector<FragPair_t>& FragPairVec);
+extern void RemoveOverlaps(AlnBlock_t& AlnBlock);
 extern void ShowFragPairVec(vector<FragPair_t>& FragPairVec);
 extern int CalAlnBlockScore(vector<FragPair_t>& FragPairVec);
 extern void IdentifyNormalPairs(vector<FragPair_t>& FragPairVec);
 extern bool CompByPosDiff(const FragPair_t& p1, const FragPair_t& p2);
 
+// ProcessCandidateAlignment.cpp
+extern void RemoveBadAlnBlocks();
+extern void *FillAlnBlockGaps(void *arg);
+extern void *CheckAlnBlockOverlaps(void *arg);
+extern void *CheckAlnBlockLargeGaps(void *arg);
+//extern void *CheckAlnBlockNoisySeeds(void *arg);
+extern void RemoveBadSeeds(AlnBlock_t& AlnBlock);
+//extern void CheckOverlaps(vector<FragPair_t>& FragPairVec);
+extern int CalAlnBlockScore(vector<FragPair_t>& FragPairVec);
+extern bool CompByRemoval(const FragPair_t& p1, const FragPair_t& p2);
+extern bool CompByPosDiff(const FragPair_t& p1, const FragPair_t& p2);
+extern bool CompByQueryPos(const FragPair_t& p1, const FragPair_t& p2);
+extern void CheckAlnBlockCompleteness(vector<FragPair_t>& FragPairVec);
+extern bool CompByAlnBlockScore(const AlnBlock_t& p1, const AlnBlock_t& p2);
+
 // dupDetection.cpp
-extern void dupDetection();
+//extern void dupDetection();
 
 // KmerAnalysis.cpp
 extern vector<uint32_t> CreateKmerVecFromReadSeq(int len, char* seq);
+extern bool CalGapSimilarity(int qPos1, int qPos2, int64_t rPos1, int64_t rPos2);
 //extern vector<FragPair_t> PartitionNormalPair(int len1, char* frag1, int len2, char* frag2);
 
 // GetData.cpp
 extern void GetQueryGenomeSeq();
 extern bool CheckBWAIndexFiles(string IndexPrefix);
 
+// SEqVariant.cpp
+extern void VariantIdentification();
+
+// DotPloting.cpp
+extern void OutputDotplot();
+
 // tools.cpp
 extern void OutputMAF();
 extern void OutputAlignment();
 extern int CheckMemoryUsage();
+extern void ShowFragPair(FragPair_t& FragPair);
 extern void ShowSeedLocationInfo(int64_t MyPos);
+extern int64_t CalPosDiffAvg(vector<int64_t>& vec);
 extern Coordinate_t GenCoordinateInfo(int64_t rPos);
 extern void SelfComplementarySeq(int len, char* seq);
 extern void OutputDesiredAlignment(AlnBlock_t AlnBlock);
@@ -189,4 +220,7 @@ extern void ShowFragPairVec(vector<FragPair_t>& FragPairVec);
 extern void ShowAlnBlockBoundary(int score, vector<FragPair_t>& FragPairVec);
 
 // nw_alignment.cpp
-extern void nw_alignment(int m, string& s1, int n, string& s2);
+extern void nw_alignment(string& s1, string& s2);
+
+// ksw2_alignment.cpp
+extern void ksw2_alignment(int m, string& s1, int n, string& s2);
