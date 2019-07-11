@@ -15,8 +15,8 @@
 #include <ctime>
 #include <pthread.h>
 #include <sys/time.h>
-#include "../seq-align/src/alignment_cmdline.h"
-#include "../seq-align/src/needleman_wunsch.h"
+//#include "../seq-align/src/alignment_cmdline.h"
+//#include "../seq-align/src/needleman_wunsch.h"
 
 using namespace std;
 
@@ -138,7 +138,7 @@ typedef struct
 // Global variables
 extern bwt_t *Refbwt;
 extern bwaidx_t *RefIdx;
-extern scoring_t scoring;
+//extern scoring_t scoring;
 extern const char* VersionStr;
 extern time_t StartProcessTime;
 extern vector<Variant_t> VarVec;
@@ -219,8 +219,8 @@ extern void OutputDesiredAlignment(AlnBlock_t AlnBlock);
 extern void ShowFragPairVec(vector<FragPair_t>& FragPairVec);
 extern void ShowAlnBlockBoundary(int score, vector<FragPair_t>& FragPairVec);
 
-// nw_alignment.cpp
-extern void nw_alignment(string& s1, string& s2);
+//// nw_alignment.cpp
+//extern void nw_alignment(string& s1, string& s2);
 
 // ksw2_alignment.cpp
 extern void ksw2_alignment(int m, string& s1, int n, string& s2);

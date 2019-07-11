@@ -1,10 +1,7 @@
 .KEEP_STAT:
 
-all: align main
+all: main
 
-align:
-		make -C seq-align
-		
 main:		
 		make -C src && mv src/GSAlign .
 

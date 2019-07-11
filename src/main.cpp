@@ -4,7 +4,7 @@
 bwt_t *Refbwt;
 string cmd_line;
 bwaidx_t *RefIdx;
-scoring_t scoring;
+//scoring_t scoring;
 time_t StartProcessTime;
 vector<QueryChr_t> QueryChrVec;
 const char* VersionStr = "1.0.0";
@@ -167,7 +167,7 @@ int main(int argc, char* argv[])
 	MaxIndelSize = 25;
 	RefSequence = RefSeqFileName = IndexFileName = QueryFileName = OutputPrefix = NULL;
 
-	scoring_system_default(&scoring);
+	//scoring_system_default(&scoring);
 	if (argc == 1 || strcmp(argv[1], "-h") == 0)
 	{
 		ShowProgramUsage(argv[0]);
