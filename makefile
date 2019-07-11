@@ -1,6 +1,6 @@
 .KEEP_STAT:
 
-all: main
+all: main index
 
 main:		
 		make -C src && mv src/GSAlign .
