@@ -1,6 +1,6 @@
 .KEEP_STAT:
 
-all: main
+all: align main
 
 align:
 		make -C seq-align
