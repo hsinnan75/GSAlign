@@ -4,7 +4,6 @@
 bwt_t *Refbwt;
 string cmd_line;
 bwaidx_t *RefIdx;
-//scoring_t scoring;
 time_t StartProcessTime;
 vector<QueryChr_t> QueryChrVec;
 const char* VersionStr = "1.0.0";
@@ -19,16 +18,14 @@ void ShowProgramUsage(const char* program)
 	fprintf(stderr, "Usage: %s [-i IndexFile Prefix / -r Reference file] -q QueryFile[Fasta]\n\n", program);
 	fprintf(stderr, "Options: -t     INT     number of threads [%d]\n", iThreadNum);
 	fprintf(stderr, "         -o     STR     Set the prefix of the output files [output]\n");
-	fprintf(stderr, "         -sensitive     Sensitive mode [False]\n");
 	fprintf(stderr, "         -fmt   INT     Set the output format 1:maf, 2:aln [%d]\n", OutputFormat);
 	fprintf(stderr, "         -idy   INT     Set the minimal sequence identity (0-100) of a local alignment [%d]\n", MinSeqIdy);
 	fprintf(stderr, "         -slen  INT     Set the minimal seed length [%d]\n", MinSeedLength);
-	//fprintf(stderr, "         -mlen  INT     Set the maximal seed length [%d]\n", MaxSeedLength);
 	fprintf(stderr, "         -alen  INT     Set the minimal alignment length [%d]\n", MinAlnLength);
 	fprintf(stderr, "         -ind   INT     Set the maximal indel size [%d]\n", MaxIndelSize);
-	//fprintf(stderr, "         -clr   INT     Set the minimal cluster size [%d]\n", MinAlnBlockScore);
+	fprintf(stderr, "         -clr   INT     Set the minimal cluster size [%d]\n", MinAlnBlockScore);
+	fprintf(stderr, "         -sen           Sensitive mode [False]\n");
 	fprintf(stderr, "         -dp            Output Dot-plots\n");
-	//fprintf(stderr, "         -dup           Duplication detection mode [false]\n");
 	fprintf(stderr, "\n");
 }
 
@@ -163,11 +160,10 @@ int main(int argc, char* argv[])
 	MinSeedLength = 15;
 	MinAlnBlockScore = 50;
 	MinAlnLength = 200;
-	MinSeqIdy = 30;
+	MinSeqIdy = 70;
 	MaxIndelSize = 25;
 	RefSequence = RefSeqFileName = IndexFileName = QueryFileName = OutputPrefix = NULL;
 
-	//scoring_system_default(&scoring);
 	if (argc == 1 || strcmp(argv[1], "-h") == 0)
 	{
 		ShowProgramUsage(argv[0]);
@@ -188,7 +184,6 @@ int main(int argc, char* argv[])
 			if (parameter == "-i") IndexFileName = argv[++i];
 			else if (parameter == "-r" &&  i + 1 < argc) RefSeqFileName = argv[++i];
 			else if (parameter == "-q" && i + 1 < argc) QueryFileName = argv[++i];
-			//else if (parameter == "-dup") bDUPmode = true;
 			else if (parameter == "-t" && i + 1 < argc)
 			{
 				if ((iThreadNum = atoi(argv[++i])) < 0)
@@ -215,12 +210,11 @@ int main(int argc, char* argv[])
 					exit(0);
 				}
 			}
-			//else if (parameter == "-mlen" && i + 1 < argc) MaxSeedLength = atoi(argv[++i]);
-			else if (parameter == "-sensitive") bSensitive = true;
+			else if (parameter == "-sen" || parameter == "-sensitive") bSensitive = true;
 			else if (parameter == "-no_vcf") bVCF = false;
 			else if (parameter == "-idy" && i + 1 < argc) MinSeqIdy = atoi(argv[++i]);
 			else if (parameter == "-alen" && i + 1 < argc) MinAlnLength = atoi(argv[++i]);
-			//else if (parameter == "-clr" && i + 1 < argc) MinAlnBlockScore = atoi(argv[++i]);
+			else if (parameter == "-clr" && i + 1 < argc) MinAlnBlockScore = atoi(argv[++i]);
 			else if (parameter == "-dp") bShowPlot = true;
 			else if (parameter == "-fmt" && i + 1 < argc) OutputFormat = atoi(argv[++i]);
 			else if (parameter == "-o") OutputPrefix = argv[++i];
