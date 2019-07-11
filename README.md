@@ -59,13 +59,9 @@ To compile Evaluation.cpp, just type 'g++ Evaluation.cpp -o eva'
 
 - Output file
 
-	1. maf file: it shows the pairwise alignments between the two genomes (standard MAF format).
-	2. vcf file: it shows the sequence variants between the two genomes (standard VCF format).
-	3. ps  file: it shows the dotplot between two chromosomes (gnuplot is required).
-	4. snp file: it shows all the SNPs of the query genome (compared to the reference genome).
-	5. ind file: it shows all the insertions and deletions of the query genome (compared to the reference genome).
-
-All above file formats are in text mode.
+	1. maf/aln file: it shows the pairwise alignments between two sequences (MAF/ALN format).
+	2. vcf file: it shows sequence variants between two sequences (VCF format).
+	3. ps  file: it shows dotplot between two sequences (gnuplot is required).
 
 # Parameter setting
 
