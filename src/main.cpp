@@ -195,7 +195,7 @@ int main(int argc, char* argv[])
 			else if (parameter == "-slen" && i + 1 < argc)
 			{
 				MinSeedLength = atoi(argv[++i]);
-				if (MinSeedLength < 10 || MinSeedLength > 20)
+				if (MinSeedLength < 10 || MinSeedLength > 30)
 				{
 					fprintf(stderr, "Warning! minimal seed length is between 10~20!\n");
 					exit(0);

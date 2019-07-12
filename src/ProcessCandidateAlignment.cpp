@@ -82,17 +82,20 @@ void RemoveBadAlnBlocks()
 void CheckGapsBetweenSeeds(AlnBlock_t& AlnBlock)
 {
 	bool bSim;
-	int p, i, j, num, gap;
 	AlnBlock_t SubAlnBlock;
 	vector<int> BreakPointVec;
 	vector<int>::iterator iter;
+	int p, i, j, num, qGap, rGap;
 
 	num = (int)AlnBlock.FragPairVec.size();
 	for (i = 0, j = 1; j < num; i++, j++)
 	{
-		if ((gap = AlnBlock.FragPairVec[j].qPos - AlnBlock.FragPairVec[i].qPos - AlnBlock.FragPairVec[i].qLen) > 300)
+		qGap = AlnBlock.FragPairVec[j].qPos - AlnBlock.FragPairVec[i].qPos - AlnBlock.FragPairVec[i].qLen;
+		rGap = AlnBlock.FragPairVec[j].rPos - AlnBlock.FragPairVec[i].rPos - AlnBlock.FragPairVec[i].rLen;
+		if ((qGap > 300 || rGap > 300))
 		{
-			if (gap > MaxSeedGap || CalGapSimilarity(AlnBlock.FragPairVec[i].qPos + AlnBlock.FragPairVec[i].qLen, AlnBlock.FragPairVec[j].qPos, AlnBlock.FragPairVec[i].rPos + AlnBlock.FragPairVec[i].rLen, AlnBlock.FragPairVec[j].rPos) == false) BreakPointVec.push_back(j);
+			if (abs(qGap - rGap) > 100 || qGap > MaxSeedGap || rGap > MaxSeedGap || CalGapSimilarity(AlnBlock.FragPairVec[i].qPos + AlnBlock.FragPairVec[i].qLen, AlnBlock.FragPairVec[j].qPos, AlnBlock.FragPairVec[i].rPos + AlnBlock.FragPairVec[i].rLen, AlnBlock.FragPairVec[j].rPos) == false) 
+				BreakPointVec.push_back(j);
 			//printf("gap_size = %d\n", gap); //ShowFragPair(AlnBlock.FragPairVec[i - 1]); ShowFragPair(AlnBlock.FragPairVec[i]);
 		}
 	}
@@ -192,6 +195,7 @@ void *CheckAlnBlockOverlaps(void *arg)
 
 void IdentifyNormalPairs(vector<FragPair_t>& FragPairVec)
 {
+	bool bBreak = false;
 	FragPair_t FragPair;
 	int i, j, qGaps, rGaps, num;
 
@@ -210,8 +214,7 @@ void IdentifyNormalPairs(vector<FragPair_t>& FragPairVec)
 			FragPair.PosDiff = FragPair.rPos - FragPair.qPos;
 			FragPair.qLen = qGaps; FragPair.rLen = rGaps;
 			FragPairVec.push_back(FragPair);
-
-			if (qGaps > MaxSeedGap || rGaps > MaxSeedGap) ShowFragPair(FragPairVec[i]), ShowFragPair(FragPairVec[j]);
+			//if(qGaps > MaxSeedGap || rGaps > MaxSeedGap) printf("Gaps=%d, %d\n", qGaps, rGaps), ShowFragPair(FragPairVec[i]), ShowFragPair(FragPairVec[j]);
 		}
 	}
 	if ((int)FragPairVec.size() > num) inplace_merge(FragPairVec.begin(), FragPairVec.begin() + num, FragPairVec.end(), CompByQueryPos);

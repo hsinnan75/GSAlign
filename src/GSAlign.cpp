@@ -309,7 +309,7 @@ void SeedGroupAnalysis(int BegIdx, int EndIdx)
 	vector<FragPair_t> SeedCandidateVec;
 
 	sort(SeedVec.begin() + BegIdx, SeedVec.begin() + EndIdx, CompByQueryPos);
-	//if (EndIdx - BegIdx < 1000000) return; //printf("Group[%d-%d]\n", BegIdx, EndIdx - 1);
+	//if (EndIdx - BegIdx < 10000) return; //printf("Group[%d-%d]\n", BegIdx, EndIdx - 1);
 	//for (i = BegIdx; i < EndIdx; i++) printf("%d:", i),ShowFragPair(SeedVec[i]);
 	UniqueArr = new bool[(EndIdx - BegIdx)]();
 	for (i = BegIdx, j = i + 1; i < EndIdx; i++, j++)
@@ -528,7 +528,6 @@ void GenomeComparison()
 		fprintf(stderr, "\t\tSeed clustering and chaining..."); // iThreadNum = 1;
 		for (i = 0; i < iThreadNum; i++) pthread_create(&ThreadArr[i], NULL, GenerateAlignmentBlocks, &vec[i]);
 		for (i = 0; i < iThreadNum; i++) pthread_join(ThreadArr[i], NULL); fprintf(stderr, "\n");
-
 		EstChromosomeSimilarity(); RemoveRedundantAlnBlocksByQueryPos(); RemoveRedundantAlnBlocksByRefPos();
 
 		fprintf(stderr, "\t\tFix overlapping seeds and close gaps between gaps...");
@@ -543,6 +542,10 @@ void GenomeComparison()
 		AlnBlockNum = (int)AlnBlockVec.size(); //iThreadNum = 1;
 		for (i = 0; i < iThreadNum; i++) pthread_create(&ThreadArr[i], NULL, FillAlnBlockGaps, &vec[i]);
 		for (i = 0; i < iThreadNum; i++) pthread_join(ThreadArr[i], NULL); fprintf(stderr, "\n");
+
+		//AlnBlockNum = (int)AlnBlockVec.size();
+		//for (i = 0; i < iThreadNum; i++) pthread_create(&ThreadArr[i], NULL, CheckAlnBlockGaps, &vec[i]);
+		//for (i = 0; i < iThreadNum; i++) pthread_join(ThreadArr[i], NULL); RemoveBadAlnBlocks();
 
 		for (ABiter = AlnBlockVec.begin(); ABiter != AlnBlockVec.end(); ABiter++) ABiter->aln_len = ABiter->score = 0;
 
