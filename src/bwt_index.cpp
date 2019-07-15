@@ -245,6 +245,7 @@ void RestoreReferenceInfo()
 	{
 		ChromosomeVec[i].len = RefIdx->bns->anns[i].len;
 		ChromosomeVec[i].name = RefIdx->bns->anns[i].name;
+		//fprintf(stderr, "%d --> %s\n", i, ChromosomeVec[i].name);
 
 		ChromosomeVec[i].FowardLocation = iTotalLength; iTotalLength += ChromosomeVec[i].len;
 		ChromosomeVec[i].ReverseLocation = TwoGenomeSize - iTotalLength;

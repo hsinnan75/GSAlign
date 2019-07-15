@@ -234,12 +234,12 @@ void *FillAlnBlockGaps(void *arg)
 void *GenerateFragAlignment(void *arg)
 {
 	FragPair_t *FragPair;
-	int i, j, aln_len, score, FragPairNum, TailIdx, mismatch, *my_id = (int*)arg;
+	int i, j, aln_len, score, FragPairNum, mismatch, *my_id = (int*)arg;
 
 	for (i = 0; i < AlnBlockNum; i++)
 	{
 		aln_len = score = 0;
-		FragPairNum = (int)AlnBlockVec[i].FragPairVec.size(); TailIdx = FragPairNum - 1;
+		FragPairNum = (int)AlnBlockVec[i].FragPairVec.size();
 		//for (j = 0; j < FragPairNum;j++)
 		for (j = *my_id; j < FragPairNum; j+= iThreadNum)
 		{
@@ -253,7 +253,6 @@ void *GenerateFragAlignment(void *arg)
 				FragPair = &AlnBlockVec[i].FragPairVec[j];
 				if (FragPair->qLen == 0)
 				{
-					//AlnBlockVec[i].aln_len += FragPair->rLen;
 					aln_len += FragPair->rLen;
 					FragPair->aln1.resize(FragPair->rLen); strncpy((char*)FragPair->aln1.c_str(), RefSequence + FragPair->rPos, FragPair->rLen);
 					FragPair->aln2.assign(FragPair->rLen, '-');
@@ -264,12 +263,14 @@ void *GenerateFragAlignment(void *arg)
 					FragPair->aln1.assign(FragPair->qLen, '-');
 					FragPair->aln2.resize(FragPair->qLen); strncpy((char*)FragPair->aln2.c_str(), QueryChrVec[QueryChrIdx].seq.c_str() + FragPair->qPos, FragPair->qLen);
 				}
-				else if (FragPair->qLen == FragPair->rLen && ((mismatch = CheckFragPairMismatch(FragPair)) <= 5 || 1.0* mismatch / FragPair->qLen < 0.15))
+				//else if (FragPair->qLen == FragPair->rLen && ((mismatch = CheckFragPairMismatch(FragPair)) <= 5 || 1.0* mismatch / FragPair->qLen < 0.1))
+				else if (FragPair->qLen == FragPair->rLen && (mismatch = CheckFragPairMismatch(FragPair)) <= 5)
 				{
 					FragPair->aln1.resize(FragPair->rLen); strncpy((char*)FragPair->aln1.c_str(), RefSequence + FragPair->rPos, FragPair->rLen);
 					FragPair->aln2.resize(FragPair->qLen); strncpy((char*)FragPair->aln2.c_str(), QueryChrVec[QueryChrIdx].seq.c_str() + FragPair->qPos, FragPair->qLen);
 					aln_len += FragPair->qLen;
 					score += (FragPair->qLen - mismatch);
+					//if (FragPair->qPos == 91210692) printf("case1, mismatch=%d\n", mismatch);
 				}
 				else
 				{
@@ -278,9 +279,10 @@ void *GenerateFragAlignment(void *arg)
 					FragPair->aln1.resize(FragPair->rLen); strncpy((char*)FragPair->aln1.c_str(), RefSequence + FragPair->rPos, FragPair->rLen);
 					FragPair->aln2.resize(FragPair->qLen); strncpy((char*)FragPair->aln2.c_str(), QueryChrVec[QueryChrIdx].seq.c_str() + FragPair->qPos, FragPair->qLen);
 					ksw2_alignment(FragPair->rLen, FragPair->aln1, FragPair->qLen, FragPair->aln2);
-					//nw_alignment(FragPair->aln1, FragPair->aln2);
+					//if (FragPair->qPos == 1231410) ShowFragPair(*FragPair), printf("%s\n%s\n", FragPair->aln1.c_str(), FragPair->aln2.c_str());
 					aln_len += FragPair->aln1.length();
 					score += CountIdenticalPairs(FragPair->aln1, FragPair->aln2);
+					//if (FragPair->qPos == 91210692) printf("case2\n");
 				}
 			}
 		}

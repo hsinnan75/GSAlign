@@ -399,106 +399,48 @@ void EstChromosomeSimilarity()
 	//printf("Query=%s\n", QueryChrVec[QueryChrIdx].name.c_str()); for (i = 0; i < iChromsomeNum; i++) printf("%s: score=%lld\n", ChromosomeVec[i].name, RefChrScoreArr[i]);
 }
 
-void RemoveRedundantAlnBlocksByQueryPos()
+void RemoveRedundantAlnBlocks(int type)
 {
-	int i, j, HeadPos1, HeadPos2, TailPos1, TailPos2, chr_idx1, chr_idx2;
-
-	AlnBlockNum = (int)AlnBlockVec.size(); sort(AlnBlockVec.begin(), AlnBlockVec.end(), CompByAlnBlockQueryPos);
-	for (i = 0; i < AlnBlockNum; i++)
-	{
-		if (AlnBlockVec[i].score == 0) continue;
-		HeadPos1 = AlnBlockVec[i].FragPairVec.begin()->qPos;
-		TailPos1 = AlnBlockVec[i].FragPairVec.rbegin()->qPos + AlnBlockVec[i].FragPairVec.rbegin()->qLen - 1;
-		chr_idx1 = ChrLocMap.lower_bound(AlnBlockVec[i].FragPairVec.begin()->rPos)->second;
-		//printf("%d / %d: Head:%d Tail%d, Chr=%d\n", i + 1, AlnBlockNum, HeadPos1, TailPos1, chr_idx1); fflush(stdout);
-		for (j = i + 1; j < AlnBlockNum; j++)
-		{
-			if (AlnBlockVec[j].score == 0) continue;
-			HeadPos2 = AlnBlockVec[j].FragPairVec.begin()->qPos;
-			TailPos2 = AlnBlockVec[j].FragPairVec.rbegin()->qPos + AlnBlockVec[j].FragPairVec.rbegin()->qLen - 1;
-			chr_idx2 = ChrLocMap.lower_bound(AlnBlockVec[j].FragPairVec.begin()->rPos)->second;
-
-			if (HeadPos2 > TailPos1) break;
-			else
-			{
-				//printf("Overlap!\n"); ShowAlnBlockBoundary(AlnBlockVec[i].score, AlnBlockVec[i].FragPairVec); ShowAlnBlockBoundary(AlnBlockVec[j].score, AlnBlockVec[j].FragPairVec);
-				if (TailPos2 < TailPos1) AlnBlockVec[j].score = 0;
-				else if (HeadPos1 == HeadPos2)
-				{
-					if (TailPos1 == TailPos2)
-					{
-						if (chr_idx1 == chr_idx2) continue;
-						else if (RefChrScoreArr[chr_idx1] > RefChrScoreArr[chr_idx2]) AlnBlockVec[j].score = 0;
-						else
-						{
-							AlnBlockVec[i].score = 0; //printf("remove first\n");
-							break;
-						}
-					}
-					else if (TailPos1 > TailPos2) AlnBlockVec[j].score = 0;
-					else
-					{
-						AlnBlockVec[i].score = 0; //printf("remove first\n");
-						break;
-					}
-				}
-				else if (TailPos1 == TailPos2) AlnBlockVec[j].score = 0;
-				//if (AlnBlockVec[j].score == 0) printf("remove second\n");
-				//else printf("Do nothing!\n");
-			}
-		}
-	}
-	RemoveBadAlnBlocks();
-}
-
-void RemoveRedundantAlnBlocksByRefPos()
-{
+	float f1, f2;
 	int i, j, chr_idx1, chr_idx2;
-	int64_t HeadPos1, HeadPos2, TailPos1, TailPos2;
+	int64_t HeadPos1, HeadPos2, TailPos1, TailPos2, overlap;
 
-	AlnBlockNum = (int)AlnBlockVec.size(); sort(AlnBlockVec.begin(), AlnBlockVec.end(), CompByAlnBlockRefPos);
+	AlnBlockNum = (int)AlnBlockVec.size(); 
+	if (type == 1) sort(AlnBlockVec.begin(), AlnBlockVec.end(), CompByAlnBlockQueryPos);
+	else sort(AlnBlockVec.begin(), AlnBlockVec.end(), CompByAlnBlockRefPos);
+
 	for (i = 0; i < AlnBlockNum; i++)
 	{
 		if (AlnBlockVec[i].score == 0) continue;
-		HeadPos1 = AlnBlockVec[i].FragPairVec.begin()->rPos;
-		TailPos1 = AlnBlockVec[i].FragPairVec.rbegin()->rPos + AlnBlockVec[i].FragPairVec.rbegin()->rLen - 1;
+		HeadPos1 = (type == 1 ? AlnBlockVec[i].FragPairVec.begin()->qPos : AlnBlockVec[i].FragPairVec.begin()->rPos);
+		TailPos1 = (type == 1 ? AlnBlockVec[i].FragPairVec.rbegin()->qPos + AlnBlockVec[i].FragPairVec.rbegin()->qLen - 1 : AlnBlockVec[i].FragPairVec.rbegin()->rPos + AlnBlockVec[i].FragPairVec.rbegin()->rLen - 1);
 		chr_idx1 = ChrLocMap.lower_bound(AlnBlockVec[i].FragPairVec.begin()->rPos)->second;
+		if (type == 2 && HeadPos1 >= GenomeSize) ReverseRefCoordinate(HeadPos1, TailPos1);
 
 		for (j = i + 1; j < AlnBlockNum; j++)
 		{
 			if (AlnBlockVec[j].score == 0) continue;
-			HeadPos2 = AlnBlockVec[j].FragPairVec.begin()->rPos;
-			TailPos2 = AlnBlockVec[j].FragPairVec.rbegin()->rPos + AlnBlockVec[j].FragPairVec.rbegin()->rLen - 1;
+			HeadPos2 = (type == 1 ? AlnBlockVec[j].FragPairVec.begin()->qPos : AlnBlockVec[j].FragPairVec.begin()->rPos);
+			TailPos2 = (type == 1 ? AlnBlockVec[j].FragPairVec.rbegin()->qPos + AlnBlockVec[j].FragPairVec.rbegin()->qLen - 1 : AlnBlockVec[j].FragPairVec.rbegin()->rPos + AlnBlockVec[j].FragPairVec.rbegin()->rLen - 1);
 			chr_idx2 = ChrLocMap.lower_bound(AlnBlockVec[j].FragPairVec.begin()->rPos)->second;
+			if (type == 2 && HeadPos2 >= GenomeSize) ReverseRefCoordinate(HeadPos2, TailPos2);
 
-			if (HeadPos2 > TailPos1) break;
-			else
+			if (HeadPos2 < TailPos1) // overlap
 			{
-				//printf("Overlap!\n"); ShowAlnBlockBoundary(AlnBlockVec[i].score, AlnBlockVec[i].FragPairVec); ShowAlnBlockBoundary(AlnBlockVec[j].score, AlnBlockVec[j].FragPairVec);
-				if (TailPos2 < TailPos1) AlnBlockVec[j].score = 0;
-				else if (HeadPos1 == HeadPos2)
+				overlap = (TailPos2 > TailPos1 ? TailPos1 - HeadPos2 : TailPos2 - HeadPos2); f1 = 1.*overlap / (TailPos1 - HeadPos1); f2 = 1.*overlap / (TailPos2 - HeadPos2);
+				//printf("\nType=%d Overlap=%d, f1=%.4f f2=%.4f\n", type, overlap, f1, f2); ShowAlnBlockBoundary(AlnBlockVec[i].score, AlnBlockVec[i].FragPairVec); ShowAlnBlockBoundary(AlnBlockVec[j].score, AlnBlockVec[j].FragPairVec);
+				//if (((HeadPos1 < ObrPos && TailPos1 > ObrPos) || (HeadPos2 < ObrPos && TailPos2 > ObrPos))) printf("!!!\n");
+				if ((f1 > f2 && f1 >= 0.9) || RefChrScoreArr[chr_idx2] > RefChrScoreArr[chr_idx1])
 				{
-					if (TailPos1 == TailPos2)
-					{
-						if (chr_idx1 == chr_idx2) continue; // repeat|CNV
-						else if (RefChrScoreArr[chr_idx1] > RefChrScoreArr[chr_idx2]) AlnBlockVec[j].score = 0;
-						else
-						{
-							AlnBlockVec[i].score = 0; //printf("remove first\n");
-							break;
-						}
-					}
-					else if (TailPos1 > TailPos2) AlnBlockVec[j].score = 0;
-					else
-					{
-						AlnBlockVec[i].score = 0; //printf("remove first\n");
-						break;
-					}
+					AlnBlockVec[i].score = 0; //printf("Remove first\n");
+					break;
 				}
-				else if (TailPos1 == TailPos2) AlnBlockVec[j].score = 0;
-				//if (AlnBlockVec[j].score == 0) printf("remove second\n");
-				//else printf("Do nothing!\n");
+				if ((f2 > f1 && f2 >= 0.9) || RefChrScoreArr[chr_idx1] > RefChrScoreArr[chr_idx2])
+				{
+					AlnBlockVec[j].score = 0; //printf("Remove second\n");
+				}
 			}
+			else break;
 		}
 	}
 	RemoveBadAlnBlocks();
@@ -516,6 +458,8 @@ void GenomeComparison()
 	fprintf(stderr, "Step2. Sequence analysis for all query chromosomes\n");
 	for (QueryChrIdx = 0; QueryChrIdx != iQueryChrNum; QueryChrIdx++)
 	{
+		//if (QueryChrVec[QueryChrIdx].name != "chr14_mut") continue;
+		//printf("Query=%s\n", QueryChrVec[QueryChrIdx].name.c_str());
 		fprintf(stderr, "\tProcess query chromsomoe: %s...\n", QueryChrVec[QueryChrIdx].name.c_str());
 		QrySeqPos = 0; QryChrLength = QueryChrVec[QueryChrIdx].seq.length();
 
@@ -528,7 +472,7 @@ void GenomeComparison()
 		fprintf(stderr, "\t\tSeed clustering and chaining..."); // iThreadNum = 1;
 		for (i = 0; i < iThreadNum; i++) pthread_create(&ThreadArr[i], NULL, GenerateAlignmentBlocks, &vec[i]);
 		for (i = 0; i < iThreadNum; i++) pthread_join(ThreadArr[i], NULL); fprintf(stderr, "\n");
-		EstChromosomeSimilarity(); RemoveRedundantAlnBlocksByQueryPos(); RemoveRedundantAlnBlocksByRefPos();
+		EstChromosomeSimilarity(); RemoveRedundantAlnBlocks(1); RemoveRedundantAlnBlocks(2);
 
 		fprintf(stderr, "\t\tFix overlapping seeds and close gaps between gaps...");
 		AlnBlockNum = (int)AlnBlockVec.size();// iThreadNum = 1;
@@ -543,15 +487,12 @@ void GenomeComparison()
 		for (i = 0; i < iThreadNum; i++) pthread_create(&ThreadArr[i], NULL, FillAlnBlockGaps, &vec[i]);
 		for (i = 0; i < iThreadNum; i++) pthread_join(ThreadArr[i], NULL); fprintf(stderr, "\n");
 
-		//AlnBlockNum = (int)AlnBlockVec.size();
-		//for (i = 0; i < iThreadNum; i++) pthread_create(&ThreadArr[i], NULL, CheckAlnBlockGaps, &vec[i]);
-		//for (i = 0; i < iThreadNum; i++) pthread_join(ThreadArr[i], NULL); RemoveBadAlnBlocks();
+		//sort(AlnBlockVec.begin(), AlnBlockVec.end(), CompByAlnBlockRefPos);
+		//for (ABiter = AlnBlockVec.begin(); ABiter != AlnBlockVec.end(); ABiter++) ShowAlnBlockBoundary(ABiter->score, ABiter->FragPairVec);
+		//for (ABiter = AlnBlockVec.begin(); ABiter != AlnBlockVec.end(); ABiter++) ShowFragPairVec(ABiter->FragPairVec);
+		//continue;
 
 		for (ABiter = AlnBlockVec.begin(); ABiter != AlnBlockVec.end(); ABiter++) ABiter->aln_len = ABiter->score = 0;
-
-		//for (ABiter = AlnBlockVec.begin(); ABiter != AlnBlockVec.end(); ABiter++) ShowFragPairVec(ABiter->FragPairVec); //ShowAlnBlockBoundary(ABiter->score, ABiter->FragPairVec); 
-		//for (ABiter = AlnBlockVec.begin(); ABiter != AlnBlockVec.end(); ABiter++) ShowAlnBlockBoundary(ABiter->score, ABiter->FragPairVec);
-
 		fprintf(stderr, "\t\tGenreate sequence alignment..."); //iThreadNum = 1;
 		for (i = 0; i < iThreadNum; i++) pthread_create(&ThreadArr[i], NULL, GenerateFragAlignment, &vec[i]);
 		for (i = 0; i < iThreadNum; i++) pthread_join(ThreadArr[i], NULL); fprintf(stderr, "\n");
@@ -563,8 +504,11 @@ void GenomeComparison()
 			{
 				LocalAlignmentNum++; TotalAlignmentLength += ABiter->aln_len;
 				ABiter->coor = GenCoordinateInfo(ABiter->FragPairVec[0].rPos);
+				//if (ABiter->FragPairVec.begin()->rPos < ObrPos && ABiter->FragPairVec.rbegin()->rPos > ObrPos) ShowFragPairVec(ABiter->FragPairVec);
 			}
 		}
+		RemoveBadAlnBlocks();
+
 		if (OutputFormat == 1) fprintf(stderr, "\t\tOutput alignments for query sequence (%s)\n", mafFileName), OutputMAF();
 		if (OutputFormat == 2) fprintf(stderr, "\t\tOutput alignments for query sequence (%s)\n", alnFileName), OutputAlignment();
 		if (bVCF) fprintf(stderr, "\t\tIdentify sequence variants for query sequence...\n"), VariantIdentification();

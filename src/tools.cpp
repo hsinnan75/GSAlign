@@ -90,20 +90,20 @@ void ShowFragPairVec(vector<FragPair_t>& FragPairVec)
 	printf("FragPairVec (N=%d)\n", (int)FragPairVec.size());
 	for (vector<FragPair_t>::iterator iter = FragPairVec.begin(); iter != FragPairVec.end(); iter++)
 	{
-		ShowFragPair(*iter);
-		//if (iter->bSeed)
-		//{
-		//	printf("\t\tq[%d-%d] r[%lld-%lld] len=%d\n", iter->qPos, iter->qPos + iter->qLen - 1, iter->rPos, iter->rPos + iter->rLen - 1, iter->qLen);
-		//	//char *frag = new char[iter->qLen + 1];
-		//	//strncpy(frag, QueryChrVec[QueryChrIdx].seq.c_str() + iter->qPos, iter->qLen); frag[iter->qLen] = '\0';
-		//	//printf("\t\t%s\n", frag);
-		//	//delete[] frag;
-		//}
-		//else
-		//{
-		//	printf("\t\tq[%d-%d]=%d r[%lld-%lld]=%d\n", iter->qPos, iter->qPos + iter->qLen - 1, iter->qLen, iter->rPos, iter->rPos + iter->rLen - 1, iter->rLen);
-		//	printf("\t\t%s\n\t\t%s\n", iter->aln1.c_str(), iter->aln2.c_str());
-		//}
+		//ShowFragPair(*iter);
+		if (iter->bSeed)
+		{
+			//printf("\t\tq[%d-%d] r[%lld-%lld] len=%d\n", iter->qPos, iter->qPos + iter->qLen - 1, iter->rPos, iter->rPos + iter->rLen - 1, iter->qLen);
+			//char *frag = new char[iter->qLen + 1];
+			//strncpy(frag, QueryChrVec[QueryChrIdx].seq.c_str() + iter->qPos, iter->qLen); frag[iter->qLen] = '\0';
+			//printf("\t\t%s\n", frag);
+			//delete[] frag;
+		}
+		else
+		{
+			printf("\t\tq[%d-%d]=%d r[%lld-%lld]=%d\n", iter->qPos, iter->qPos + iter->qLen - 1, iter->qLen, iter->rPos, iter->rPos + iter->rLen - 1, iter->rLen);
+			printf("\t\t%s\n\t\t%s\n", iter->aln1.c_str(), iter->aln2.c_str());
+		}
 	}
 	printf("End\n\n");
 }
@@ -154,7 +154,6 @@ void OutputMAF()
 
 	for (vector<AlnBlock_t>::iterator ABiter = AlnBlockVec.begin(); ABiter != AlnBlockVec.end(); ABiter++)
 	{
-		if (ABiter->score == 0) continue; //ShowFragPairVec(ABiter->FragPairVec);
 		aln_len = 0; aln1 = new char[ABiter->aln_len + 1]; aln2 = new char[ABiter->aln_len + 1]; aln1[ABiter->aln_len] = aln2[ABiter->aln_len] = '\0';
 		for (FragPairIter = ABiter->FragPairVec.begin(); FragPairIter != ABiter->FragPairVec.end(); FragPairIter++)
 		{
@@ -202,13 +201,14 @@ void OutputAlignment()
 	int64_t RefPos;
 	char *aln1, *aln2;
 	string QueryChrName, RefChrName;
-	int i, p, q, aln_len, RefIdx, QueryPos;
+	int pos, p, q, aln_len, RefIdx, QueryPos;
 	vector<FragPair_t>::iterator FragPairIter;
 
-	outFile = fopen(alnFileName, "a");
+	if (QueryChrIdx == 0) outFile = fopen(alnFileName, "w");
+	else outFile = fopen(alnFileName, "a");
+
 	for (vector<AlnBlock_t>::iterator ABiter = AlnBlockVec.begin(); ABiter != AlnBlockVec.end(); ABiter++)
 	{
-		if (ABiter->score == 0) continue; //ShowFragPairVec(ABiter->FragPairVec);
 		aln_len = 0; aln1 = new char[ABiter->aln_len + 1]; aln2 = new char[ABiter->aln_len + 1]; aln1[ABiter->aln_len] = aln2[ABiter->aln_len] = '\0';
 		for (FragPairIter = ABiter->FragPairVec.begin(); FragPairIter != ABiter->FragPairVec.end(); FragPairIter++)
 		{
@@ -231,15 +231,14 @@ void OutputAlignment()
 		else QueryChrName += string().assign((RefChrName.length() - QueryChrName.length()), ' ');
 
 		fprintf(outFile, "#Identity = %d / %d (%.2f%%) Orientation = %s\n\n", ABiter->score, ABiter->aln_len, (int)(1000 * (1.0*ABiter->score / ABiter->aln_len)) / 10.0, ABiter->coor.bDir ? "Forward" : "Reverse");
-		//ShowFragPairVec(ABiter->FragPairVec); printf("\n\n");
-		i = 0; QueryPos = ABiter->FragPairVec[0].qPos + 1; RefPos = ABiter->coor.gPos; 
-		while (i < aln_len)
+		pos = 0; QueryPos = ABiter->FragPairVec[0].qPos + 1; RefPos = ABiter->coor.gPos;
+		while (pos < aln_len)
 		{
-			p = 80 - CountGapNum(aln1, i, (i + 80 > aln_len ? aln_len : i + 80));
-			q = 80 - CountGapNum(aln2, i, (i + 80 > aln_len ? aln_len : i + 80));
+			p = 80 - CountGapNum(aln1, pos, (pos + 80 > aln_len ? aln_len : pos + 80));
+			q = 80 - CountGapNum(aln2, pos, (pos + 80 > aln_len ? aln_len : pos + 80));
 
-			fprintf(outFile, "%s\t%12d\t%.80s\n%s\t%12d\t%.80s\n\n", RefChrName.c_str(), RefPos, aln1 + i, QueryChrName.c_str(), QueryPos, aln2 + i);
-			i += 80; RefPos += (ABiter->coor.bDir ? p : 0 - p); QueryPos += q;
+			fprintf(outFile, "%s\t%12d\t%.80s\n%s\t%12d\t%.80s\n\n", RefChrName.c_str(), RefPos, aln1 + pos, QueryChrName.c_str(), QueryPos, aln2 + pos);
+			pos += 80; RefPos += (ABiter->coor.bDir ? p : 0 - p); QueryPos += q;
 		}
 		delete[] aln1; delete[] aln2;
 		fprintf(outFile, "%s\n", string().assign(100, '*').c_str());
@@ -262,4 +261,13 @@ int64_t CalPosDiffAvg(vector<int64_t>& vec)
 	}
 	if (n > 0) return (sum / n);
 	else return GenomeSize;
+}
+
+void ReverseRefCoordinate(int64_t &pos1, int64_t &pos2)
+{
+	int64_t tmp_pos;
+
+	tmp_pos = pos1;
+	pos1 = TwoGenomeSize - 1 - pos2;
+	pos2 = TwoGenomeSize - 1 - tmp_pos;
 }

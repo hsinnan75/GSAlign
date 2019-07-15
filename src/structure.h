@@ -124,6 +124,7 @@ typedef struct
 {
 	int pos;
 	int chr_idx;
+	int query_idx;
 	string ref_frag;
 	string alt_frag;
 	int type;
@@ -217,6 +218,7 @@ extern Coordinate_t GenCoordinateInfo(int64_t rPos);
 extern void SelfComplementarySeq(int len, char* seq);
 extern void OutputDesiredAlignment(AlnBlock_t AlnBlock);
 extern void ShowFragPairVec(vector<FragPair_t>& FragPairVec);
+extern void ReverseRefCoordinate(int64_t &pos1, int64_t &pos2);
 extern void ShowAlnBlockBoundary(int score, vector<FragPair_t>& FragPairVec);
 
 // ksw2_alignment.cpp

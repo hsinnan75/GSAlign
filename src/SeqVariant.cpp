@@ -18,10 +18,9 @@ void VariantIdentification()
 
 	for (vector<AlnBlock_t>::iterator ABiter = AlnBlockVec.begin(); ABiter != AlnBlockVec.end(); ABiter++)
 	{
-		if (ABiter->score == 0) continue;
-		//OutputDesiredAlignment(*ABiter); ShowFragPairVec(ABiter->FragPairVec);
 		Variant.chr_idx = ABiter->coor.ChromosomeIdx;
-		//if (ObrPos != -1 && ABiter->coor.gPos < ObrPos && ABiter->coor.gPos + ABiter->aln_len > ObrPos) OutputDesiredAlignment(*ABiter);
+		Variant.query_idx = QueryChrIdx;
+
 		for (FragPairIter = ABiter->FragPairVec.begin(); FragPairIter != ABiter->FragPairVec.end(); FragPairIter++)
 		{
 			if (!FragPairIter->bSeed)
@@ -35,8 +34,6 @@ void VariantIdentification()
 					Variant.ref_frag = frag1;
 					Variant.alt_frag.resize(1); Variant.alt_frag[0] = QueryChrVec[QueryChrIdx].seq[FragPairIter->qPos - 1];
 					VarVec.push_back(Variant);
-					//if (GenCoordinateInfo(rPos - 1).gPos == 223885) OutputDesiredAlignment(*ABiter);
-					//fprintf(outFile, "%s\t%d\t.\t%s\t%c\t100\tPASS\tmt=DELETE\n", RefChrName.c_str(), GenCoordinateInfo(FragPairIter->rPos - 1).gPos, (char*)frag1.c_str(), QueryChrVec[QueryChrIdx].seq[FragPairIter->qPos - 1]);
 				}
 				else if (FragPairIter->rLen == 0) // insert
 				{
@@ -46,7 +43,6 @@ void VariantIdentification()
 					Variant.ref_frag.resize(1); Variant.ref_frag[0] = RefSequence[FragPairIter->rPos - 1];
 					Variant.alt_frag = frag2;
 					VarVec.push_back(Variant);
-					//fprintf(outFile, "%s\t%d\t.\t%c\t%s\t100\tPASS\tmt=INSERT\n", RefChrName.c_str(), GenCoordinateInfo(FragPairIter->rPos - 1).gPos, RefSequence[FragPairIter->rPos - 1], (char*)frag2.c_str());
 				}
 				else if (FragPairIter->qLen == 1 && FragPairIter->rLen == 1) // substitution
 				{
@@ -57,8 +53,7 @@ void VariantIdentification()
 						Variant.ref_frag = FragPairIter->aln1;
 						Variant.alt_frag = FragPairIter->aln2;
 						VarVec.push_back(Variant);
-						//if (GenCoordinateInfo(rPos - 1).gPos == 223885) OutputDesiredAlignment(*ABiter);
-						//fprintf(outFile, "%s\t%d\t.\t%c\t%c\t100\tPASS\tmt=SUBSTITUTE\n", RefChrName.c_str(), GenCoordinateInfo(FragPairIter->rPos).gPos, FragPairIter->aln1[0], FragPairIter->aln2[0]);
+						//if (Variant.pos == 6250062) ShowFragPairVec(ABiter->FragPairVec);
 					}
 				}
 				else
@@ -85,7 +80,7 @@ void VariantIdentification()
 							ind_len = 1; while (FragPairIter->aln2[i + ind_len] == '-') ind_len++;
 							frag1.resize(ind_len + 2); frag1[ind_len + 1] = '\0';
 							strncpy((char*)frag1.c_str(), RefSequence + rPos - 1, ind_len + 1);
-							//fprintf(outFile, "%s\t%d\t.\t%s\t%c\t100\tPASS\tmt=DELETE\n", RefChrName.c_str(), GenCoordinateInfo(rPos - 1).gPos, (char*)frag1.c_str(), frag1[0]);
+
 							Variant.type = 2;
 							Variant.pos = GenCoordinateInfo(rPos - 1).gPos;
 							Variant.ref_frag = frag1;
@@ -98,12 +93,12 @@ void VariantIdentification()
 						{
 							if (nst_nt4_table[(int)FragPairIter->aln1[i]] != 4 && nst_nt4_table[(int)FragPairIter->aln2[i]] != 4)
 							{
-								//fprintf(outFile, "%s\t%d\t.\t%c\t%c\t100\tPASS\tmt=SUBSTITUTE\n", RefChrName.c_str(), GenCoordinateInfo(rPos).gPos, FragPairIter->aln1[i], FragPairIter->aln2[i]);
 								Variant.type = 0;
 								Variant.pos = GenCoordinateInfo(rPos).gPos;
 								Variant.ref_frag.resize(1); Variant.ref_frag[0] = FragPairIter->aln1[i];
 								Variant.alt_frag.resize(1); Variant.alt_frag[0] = FragPairIter->aln2[i];
 								VarVec.push_back(Variant);
+								//if (Variant.pos == 6250062) ShowFragPairVec(ABiter->FragPairVec);
 							}
 							rPos++; qPos++;
 						}
@@ -133,6 +128,7 @@ void OutputSequenceVariants()
 	fprintf(outFile, "##INFO=<ID=TYPE,Type=String,Description=\"The type of allele, either SUBSTITUTE, INSERT, DELETE, or BND.\">\n");
 	for (vector<Variant_t>::iterator iter = VarVec.begin(); iter != VarVec.end(); iter++)
 	{
+		//fprintf(outFile, "%s\t%d\t.\t%s\t%s\t100\tPASS\tQuery=%s,TYPE=%s\n", ChromosomeVec[iter->chr_idx].name, iter->pos, (char*)iter->ref_frag.c_str(), (char*)iter->alt_frag.c_str(), QueryChrVec[iter->query_idx].name.c_str(), MutType[iter->type]);
 		fprintf(outFile, "%s\t%d\t.\t%s\t%s\t100\tPASS\tTYPE=%s\n", ChromosomeVec[iter->chr_idx].name, iter->pos, (char*)iter->ref_frag.c_str(), (char*)iter->alt_frag.c_str(), MutType[iter->type]);
 	}
 	std::fclose(outFile);
