@@ -1,7 +1,9 @@
 #include "structure.h"
 
-#define KmerSize 8
-#define KmerPower 0x3FFF
+//#define KmerSize 8
+//#define KmerPower 0x3FFF
+#define KmerSize 5
+#define KmerPower 0xFF
 
 const char* DNA = "ACGT";
 
@@ -103,7 +105,7 @@ bool CalGapSimilarity(int qPos1, int qPos2, int64_t rPos1, int64_t rPos2)
 		KmerVec1 = CreateKmerVecFromReadSeq(q_len, (char*)query_frag.c_str());
 		KmerVec2 = CreateKmerVecFromReadSeq(r_len, (char*)ref_frag.c_str());
 		set_intersection(KmerVec1.begin(), KmerVec1.end(), KmerVec2.begin(), KmerVec2.end(), back_inserter(vec));
-		if ((int)vec.size() > (q_len + r_len)*0.15) bSimilar = true;
+		if ((int)vec.size() > (q_len + r_len)*0.1) bSimilar = true;
 
 		//if (!bSimilar)
 		//{

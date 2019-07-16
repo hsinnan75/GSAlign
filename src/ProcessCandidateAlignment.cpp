@@ -72,8 +72,8 @@ void RemoveBadSeeds(vector<FragPair_t>& FragPairVec)
 
 void RemoveBadAlnBlocks()
 {
-	int num;
-	num = AlnBlockVec.size(); sort(AlnBlockVec.begin(), AlnBlockVec.end(), CompByAlnBlockScore);
+	int num = AlnBlockVec.size(); 
+	sort(AlnBlockVec.begin(), AlnBlockVec.end(), CompByAlnBlockScore);
 	while (AlnBlockVec[num -1].score == 0) num--;
 	//fprintf(stderr, "\t\tAlnBlockNum = %d --> %d\n", AlnBlockVec.size(), num);
 	AlnBlockVec.resize(num);
@@ -94,9 +94,10 @@ void CheckGapsBetweenSeeds(AlnBlock_t& AlnBlock)
 		rGap = AlnBlock.FragPairVec[j].rPos - AlnBlock.FragPairVec[i].rPos - AlnBlock.FragPairVec[i].rLen;
 		if ((qGap > 300 || rGap > 300))
 		{
-			if (abs(qGap - rGap) > 100 || qGap > MaxSeedGap || rGap > MaxSeedGap || CalGapSimilarity(AlnBlock.FragPairVec[i].qPos + AlnBlock.FragPairVec[i].qLen, AlnBlock.FragPairVec[j].qPos, AlnBlock.FragPairVec[i].rPos + AlnBlock.FragPairVec[i].rLen, AlnBlock.FragPairVec[j].rPos) == false) 
+			if (qGap > MaxSeedGap || rGap > MaxSeedGap || CalGapSimilarity(AlnBlock.FragPairVec[i].qPos + AlnBlock.FragPairVec[i].qLen, AlnBlock.FragPairVec[j].qPos, AlnBlock.FragPairVec[i].rPos + AlnBlock.FragPairVec[i].rLen, AlnBlock.FragPairVec[j].rPos) == false)
+			{
 				BreakPointVec.push_back(j);
-			//printf("gap_size = %d\n", gap); //ShowFragPair(AlnBlock.FragPairVec[i - 1]); ShowFragPair(AlnBlock.FragPairVec[i]);
+			}
 		}
 	}
 	if ((num = (int)BreakPointVec.size()) > 0) // split this alignment block
@@ -106,14 +107,13 @@ void CheckGapsBetweenSeeds(AlnBlock_t& AlnBlock)
 		for (i = 0, iter = BreakPointVec.begin(); iter != BreakPointVec.end();iter++)
 		{
 			j = *iter;
-			//printf("split [%d-%d]\n", i, j); ShowFragPair(AlnBlock.FragPairVec[j - 1]); ShowFragPair(AlnBlock.FragPairVec[j]);
 			SubAlnBlock.FragPairVec.clear(); copy(AlnBlock.FragPairVec.begin() + i, AlnBlock.FragPairVec.begin() + j, back_inserter(SubAlnBlock.FragPairVec));
-			if ((SubAlnBlock.score = CalAlnBlockScore(AlnBlock.FragPairVec)) > MinAlnBlockScore) AlnBlockVec.push_back(SubAlnBlock);
+			if ((SubAlnBlock.score = CalAlnBlockScore(SubAlnBlock.FragPairVec)) > MinAlnBlockScore) AlnBlockVec.push_back(SubAlnBlock);
 			i = j;
 		}
 		//printf("split [%d-%d]\n", i, (int)AlnBlock.FragPairVec.size()); ShowFragPair(AlnBlock.FragPairVec[i - 1]); ShowFragPair(AlnBlock.FragPairVec[i]);
 		SubAlnBlock.FragPairVec.clear(); copy(AlnBlock.FragPairVec.begin() + i, AlnBlock.FragPairVec.end(), back_inserter(SubAlnBlock.FragPairVec));
-		if ((SubAlnBlock.score = CalAlnBlockScore(AlnBlock.FragPairVec)) > MinAlnBlockScore) AlnBlockVec.push_back(SubAlnBlock);
+		if ((SubAlnBlock.score = CalAlnBlockScore(SubAlnBlock.FragPairVec)) > MinAlnBlockScore) AlnBlockVec.push_back(SubAlnBlock);
 		pthread_mutex_unlock(&Lock);
 	}
 }

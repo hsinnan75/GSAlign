@@ -34,11 +34,18 @@ void AddAlnBlock(int i, int j)
 	AlnBlock.score = 0;
 	copy(SeedVec.begin() + i, SeedVec.begin() + j, back_inserter(AlnBlock.FragPairVec));
 	for (vector<FragPair_t>::iterator iter = AlnBlock.FragPairVec.begin(); iter != AlnBlock.FragPairVec.end(); iter++) AlnBlock.score += iter->qLen;
-	region_size = AlnBlock.FragPairVec.rbegin()->qPos + AlnBlock.FragPairVec.rbegin()->qLen - AlnBlock.FragPairVec.begin()->qPos;
-	if (AlnBlock.score < MinAlnBlockScore || region_size < MinAlnLength || AlnBlock.score < region_size*0.1) return;
-	pthread_mutex_lock(&Lock);
-	AlnBlockVec.push_back(AlnBlock);
-	pthread_mutex_unlock(&Lock);
+	region_size = (AlnBlock.FragPairVec.rbegin()->qPos + AlnBlock.FragPairVec.rbegin()->qLen) - AlnBlock.FragPairVec.begin()->qPos;
+	if (AlnBlock.score < MinAlnBlockScore || region_size < MinAlnLength || AlnBlock.score < region_size*0.05)
+	{
+		//printf("discard!\n"); ShowAlnBlockBoundary(AlnBlock.score, AlnBlock.FragPairVec);
+	}
+	else
+	{
+		//printf("add\n"); ShowAlnBlockBoundary(AlnBlock.score, AlnBlock.FragPairVec);
+		pthread_mutex_lock(&Lock);
+		AlnBlockVec.push_back(AlnBlock);
+		pthread_mutex_unlock(&Lock);
+	}
 }
 
 void *IdentifyLocalMEM(void *arg)
@@ -124,7 +131,7 @@ int SeedGrouping()
 		//printf("check: "); ShowFragPair(SeedVec[i]);
 		if (SeedVec[j].PosDiff - SeedVec[i].PosDiff > MaxIndelSize)
 		{
-			//printf("Break!!\n");// ShowFragPair(SeedVec[i]); ShowFragPair(SeedVec[j]);
+			//printf("Break!!\n"); ShowFragPair(SeedVec[i]); ShowFragPair(SeedVec[j]);
 			SeedGroupVec.push_back(make_pair(p, j));
 			p = j;
 		}
@@ -251,23 +258,27 @@ void RefinePDFmap(int BegIdx, int EndIdx, map<int, int>& PDFmap)
 
 void RemoveOutlierSeeds(int BegIdx, int EndIdx, bool *UniqueArr)
 {
+	int n, i, j, pd;
 	int64_t sum, avg;
-	int n, i, j, k, pd;
 	map<int, int> PDFmap; //PosDiff frequency
 
 	n = 0; sum = 0;
 	for (i = BegIdx; i < EndIdx; i++)
 	{
+		if (UniqueArr[i - BegIdx]) PDFmap[((int)(SeedVec[i].PosDiff >> 4))]++;
+	}
+	RefinePDFmap(BegIdx, EndIdx, PDFmap); 
+	for (i = BegIdx; i < EndIdx; i++)
+	{
 		if (UniqueArr[i - BegIdx])
 		{
-			sum += SeedVec[i].PosDiff; n++;
-			//printf("%d: ", i), ShowFragPair(SeedVec[i]);
-			pd = (int)(SeedVec[i].PosDiff >> 4); PDFmap[pd]++;
+			if (PDFmap[((int)(SeedVec[i].PosDiff >> 4))] > 0)
+			{
+				sum += SeedVec[i].PosDiff; n++;
+			}
 		}
 	}
 	avg = n > 0 ? sum / n : GenomeSize;
-
-	RefinePDFmap(BegIdx, EndIdx, PDFmap);
 
 	//printf("avg = %lld (N=%d)\n", avg, n);
 	for (i = BegIdx; i < EndIdx; i++)
@@ -280,36 +291,18 @@ void RemoveOutlierSeeds(int BegIdx, int EndIdx, bool *UniqueArr)
 			//else printf("%d: ", i), ShowFragPair(SeedVec[i]);
 		}
 	}
-	for (i = BegIdx, j = i + 1, k = j + 1; k < EndIdx; i++, j++, k++)
-	{
-		if (SeedVec[j].bSeed && UniqueArr[i - BegIdx] && UniqueArr[j - BegIdx] && UniqueArr[k - BegIdx])
-		{
-			if (abs(SeedVec[j].PosDiff - SeedVec[i].PosDiff) > 5 && abs(SeedVec[j].PosDiff - SeedVec[k].PosDiff) > 5) SeedVec[j].bSeed = false;
-		}
-	}
 	//printf("break\n\n");
 }
-
-//void CheckSeedGroup(int BegIdx, int EndIdx)
-//{
-//	int i, j;
-//	for (i = BegIdx, j = i + 1; j < EndIdx; i++, j++)
-//	{
-//		if (SeedVec[i].qPos == SeedVec[j].qPos) printf("Error!\n"), ShowFragPair(SeedVec[i]), ShowFragPair(SeedVec[j]);
-//		if (abs(SeedVec[i].PosDiff - SeedVec[j].PosDiff) > MaxIndelSize) printf("Warning!\n"), ShowFragPair(SeedVec[i]), ShowFragPair(SeedVec[j]);
-//	}
-//	for (i = BegIdx; i < EndIdx; i++) ShowFragPair(SeedVec[i]);
-//}
 
 void SeedGroupAnalysis(int BegIdx, int EndIdx)
 {
 	bool *UniqueArr;
-	int n, p, i, j, num;
 	AlnBlock_t AlnBlock;
+	int n, p, i, j, k, num;
 	vector<FragPair_t> SeedCandidateVec;
 
 	sort(SeedVec.begin() + BegIdx, SeedVec.begin() + EndIdx, CompByQueryPos);
-	//if (EndIdx - BegIdx < 10000) return; //printf("Group[%d-%d]\n", BegIdx, EndIdx - 1);
+	//if (EndIdx - BegIdx < 100000) return; printf("Group[%d-%d]\n", BegIdx, EndIdx - 1);
 	//for (i = BegIdx; i < EndIdx; i++) printf("%d:", i),ShowFragPair(SeedVec[i]);
 	UniqueArr = new bool[(EndIdx - BegIdx)]();
 	for (i = BegIdx, j = i + 1; i < EndIdx; i++, j++)
@@ -336,10 +329,6 @@ void SeedGroupAnalysis(int BegIdx, int EndIdx)
 	}
 	RemoveOutlierSeeds(i, EndIdx, UniqueArr + (i - BegIdx));
 
-	//for (i = BegIdx; i < EndIdx; i++)
-	//{
-	//	if (!UniqueArr[(i - BegIdx)]) printf("\t"); ShowFragPair(SeedVec[i]);
-	//}
 	//Remove outliers in repetitive regions
 	for (i = BegIdx, j = i + 1; i < EndIdx; i++, j++)
 	{
@@ -355,10 +344,19 @@ void SeedGroupAnalysis(int BegIdx, int EndIdx)
 
 	sort(SeedVec.begin() + BegIdx, SeedVec.begin() + EndIdx, CompByRemoval); while (!SeedVec[EndIdx - 1].bSeed) EndIdx--;
 	//printf("Group\n"); for (i = BegIdx; i < EndIdx; i++) ShowFragPair(SeedVec[i]); printf("End\n\n");
+	for (i = BegIdx, j = i + 1, k = j + 1; k < EndIdx; i++, j++, k++)
+	{
+		if (abs(SeedVec[j].PosDiff - SeedVec[i].PosDiff) > 5 && abs(SeedVec[j].PosDiff - SeedVec[k].PosDiff) > 5)
+		{
+			//printf("noise\n"),ShowFragPair(SeedVec[i]), ShowFragPair(SeedVec[j]), ShowFragPair(SeedVec[k]);
+			SeedVec[j].bSeed = false;
+		}
+	}
+	sort(SeedVec.begin() + BegIdx, SeedVec.begin() + EndIdx, CompByRemoval); while (!SeedVec[EndIdx - 1].bSeed) EndIdx--;
 	for (p = i = BegIdx, j = i + 1; j < EndIdx; i++, j++)
 	{
 		//ShowFragPair(SeedVec[i]);
-		if (SeedVec[j].qPos - SeedVec[i].qPos - SeedVec[i].qLen > MaxSeedGap)
+		if (SeedVec[j].qPos - SeedVec[i].qPos - SeedVec[i].qLen > MaxSeedGap || abs(SeedVec[i].PosDiff - SeedVec[j].PosDiff) > 100)
 		{
 			//printf("break!\n");
 			AddAlnBlock(p, j);
@@ -469,10 +467,9 @@ void GenomeComparison()
 		for (i = 0; i < iThreadNum; i++) pthread_join(ThreadArr[i], NULL); fprintf(stderr, "\n");
 
 		SeedNum = (int)SeedVec.size(); SeedGroupNum = SeedGrouping(); GroupID = 0;
-		fprintf(stderr, "\t\tSeed clustering and chaining..."); // iThreadNum = 1;
+		fprintf(stderr, "\t\tSeed clustering and chaining..."); //iThreadNum = 1;
 		for (i = 0; i < iThreadNum; i++) pthread_create(&ThreadArr[i], NULL, GenerateAlignmentBlocks, &vec[i]);
 		for (i = 0; i < iThreadNum; i++) pthread_join(ThreadArr[i], NULL); fprintf(stderr, "\n");
-		EstChromosomeSimilarity(); RemoveRedundantAlnBlocks(1); RemoveRedundantAlnBlocks(2);
 
 		fprintf(stderr, "\t\tFix overlapping seeds and close gaps between gaps...");
 		AlnBlockNum = (int)AlnBlockVec.size();// iThreadNum = 1;
@@ -483,13 +480,15 @@ void GenomeComparison()
 		for (i = 0; i < iThreadNum; i++) pthread_create(&ThreadArr[i], NULL, CheckAlnBlockLargeGaps, &vec[i]);
 		for (i = 0; i < iThreadNum; i++) pthread_join(ThreadArr[i], NULL); RemoveBadAlnBlocks();
 
+		EstChromosomeSimilarity(); RemoveRedundantAlnBlocks(1); RemoveRedundantAlnBlocks(2);
+
 		AlnBlockNum = (int)AlnBlockVec.size(); //iThreadNum = 1;
 		for (i = 0; i < iThreadNum; i++) pthread_create(&ThreadArr[i], NULL, FillAlnBlockGaps, &vec[i]);
 		for (i = 0; i < iThreadNum; i++) pthread_join(ThreadArr[i], NULL); fprintf(stderr, "\n");
 
 		//sort(AlnBlockVec.begin(), AlnBlockVec.end(), CompByAlnBlockRefPos);
 		//for (ABiter = AlnBlockVec.begin(); ABiter != AlnBlockVec.end(); ABiter++) ShowAlnBlockBoundary(ABiter->score, ABiter->FragPairVec);
-		//for (ABiter = AlnBlockVec.begin(); ABiter != AlnBlockVec.end(); ABiter++) ShowFragPairVec(ABiter->FragPairVec);
+		////for (ABiter = AlnBlockVec.begin(); ABiter != AlnBlockVec.end(); ABiter++) ShowFragPairVec(ABiter->FragPairVec);
 		//continue;
 
 		for (ABiter = AlnBlockVec.begin(); ABiter != AlnBlockVec.end(); ABiter++) ABiter->aln_len = ABiter->score = 0;

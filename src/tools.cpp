@@ -74,15 +74,20 @@ int CheckMemoryUsage()
 
 void ShowFragPair(FragPair_t& FragPair)
 {
-	//printf("q[%d-%d] r[%lld-%lld] L:%d D:%lld \n", FragPair.qPos, FragPair.qPos + FragPair.qLen - 1, FragPair.rPos, FragPair.rPos + FragPair.rLen - 1, FragPair.qLen, FragPair.PosDiff);
-	if (FragPair.bSeed) printf("q[%d-%d] r[%lld-%lld] L:%d D:%lld \n", FragPair.qPos, FragPair.qPos + FragPair.qLen - 1, FragPair.rPos, FragPair.rPos + FragPair.rLen - 1, FragPair.qLen, FragPair.PosDiff);
-	else printf("q[%d-%d]=%d r[%lld-%lld]=%d\n", FragPair.qPos, FragPair.qPos + FragPair.qLen - 1, FragPair.qLen, FragPair.rPos, FragPair.rPos + FragPair.rLen - 1, FragPair.rLen);
+	printf("q[%d-%d] r[%lld-%lld] L:%d D:%lld \n", FragPair.qPos, FragPair.qPos + FragPair.qLen - 1, FragPair.rPos, FragPair.rPos + FragPair.rLen - 1, FragPair.qLen, FragPair.PosDiff);
+	//if (FragPair.bSeed) printf("q[%d-%d] r[%lld-%lld] L:%d D:%lld \n", FragPair.qPos, FragPair.qPos + FragPair.qLen - 1, FragPair.rPos, FragPair.rPos + FragPair.rLen - 1, FragPair.qLen, FragPair.PosDiff);
+	//else printf("q[%d-%d]=%d r[%lld-%lld]=%d\n", FragPair.qPos, FragPair.qPos + FragPair.qLen - 1, FragPair.qLen, FragPair.rPos, FragPair.rPos + FragPair.rLen - 1, FragPair.rLen);
 }
 
 void ShowAlnBlockBoundary(int score, vector<FragPair_t>& FragPairVec)
 {
-	int chr_idx = ChrLocMap.lower_bound(FragPairVec.begin()->rPos)->second;
-	printf("AlnBlockBoundary Q[%d-%d] R[%lld-%lld] chr=%s score = %d size = %d\n", FragPairVec.begin()->qPos, FragPairVec.rbegin()->qPos + FragPairVec.rbegin()->qLen - 1, FragPairVec.begin()->rPos, FragPairVec.rbegin()->rPos + FragPairVec.rbegin()->rLen - 1, ChromosomeVec[chr_idx].name, score, FragPairVec.rbegin()->qPos + FragPairVec.rbegin()->qLen - FragPairVec.begin()->qPos);
+	int64_t r1, r2;
+	int q1, q2, chr_idx = ChrLocMap.lower_bound(FragPairVec.begin()->rPos)->second;
+
+	q1 = FragPairVec.begin()->qPos; q2 = FragPairVec.rbegin()->qPos + FragPairVec.rbegin()->qLen - 1;
+	r1 = FragPairVec.begin()->rPos; r2 = FragPairVec.rbegin()->rPos + FragPairVec.rbegin()->rLen - 1;
+	printf("AlnBlockBoundary Q[%d-%d] R[%lld-%lld] chr=%s score = %d size = %d\n", q1, q2, r1, r2, ChromosomeVec[chr_idx].name, score, FragPairVec.rbegin()->qPos + FragPairVec.rbegin()->qLen - FragPairVec.begin()->qPos);
+	if (r2 - r1 < 100) ShowFragPairVec(FragPairVec);
 }
 
 void ShowFragPairVec(vector<FragPair_t>& FragPairVec)
@@ -90,20 +95,20 @@ void ShowFragPairVec(vector<FragPair_t>& FragPairVec)
 	printf("FragPairVec (N=%d)\n", (int)FragPairVec.size());
 	for (vector<FragPair_t>::iterator iter = FragPairVec.begin(); iter != FragPairVec.end(); iter++)
 	{
-		//ShowFragPair(*iter);
-		if (iter->bSeed)
-		{
-			//printf("\t\tq[%d-%d] r[%lld-%lld] len=%d\n", iter->qPos, iter->qPos + iter->qLen - 1, iter->rPos, iter->rPos + iter->rLen - 1, iter->qLen);
-			//char *frag = new char[iter->qLen + 1];
-			//strncpy(frag, QueryChrVec[QueryChrIdx].seq.c_str() + iter->qPos, iter->qLen); frag[iter->qLen] = '\0';
-			//printf("\t\t%s\n", frag);
-			//delete[] frag;
-		}
-		else
-		{
-			printf("\t\tq[%d-%d]=%d r[%lld-%lld]=%d\n", iter->qPos, iter->qPos + iter->qLen - 1, iter->qLen, iter->rPos, iter->rPos + iter->rLen - 1, iter->rLen);
-			printf("\t\t%s\n\t\t%s\n", iter->aln1.c_str(), iter->aln2.c_str());
-		}
+		ShowFragPair(*iter);
+		//if (iter->bSeed)
+		//{
+		//	//printf("\t\tq[%d-%d] r[%lld-%lld] len=%d\n", iter->qPos, iter->qPos + iter->qLen - 1, iter->rPos, iter->rPos + iter->rLen - 1, iter->qLen);
+		//	//char *frag = new char[iter->qLen + 1];
+		//	//strncpy(frag, QueryChrVec[QueryChrIdx].seq.c_str() + iter->qPos, iter->qLen); frag[iter->qLen] = '\0';
+		//	//printf("\t\t%s\n", frag);
+		//	//delete[] frag;
+		//}
+		//else
+		//{
+		//	printf("\t\tq[%d-%d]=%d r[%lld-%lld]=%d\n", iter->qPos, iter->qPos + iter->qLen - 1, iter->qLen, iter->rPos, iter->rPos + iter->rLen - 1, iter->rLen);
+		//	printf("\t\t%s\n\t\t%s\n", iter->aln1.c_str(), iter->aln2.c_str());
+		//}
 	}
 	printf("End\n\n");
 }
