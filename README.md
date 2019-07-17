@@ -82,7 +82,7 @@ To compile Evaluation.cpp, just type 'g++ Evaluation.cpp -o eva'
 
 -fmt INT Set the output format [1]: 1:maf, 2:aln
 
--idy  set the minimal sequnce identity [20]
+-idy  set the minimal sequnce identity [70]
 
 -slen set the minimal seed length [15]
 
