@@ -66,7 +66,7 @@ To compile Evaluation.cpp, just type 'g++ Evaluation.cpp -o eva'
 # Parameter setting
 
  ```
--t INT number of threads [4]
+-t INT number of threads [8]
 
 -i STR index prefix [BWT based (BWA)]
 
@@ -86,11 +86,11 @@ To compile Evaluation.cpp, just type 'g++ Evaluation.cpp -o eva'
 
 -slen set the minimal seed length [15]
 
--alen set the minimal alignment length [200]
+-alen set the minimal alignment length [5000]
 
 -ind set the maximal indel size [25]
 
--clr set the minimal cluster size [50]
+-clr set the minimal cluster size [250]
 
 -no_vcf No VCF output [false]
 
