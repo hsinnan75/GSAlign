@@ -158,8 +158,8 @@ int main(int argc, char* argv[])
 	bDebugMode = false;
 	bVCF = true;
 	MinSeedLength = 15;
-	MinAlnBlockScore = 50;
-	MinAlnLength = 200;
+	MinAlnBlockScore = 250;
+	MinAlnLength = 5000;
 	MinSeqIdy = 70;
 	MaxIndelSize = 25;
 	RefSequence = RefSeqFileName = IndexFileName = QueryFileName = OutputPrefix = NULL;

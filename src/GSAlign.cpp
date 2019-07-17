@@ -35,7 +35,7 @@ void AddAlnBlock(int i, int j)
 	copy(SeedVec.begin() + i, SeedVec.begin() + j, back_inserter(AlnBlock.FragPairVec));
 	for (vector<FragPair_t>::iterator iter = AlnBlock.FragPairVec.begin(); iter != AlnBlock.FragPairVec.end(); iter++) AlnBlock.score += iter->qLen;
 	region_size = (AlnBlock.FragPairVec.rbegin()->qPos + AlnBlock.FragPairVec.rbegin()->qLen) - AlnBlock.FragPairVec.begin()->qPos;
-	if (AlnBlock.score < MinAlnBlockScore || region_size < MinAlnLength || AlnBlock.score < region_size*0.05)
+	if (AlnBlock.score < MinAlnBlockScore || region_size < MinAlnLength || (AlnBlock.score < 1000 && AlnBlock.score < region_size*0.05))
 	{
 		//printf("discard!\n"); ShowAlnBlockBoundary(AlnBlock.score, AlnBlock.FragPairVec);
 	}
@@ -294,6 +294,13 @@ void RemoveOutlierSeeds(int BegIdx, int EndIdx, bool *UniqueArr)
 	//printf("break\n\n");
 }
 
+int FindSeedGroupScore(int BegIdx, int EndIdx)
+{
+	int score = 0;
+	for (int i = BegIdx; i < EndIdx; i++) score += SeedVec[i].qLen;
+	return score;
+}
+
 void SeedGroupAnalysis(int BegIdx, int EndIdx)
 {
 	bool *UniqueArr;
@@ -302,7 +309,7 @@ void SeedGroupAnalysis(int BegIdx, int EndIdx)
 	vector<FragPair_t> SeedCandidateVec;
 
 	sort(SeedVec.begin() + BegIdx, SeedVec.begin() + EndIdx, CompByQueryPos);
-	//if (EndIdx - BegIdx < 100000) return; printf("Group[%d-%d]\n", BegIdx, EndIdx - 1);
+	//if (EndIdx - BegIdx < 10000) return; printf("Group[%d-%d]\n", BegIdx, EndIdx - 1);
 	//for (i = BegIdx; i < EndIdx; i++) printf("%d:", i),ShowFragPair(SeedVec[i]);
 	UniqueArr = new bool[(EndIdx - BegIdx)]();
 	for (i = BegIdx, j = i + 1; i < EndIdx; i++, j++)
@@ -376,6 +383,7 @@ void *GenerateAlignmentBlocks(void *arg)
 		pthread_mutex_unlock(&Lock);
 
 		if (i >= SeedGroupNum) break;
+		else if (FindSeedGroupScore(SeedGroupVec[i].first, SeedGroupVec[i].second) < MinAlnBlockScore) continue;
 		else SeedGroupAnalysis(SeedGroupVec[i].first, SeedGroupVec[i].second);
 	}
 	return (void*)(1);
@@ -456,7 +464,7 @@ void GenomeComparison()
 	fprintf(stderr, "Step2. Sequence analysis for all query chromosomes\n");
 	for (QueryChrIdx = 0; QueryChrIdx != iQueryChrNum; QueryChrIdx++)
 	{
-		//if (QueryChrVec[QueryChrIdx].name != "chr14_mut") continue;
+		//if (QueryChrVec[QueryChrIdx].name != "chr18_mut") continue;
 		//printf("Query=%s\n", QueryChrVec[QueryChrIdx].name.c_str());
 		fprintf(stderr, "\tProcess query chromsomoe: %s...\n", QueryChrVec[QueryChrIdx].name.c_str());
 		QrySeqPos = 0; QryChrLength = QueryChrVec[QueryChrIdx].seq.length();
@@ -496,18 +504,20 @@ void GenomeComparison()
 		for (i = 0; i < iThreadNum; i++) pthread_create(&ThreadArr[i], NULL, GenerateFragAlignment, &vec[i]);
 		for (i = 0; i < iThreadNum; i++) pthread_join(ThreadArr[i], NULL); fprintf(stderr, "\n");
 
+		int n = 0, aln_len = 0;
 		for (ABiter = AlnBlockVec.begin(); ABiter != AlnBlockVec.end(); ABiter++)
 		{
 			if ((int)(100 * (1.0*ABiter->score / ABiter->aln_len)) < MinSeqIdy) ABiter->score = 0;
 			else
 			{
+				n++; aln_len+= ABiter->aln_len;
 				LocalAlignmentNum++; TotalAlignmentLength += ABiter->aln_len;
 				ABiter->coor = GenCoordinateInfo(ABiter->FragPairVec[0].rPos);
 				//if (ABiter->FragPairVec.begin()->rPos < ObrPos && ABiter->FragPairVec.rbegin()->rPos > ObrPos) ShowFragPairVec(ABiter->FragPairVec);
 			}
 		}
 		RemoveBadAlnBlocks();
-
+		fprintf(stderr, "\t\tProduce %d local alignments (length = %d)\n", n, aln_len);
 		if (OutputFormat == 1) fprintf(stderr, "\t\tOutput alignments for query sequence (%s)\n", mafFileName), OutputMAF();
 		if (OutputFormat == 2) fprintf(stderr, "\t\tOutput alignments for query sequence (%s)\n", alnFileName), OutputAlignment();
 		if (bVCF) fprintf(stderr, "\t\tIdentify sequence variants for query sequence...\n"), VariantIdentification();
