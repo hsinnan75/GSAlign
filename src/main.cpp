@@ -210,7 +210,12 @@ int main(int argc, char* argv[])
 					exit(0);
 				}
 			}
-			else if (parameter == "-sen" || parameter == "-sensitive") bSensitive = true;
+			else if (parameter == "-sen" || parameter == "-sensitive")
+			{
+				bSensitive = true;
+				MinAlnLength = 200;
+				MinAlnBlockScore = 50;
+			}
 			else if (parameter == "-no_vcf") bVCF = false;
 			else if (parameter == "-idy" && i + 1 < argc) MinSeqIdy = atoi(argv[++i]);
 			else if (parameter == "-alen" && i + 1 < argc) MinAlnLength = atoi(argv[++i]);
