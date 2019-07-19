@@ -1,9 +1,15 @@
 #!/bin/bash
+#test indexing
+echo
+echo "Test1 -- Generate index files with a reference file"
+echo "Command=./bwt_index test/ecoli.fa test/ecoli"
+echo
+./bwt_index test/ecoli.fa test/ecoli
+
 #test alignment
+echo "Test2 -- Align two E.coli strains with 4 threads"
+echo "Command=./GSAlign -t 4 -i test/ecoli -q test/ecoli.mut -o test/output"
 echo
-echo "Test -- Align two E.coli strains with 4 threads"
-echo "Command=./GSAlign -t 4 -r test/ecoli.fa -q test/ecoli.mut -o test/output"
-echo
-./GSAlign -t 4 -r test/ecoli.fa -q test/ecoli.mut -o test/output
+./GSAlign -t 4 -i test/ecoli -q test/ecoli.mut -o test/output
 echo
 echo "[End of test]"
