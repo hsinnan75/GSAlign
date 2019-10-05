@@ -99,7 +99,6 @@ bool CheckOutputPrefix()
 
 void InitializeOutputFiles()
 {
-	FILE *outFile;
 	int len = strlen(OutputPrefix);
 
 	mafFileName = alnFileName = vcfFileName = gpFileName = NULL;
@@ -261,7 +260,7 @@ int main(int argc, char* argv[])
 		if (bShowPlot) FindGnuPlotPath();
 		InitializeOutputFiles();
 		GenomeComparison();
-		if (bVCF) fprintf(stderr, "\nGSAlign identifies %d sequence variants [%s].\n\n", VarVec.size(), vcfFileName), OutputSequenceVariants();
+		if (bVCF) fprintf(stderr, "\nGSAlign identifies %d sequence variants [%s].\n\n", (int)VarVec.size(), vcfFileName), OutputSequenceVariants();
 		bwa_idx_destroy(RefIdx);
 		if (RefSequence != NULL) delete[] RefSequence;
 		DestroyOutputFileNames();

@@ -34,9 +34,9 @@ vector<uint32_t> CreateKmerVecFromReadSeq(int len, char* seq)
 	vector<uint32_t> vec;
 	uint32_t wid, count, head, tail;
 
-	tail = 0; count = 0;
+	tail = 0; count = 0; head = 0;
 
-	while (count < KmerSize && tail < len)
+	while (count < (uint32_t)KmerSize && tail < (uint32_t)len)
 	{
 		if (seq[tail++] != 'N') count++;
 		else count = 0;
@@ -46,7 +46,7 @@ vector<uint32_t> CreateKmerVecFromReadSeq(int len, char* seq)
 		wid = CreateKmerID(seq, head);
 		vec.push_back(wid);
 
-		for (head += 1; tail < len; head++, tail++)
+		for (head += 1; tail < (uint32_t)len; head++, tail++)
 		{
 			if (seq[tail] != 'N')
 			{
@@ -57,7 +57,7 @@ vector<uint32_t> CreateKmerVecFromReadSeq(int len, char* seq)
 			{
 				// find next kmer without 'N'
 				count = 0; tail++;
-				while (count < KmerSize && tail < len)
+				while (count < (uint32_t)KmerSize && tail < (uint32_t)len)
 				{
 					if (seq[tail++] != 'N') count++;
 					else count = 0;
@@ -91,8 +91,8 @@ bool CalGapSimilarity(int qPos1, int qPos2, int64_t rPos1, int64_t rPos2)
 		//printf("q_len=%d (%d-%d) r_len=%d (%lld-%lld)\n", q_len, qPos1, qPos2 - 1, r_len, rPos1, rPos2 - 1); fflush(stdout);
 		for (idy = 0, q = qPos1, r = rPos1; q < qPos2; q++, r++)
 		{
-			nt1 = nst_nt4_table[RefSequence[r]];
-			nt2 = nst_nt4_table[QueryChrVec[QueryChrIdx].seq[q]];
+			nt1 = nst_nt4_table[(unsigned char)RefSequence[r]];
+			nt2 = nst_nt4_table[(unsigned char)QueryChrVec[QueryChrIdx].seq[q]];
 			if (nt1 == nt2 || nt1 == 4 || nt2 == 4) idy++;
 		}
 		//printf("linear scan similarity = %.4f\n", 1.0*idy / q_len);

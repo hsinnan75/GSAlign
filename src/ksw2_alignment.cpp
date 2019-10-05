@@ -94,9 +94,9 @@ string ksw_extz2_sse(int qlen, const uint8_t *query, int tlen, const uint8_t *ta
 	a = _mm_sub_epi8(a, z); \
 	b = _mm_sub_epi8(b, z);
 
-	int r, t, qe = q + e, n_col_, *off = 0, *off_end = 0, tlen_, qlen_, last_st, last_en, wl, wr, max_sc, min_sc;
+	int r, t, qe = q + e, n_col_, *off = 0, *off_end = 0, tlen_, qlen_, last_st, last_en, wl, wr;
 	//int with_cigar = !(flag&KSW_EZ_SCORE_ONLY), approx_max = !!(flag&KSW_EZ_APPROX_MAX);
-	int32_t *H = 0, H0 = 0, last_H0_t = 0;
+	int32_t *H = 0;
 	uint8_t *qr, *sf, *mem, *mem2 = 0;
 	__m128i q_, qe2_, zero_, flag1_, flag2_, flag8_, flag16_, sc_mch_, sc_mis_, m1_, max_sc_;
 	__m128i *u, *v, *x, *y, *s, *p = 0;

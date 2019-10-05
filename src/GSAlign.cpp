@@ -107,7 +107,6 @@ void *IdentifyLocalMEM(void *arg)
 
 void FindSpecificLocalMEM(int start, int stop, int64_t rPos1, int64_t rPos2)
 {
-	int i, num;
 	FragPair_t seed;
 
 	string& seq = QueryChrVec[QueryChrIdx].seq; seed.bSeed = true;
@@ -258,7 +257,7 @@ void RefinePDFmap(int BegIdx, int EndIdx, map<int, int>& PDFmap)
 
 void RemoveOutlierSeeds(int BegIdx, int EndIdx, bool *UniqueArr)
 {
-	int n, i, j, pd;
+	int n, i, pd;
 	int64_t sum, avg;
 	map<int, int> PDFmap; //PosDiff frequency
 
@@ -304,8 +303,8 @@ int FindSeedGroupScore(int BegIdx, int EndIdx)
 void SeedGroupAnalysis(int BegIdx, int EndIdx)
 {
 	bool *UniqueArr;
+	int n, p, i, j, k;
 	AlnBlock_t AlnBlock;
-	int n, p, i, j, k, num;
 	vector<FragPair_t> SeedCandidateVec;
 
 	sort(SeedVec.begin() + BegIdx, SeedVec.begin() + EndIdx, CompByQueryPos);
@@ -483,13 +482,10 @@ void GenomeComparison()
 		AlnBlockNum = (int)AlnBlockVec.size();// iThreadNum = 1;
 		for (i = 0; i < iThreadNum; i++) pthread_create(&ThreadArr[i], NULL, CheckAlnBlockOverlaps, &vec[i]);
 		for (i = 0; i < iThreadNum; i++) pthread_join(ThreadArr[i], NULL);
-
 		AlnBlockNum = (int)AlnBlockVec.size();
 		for (i = 0; i < iThreadNum; i++) pthread_create(&ThreadArr[i], NULL, CheckAlnBlockLargeGaps, &vec[i]);
 		for (i = 0; i < iThreadNum; i++) pthread_join(ThreadArr[i], NULL); RemoveBadAlnBlocks();
-
 		EstChromosomeSimilarity(); RemoveRedundantAlnBlocks(1); RemoveRedundantAlnBlocks(2);
-
 		AlnBlockNum = (int)AlnBlockVec.size(); //iThreadNum = 1;
 		for (i = 0; i < iThreadNum; i++) pthread_create(&ThreadArr[i], NULL, FillAlnBlockGaps, &vec[i]);
 		for (i = 0; i < iThreadNum; i++) pthread_join(ThreadArr[i], NULL); fprintf(stderr, "\n");
@@ -524,7 +520,7 @@ void GenomeComparison()
 		if (bShowPlot && GnuPlotPath != NULL) fprintf(stderr, "\t\tGenerate dotplot for query sequence (%s-%s).ps\n", OutputPrefix, QueryChrVec[QueryChrIdx].name.c_str()), OutputDotplot();
 		fprintf(stderr, "\n");
 	}
-	if (LocalAlignmentNum > 0) fprintf(stderr, "\tAlignment#=%d (total alignment length=%lld)\n", LocalAlignmentNum, TotalAlignmentLength);
+	if (LocalAlignmentNum > 0) fprintf(stderr, "\tAlignment#=%d (total alignment length=%lld)\n", (int)LocalAlignmentNum, (long long)TotalAlignmentLength);
 	fprintf(stderr, "\tIt took %lld seconds for genome sequence alignment.\n", (long long)(time(NULL) - StartProcessTime));
 
 	delete[] RefChrScoreArr; delete[] ThreadArr;

@@ -56,7 +56,7 @@ int CheckFragPairMismatch(FragPair_t* FragPair)
 
 	for (i = 0; i < FragPair->qLen; i++)
 	{
-		if (nst_nt4_table[QuerySeq[i]] != nst_nt4_table[TemplateSeq[i]]) mismatch++;
+		if (nst_nt4_table[(unsigned char)QuerySeq[i]] != nst_nt4_table[(unsigned char)TemplateSeq[i]]) mismatch++;
 	}
 	return mismatch;
 }
@@ -65,7 +65,7 @@ void RemoveBadSeeds(vector<FragPair_t>& FragPairVec)
 {
 	int num = (int)FragPairVec.size();
 	sort(FragPairVec.begin(), FragPairVec.end(), CompByRemoval);
-	while (!FragPairVec[num - 1].bSeed) num--;
+	while (num > 0 && !FragPairVec[num - 1].bSeed) num--;
 	//printf("size: %d --> %d\n", (int)FragPairVec.size(), num);
 	FragPairVec.resize(num);
 }
@@ -74,18 +74,17 @@ void RemoveBadAlnBlocks()
 {
 	int num = AlnBlockVec.size(); 
 	sort(AlnBlockVec.begin(), AlnBlockVec.end(), CompByAlnBlockScore);
-	while (AlnBlockVec[num -1].score == 0) num--;
+	while (num > 0 && AlnBlockVec[num -1].score == 0) num--;
 	//fprintf(stderr, "\t\tAlnBlockNum = %d --> %d\n", AlnBlockVec.size(), num);
 	AlnBlockVec.resize(num);
 }
 
 void CheckGapsBetweenSeeds(AlnBlock_t& AlnBlock)
 {
-	bool bSim;
 	AlnBlock_t SubAlnBlock;
 	vector<int> BreakPointVec;
+	int i, j, num, qGap, rGap;
 	vector<int>::iterator iter;
-	int p, i, j, num, qGap, rGap;
 
 	num = (int)AlnBlock.FragPairVec.size();
 	for (i = 0, j = 1; j < num; i++, j++)
@@ -195,7 +194,6 @@ void *CheckAlnBlockOverlaps(void *arg)
 
 void IdentifyNormalPairs(vector<FragPair_t>& FragPairVec)
 {
-	bool bBreak = false;
 	FragPair_t FragPair;
 	int i, j, qGaps, rGaps, num;
 
@@ -297,7 +295,6 @@ void *GenerateFragAlignment(void *arg)
 void CheckAlnBlockCompleteness(vector<FragPair_t>& FragPairVec)
 {
 	int64_t rPos;
-	bool bChecked = true;
 	int i, qPos, num = (int)FragPairVec.size();
 
 	if (num == 0) return;
