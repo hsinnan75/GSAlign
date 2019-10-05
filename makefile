@@ -1,10 +1,16 @@
 .KEEP_STAT:
 
-all: main index
+all: 		main bwt_index
 
-main:		
-		make -C src && mv src/GSAlign .
+main:
+		$(MAKE) -C src
+		cp -f src/GSAlign .
 
-index:
-		make -C BWT_Index && mv BWT_Index/bwt_index .
+bwt_index:
+		$(MAKE) -C src/BWT_Index
+		cp -f src/BWT_Index/$@ .
 		
+clean:
+		rm -f GSAlign bwt_index
+		$(MAKE) clean -C src
+		$(MAKE) clean -C src/BWT_Index
