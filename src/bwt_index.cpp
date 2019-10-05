@@ -239,7 +239,7 @@ void RestoreReferenceInfo()
 
 	fprintf(stderr, "\tLoad the reference sequences (%d %s)\n", RefIdx->bns->n_seqs, RefIdx->bns->n_seqs > 1 ? "chromosomes" : "chromosome");
 	fseek(RefIdx->bns->fp_pac, 0, SEEK_SET);
-	size_t ret = fread(RefIdx->pac, 1, GenomeSize / 4 + 1, RefIdx->bns->fp_pac);
+	fread(RefIdx->pac, 1, GenomeSize / 4 + 1, RefIdx->bns->fp_pac);
 
 	for (i = 0; i < iChromsomeNum; i++)
 	{
