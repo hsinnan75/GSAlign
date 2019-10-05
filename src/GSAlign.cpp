@@ -189,8 +189,8 @@ int64_t FindNeighboringPosDiffAvg(int i, int j, int BegIdx, int EndIdx, bool *Un
 			if (n1 == 5) break;
 		}
 	}
-	p2 = j; n2 = 0; sum2 = 0;
-	for (p2 = j; p2 < EndIdx; p2++)
+	n2 = 0; sum2 = 0;
+	for (p2 = j; p2 < EndIdx && p2 > BegIdx; p2++)
 	{
 		if (UniqueArr[p2 - BegIdx] && SeedVec[p2].bSeed)
 		{
