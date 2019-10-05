@@ -21,9 +21,6 @@ To compile GSAlign and the index tool, please change to GSAlign's folder and jus
 
 You may run ./run_test.sh to test GSAlign with two E.coli strains.
 
-# Changes
-version 1.0.0: First release version
-
 # Instructions
 
 To index a reference genome, GSAlign requires the target genome file (in fasta format) and the prefix of the index files (including the directory path).
@@ -95,3 +92,6 @@ To compile Evaluation.cpp, just type 'g++ Evaluation.cpp -o eva'
 -no_vcf No VCF output [false]
 
   ```
+# Changes
+- version 1.0.0: First release version
+
