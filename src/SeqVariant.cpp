@@ -121,11 +121,13 @@ void OutputSequenceVariants()
 	sort(VarVec.begin(), VarVec.end(), CompByVariantPos);
 
 	outFile = fopen(vcfFileName, "w");
-	fprintf(outFile, "##fileformat=VCFv4.3\n");
+	fprintf(outFile, "##fileformat=VCFv4.2\n");
 	if (IndexFileName != NULL) fprintf(outFile, "##reference=%s\n", IndexFileName);
 	else fprintf(outFile, "##reference=%s\n", RefSeqFileName);
 	fprintf(outFile, "##source=GSAlign %s\n", VersionStr);
-	fprintf(outFile, "##INFO=<ID=TYPE,Type=String,Description=\"The type of allele, either SUBSTITUTE, INSERT, DELETE, or BND.\">\n");
+	fprintf(outFile, "##INFO=<ID=TYPE,Number=1,Type=String,Description=\"The type of allele, either SUBSTITUTE, INSERT, or DELETE.\">\n");
+	for (int i = 0; i < iChromsomeNum; i++) fprintf(outFile, "##contig=<ID=%s,length=%d>\n", ChromosomeVec[i].name, ChromosomeVec[i].len);
+	fprintf(outFile, "#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO\n");
 	for (vector<Variant_t>::iterator iter = VarVec.begin(); iter != VarVec.end(); iter++)
 	{
 		//fprintf(outFile, "%s\t%d\t.\t%s\t%s\t100\tPASS\tQuery=%s,TYPE=%s\n", ChromosomeVec[iter->chr_idx].name, iter->pos, (char*)iter->ref_frag.c_str(), (char*)iter->alt_frag.c_str(), QueryChrVec[iter->query_idx].name.c_str(), MutType[iter->type]);
