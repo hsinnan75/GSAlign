@@ -93,5 +93,5 @@ To compile Evaluation.cpp, just type 'g++ Evaluation.cpp -o eva'
 
   ```
 # Changes
-- version 1.0.0: First release version
+- 1.0.0: First release version
 
