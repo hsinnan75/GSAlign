@@ -132,7 +132,7 @@ void FindGnuPlotPath()
 	stringstream ss;
 	string fullpath, cmd, str, tmp;
 
-	cmd = "/usr/bin/whereis gnuplot > GnuPlotPath"; i = system(cmd.c_str());
+	cmd = "/usr/bin/whereis gnuplot > GnuPlotPath"; (void)system(cmd.c_str());
 	file.open("GnuPlotPath"); getline(file, str); file.close();
 	ss.clear(); ss.str(str);
 

@@ -81,7 +81,6 @@ int bwa_idx_build(const char *fa, const char *prefix) //**//
 
 	char *str, *str2, *str3;
 	clock_t t;
-	int64_t l_pac;
 
 	str  = (char*)calloc(strlen(prefix) + 10, 1);
 	str2 = (char*)calloc(strlen(prefix) + 10, 1);
@@ -91,7 +90,7 @@ int bwa_idx_build(const char *fa, const char *prefix) //**//
 		gzFile fp = xzopen(fa, "r");
 		t = clock();
 		fprintf(stderr, "[bwt_index] Pack FASTA... ");
-		l_pac = bns_fasta2bntseq(fp, prefix, 0);
+		(void)bns_fasta2bntseq(fp, prefix, 0);
 		fprintf(stderr, "%.2f sec\n", (float)(clock() - t) / CLOCKS_PER_SEC);
 		err_gzclose(fp);
 	}
@@ -128,7 +127,7 @@ int bwa_idx_build(const char *fa, const char *prefix) //**//
 		gzFile fp = xzopen(fa, "r");
 		t = clock();
 		fprintf(stderr, "[bwt_index] Pack forward-only FASTA... ");
-		l_pac = bns_fasta2bntseq(fp, prefix, 1);
+		(void)bns_fasta2bntseq(fp, prefix, 1);
 		fprintf(stderr, "%.2f sec\n", (float)(clock() - t) / CLOCKS_PER_SEC);
 		err_gzclose(fp);
 	}
