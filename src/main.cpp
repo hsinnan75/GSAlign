@@ -128,7 +128,6 @@ void DestroyOutputFileNames()
 
 void FindGnuPlotPath()
 {
-	int i;
 	fstream file;
 	stringstream ss;
 	string fullpath, cmd, str, tmp;

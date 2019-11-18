@@ -2,15 +2,17 @@
 
 all: 		main bwt_index
 
-main:
+bin:
+		mkdir -p bin
+main: bin
 		$(MAKE) -C src
-		cp -f src/GSAlign .
+		mv -f src/GSAlign bin
 
-bwt_index:
+bwt_index: bin
 		$(MAKE) -C src/BWT_Index
-		cp -f src/BWT_Index/$@ .
+		mv -f src/BWT_Index/$@ bin
 		
 clean:
-		rm -f GSAlign bwt_index
+		rm -f bin/GSAlign bin/bwt_index
 		$(MAKE) clean -C src
 		$(MAKE) clean -C src/BWT_Index

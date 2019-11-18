@@ -42,11 +42,10 @@ bntseq_t *bns_restore_core(const char *ann_filename, const char* amb_filename, c
 	bntseq_t *bns;
 	long long xx;
 	int i;
-	int scanres;
 	bns = (bntseq_t*)calloc(1, sizeof(bntseq_t));
 	{ // read .ann
 		fp = fopen(fname = ann_filename, "r");
-		scanres = fscanf(fp, "%lld%d%u", &xx, &bns->n_seqs, &bns->seed);
+		(void)fscanf(fp, "%lld%d%u", &xx, &bns->n_seqs, &bns->seed);
 		bns->l_pac = xx;
 		bns->anns = (bntann1_t*)calloc(bns->n_seqs, sizeof(bntann1_t));
 		for (i = 0; i < bns->n_seqs; ++i) {
@@ -54,7 +53,7 @@ bntseq_t *bns_restore_core(const char *ann_filename, const char* amb_filename, c
 			char *q = str;
 			int c;
 			// read gi and sequence name
-			scanres = fscanf(fp, "%u%s", &p->gi, str);
+			(void)fscanf(fp, "%u%s", &p->gi, str);
 			p->name = strdup(str);
 			// read fasta comments 
 			while (str - q < (int)(sizeof(str) - 1) && (c = fgetc(fp)) != '\n' && c != EOF) *q++ = c;
@@ -64,22 +63,20 @@ bntseq_t *bns_restore_core(const char *ann_filename, const char* amb_filename, c
 			if (q - str > 1) p->anno = strdup(str + 1); // skip leading space
 			else p->anno = strdup("");
 			// read the rest
-			scanres = fscanf(fp, "%lld%d%d", &xx, &p->len, &p->n_ambs);
+			(void)fscanf(fp, "%lld%d%d", &xx, &p->len, &p->n_ambs);
 			p->offset = xx;
 		}
 		fclose(fp);
 	}
 	{ // read .amb
-		int64_t l_pac;
 		int32_t n_seqs;
 		fp = fopen(fname = amb_filename, "r");
-		scanres = fscanf(fp, "%lld%d%d", &xx, &n_seqs, &bns->n_holes);
-		l_pac = xx;
+		(void)fscanf(fp, "%lld%d%d", &xx, &n_seqs, &bns->n_holes);
 		//xassert(l_pac == bns->l_pac && n_seqs == bns->n_seqs, "inconsistent .ann and .amb files.");
 		bns->ambs = bns->n_holes? (bntamb1_t*)calloc(bns->n_holes, sizeof(bntamb1_t)) : 0;
 		for (i = 0; i < bns->n_holes; ++i) {
 			bntamb1_t *p = bns->ambs + i;
-			scanres = fscanf(fp, "%lld%d%s", &xx, &p->len, str);
+			(void)fscanf(fp, "%lld%d%s", &xx, &p->len, str);
 			p->offset = xx;
 			p->amb = str[0];
 		}
