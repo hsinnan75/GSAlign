@@ -1,17 +1,17 @@
 CC=gcc
-CFLAGS=	-g -Wall -O3
+FLAGS=		-I${PREFIX}/include -L${PREFIX}/lib -g -Wall -O3
 AR=ar
 LOBJS=		utils.o bwt.o bntseq.o QSufSort.o bwt_gen.o bwtindex.o
 PROG=		bwt_index
 LIBS=		-lm -lz
 
 .c.o:
-		$(CC) -c $(CFLAGS) $(INCLUDES) $< -o $@
+		$(CC) -c $(FLAGS) $(INCLUDES) $< -o $@
 
 all:$(PROG)
 
 bwt_index:libbwa.a main.o
-		$(CC) $(CFLAGS) main.o -o $@ -L. -lbwa $(LIBS)
+		$(CC) $(FLAGS) main.o -o $@ -L. -lbwa $(LIBS)
 
 libbwa.a:$(LOBJS)
 		$(AR) -csru $@ $(LOBJS)

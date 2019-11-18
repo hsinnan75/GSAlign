@@ -26,7 +26,7 @@ You may run ./run_test.sh to test GSAlign with two E.coli strains.
 To index a reference genome, GSAlign requires the target genome file (in fasta format) and the prefix of the index files (including the directory path).
 
   ```
-  $ ./bwt_index ref_file[ex.ecoli.fa] index_prefix[ex. Ecoli]
+  $ bin/bwt_index ref_file[ex.ecoli.fa] index_prefix[ex. Ecoli]
   ```
 The above command is to index the genome file Ecoli.fa and store the index files begining with ecoli.
 If the index files are not mdade beforehand, GSAlign will generate index files istself with the given reference genome sequences.
@@ -34,12 +34,12 @@ If the index files are not mdade beforehand, GSAlign will generate index files i
 To align two genome sequences, GSAlign requires two genome files (in fasta format)
 
   ```
-  $ ./GSAlign -r fa1 -q fa2 -o output
+  $ bin/GSAlign -r fa1 -q fa2 -o output
   ```
 or with a pre-built index file
 
   ```
-  $ ./GSAlign -i idx_prefix -q fa2 -o output
+  $ bin/GSAlign -i idx_prefix -q fa2 -o output
   ```
 
 # Datasets
