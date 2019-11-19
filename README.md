@@ -9,7 +9,13 @@ Personal genomics and comparative genomics are two fields that are more and more
 
 # Download
 
-Please use the command 
+## Conda
+Install [Bioconda](https://bioconda.github.io/user/install.html) then type:
+```
+$ conda install gsalign
+```
+
+## Github
   ```
   $ git clone https://github.com/hsinnan75/GSAlign.git
   ```
