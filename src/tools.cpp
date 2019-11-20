@@ -56,19 +56,23 @@ int parseLine(char* line) {
 // return value is in GB
 int CheckMemoryUsage()
 {
-	FILE* file = fopen("/proc/self/status", "r");
-	int iKB = -1;
-	char line[128];
+	FILE* file;
+	if ((file = fopen("/proc/self/status", "r")) != NULL)
+	{
+		int iKB = -1;
+		char line[128];
 
-	while (fgets(line, 128, file) != NULL) {
-		if (strncmp(line, "VmRSS:", 6) == 0) {
-			iKB = parseLine(line);
-			break;
+		while (fgets(line, 128, file) != NULL) {
+			if (strncmp(line, "VmRSS:", 6) == 0) {
+				iKB = parseLine(line);
+				break;
+			}
 		}
-	}
-	fclose(file);
+		fclose(file);
 
-	if (iKB > 0) return (iKB >> 10);
+		if (iKB > 0) return (iKB >> 10);
+		else return 0;
+	}
 	else return 0;
 }
 
