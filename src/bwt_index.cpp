@@ -252,7 +252,7 @@ void RestoreReferenceInfo()
 	}
 	RefSequence = new char[TwoGenomeSize + 1]; RefSequence[TwoGenomeSize] = '\0';
 	RestoreReferenceSequences();
-	fprintf(stderr, "\t(Current memory consumption: %d MB)\n\n", CheckMemoryUsage());
+	//fprintf(stderr, "\t(Current memory consumption: %d MB)\n\n", CheckMemoryUsage());
 
 	//if (bDebugMode)
 	//{
