@@ -1,7 +1,5 @@
 #include "structure.h"
 
-static pthread_mutex_t Lock;
-
 bool CompByPosDiff(const FragPair_t& p1, const FragPair_t& p2)
 {
 	if (p1.PosDiff == p2.PosDiff) return p1.qPos < p2.qPos;

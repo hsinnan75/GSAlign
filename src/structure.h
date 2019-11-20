@@ -139,7 +139,7 @@ typedef struct
 // Global variables
 extern bwt_t *Refbwt;
 extern bwaidx_t *RefIdx;
-//extern scoring_t scoring;
+extern pthread_mutex_t Lock;
 extern const char* VersionStr;
 extern time_t StartProcessTime;
 extern vector<Variant_t> VarVec;

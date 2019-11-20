@@ -5,10 +5,10 @@
 #define SeedExplorationChunk 10000
 
 int ObrPos = -1;
+pthread_mutex_t Lock;
 int64_t *RefChrScoreArr;
 vector<FragPair_t> SeedVec;
 int QrySeqPos, QryChrLength;
-static pthread_mutex_t Lock;
 vector<AlnBlock_t> AlnBlockVec;
 vector<pair<int, int> > SeedGroupVec;
 int SeedNum, SeedGroupNum, GroupID, AlnBlockNum;
@@ -51,8 +51,8 @@ void AddAlnBlock(int i, int j)
 void *IdentifyLocalMEM(void *arg)
 {
 	FragPair_t seed;
-	vector<FragPair_t> vec;
-	int i, start, stop, num;
+	int i, start, stop;
+	vector<FragPair_t> seed_vec;
 	bwtSearchResult_t bwtSearchResult;
 
 	string& seq = QueryChrVec[QueryChrIdx].seq; seed.bSeed = true;
@@ -80,7 +80,7 @@ void *IdentifyLocalMEM(void *arg)
 					{
 						seed.rPos = bwtSearchResult.LocArr[i];
 						seed.PosDiff = seed.rPos - seed.qPos;
-						vec.push_back(seed);
+						seed_vec.push_back(seed);
 					}
 					delete[] bwtSearchResult.LocArr;
 					if (bSensitive) start += 5;
@@ -91,14 +91,14 @@ void *IdentifyLocalMEM(void *arg)
 			}
 		}
 	}
-	sort(vec.begin(), vec.end(), CompByPosDiff);
+	sort(seed_vec.begin(), seed_vec.end(), CompByPosDiff);
 
-	if (iThreadNum == 1) SeedVec.swap(vec);
+	if (iThreadNum == 1) SeedVec.swap(seed_vec);
 	else
 	{
 		pthread_mutex_lock(&Lock);
-		num = (int)SeedVec.size();
-		copy(vec.begin(), vec.end(), back_inserter(SeedVec));
+		int num = (int)SeedVec.size();
+		std::copy(seed_vec.begin(), seed_vec.end(), std::back_inserter(SeedVec));
 		inplace_merge(SeedVec.begin(), SeedVec.begin() + num, SeedVec.end(), CompByPosDiff);
 		pthread_mutex_unlock(&Lock);
 	}
@@ -135,7 +135,7 @@ int SeedGrouping()
 			p = j;
 		}
 	}
-	SeedGroupVec.push_back(make_pair(p, j));
+	if (p < j) SeedGroupVec.push_back(make_pair(p, j));
 
 	return (int)SeedGroupVec.size();
 }
@@ -383,7 +383,7 @@ void *GenerateAlignmentBlocks(void *arg)
 
 		if (i >= SeedGroupNum) break;
 		else if (FindSeedGroupScore(SeedGroupVec[i].first, SeedGroupVec[i].second) < MinAlnBlockScore) continue;
-		else SeedGroupAnalysis(SeedGroupVec[i].first, SeedGroupVec[i].second);
+		else if (SeedGroupVec[i].first < SeedGroupVec[i].second) SeedGroupAnalysis(SeedGroupVec[i].first, SeedGroupVec[i].second);
 	}
 	return (void*)(1);
 }
@@ -459,7 +459,7 @@ void GenomeComparison()
 
 	vector<int> vec(iThreadNum); for (i = 0; i < iThreadNum; i++) vec[i] = i;
 
-	RefChrScoreArr = new int64_t[iChromsomeNum];
+	RefChrScoreArr = new int64_t[iChromsomeNum]; pthread_mutex_init(&Lock, NULL);
 	fprintf(stderr, "Step2. Sequence analysis for all query chromosomes\n");
 	for (QueryChrIdx = 0; QueryChrIdx != iQueryChrNum; QueryChrIdx++)
 	{
@@ -473,7 +473,7 @@ void GenomeComparison()
 		for (i = 0; i < iThreadNum; i++) pthread_create(&ThreadArr[i], NULL, IdentifyLocalMEM, NULL);
 		for (i = 0; i < iThreadNum; i++) pthread_join(ThreadArr[i], NULL); fprintf(stderr, "\n");
 
-		SeedNum = (int)SeedVec.size(); SeedGroupNum = SeedGrouping(); GroupID = 0;
+		SeedNum = (int)SeedVec.size(); GroupID = 0; SeedGroupNum = SeedGrouping();
 		fprintf(stderr, "\t\tSeed clustering and chaining..."); //iThreadNum = 1;
 		for (i = 0; i < iThreadNum; i++) pthread_create(&ThreadArr[i], NULL, GenerateAlignmentBlocks, &vec[i]);
 		for (i = 0; i < iThreadNum; i++) pthread_join(ThreadArr[i], NULL); fprintf(stderr, "\n");

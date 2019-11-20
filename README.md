@@ -101,3 +101,4 @@ To compile Evaluation.cpp, just type 'g++ Evaluation.cpp -o eva'
 # Changes
 - 1.0.0: First release version
 - 1.0.1: Fixed a bug in <<CheckMemoryUsage>>
+- 1.0.2: Fixed a bug when running with multi-threads on Mac PCs

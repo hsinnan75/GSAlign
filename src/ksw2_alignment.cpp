@@ -243,6 +243,7 @@ string ksw_extz2_sse(int qlen, const uint8_t *query, int tlen, const uint8_t *ta
 	cigar = ksw_backtrack((uint8_t*)p, off, off_end, n_col_ * 16, tlen - 1, qlen - 1);
 	//printf("cigar=%s\n", cigar.c_str());
 	free(mem); free(H); free(mem2); free(off);
+	mem = mem2 = NULL; off = NULL; H = NULL;
 
 	return cigar;
 }
@@ -258,7 +259,7 @@ void ksw2_alignment(int m, string& s1, int n, string& s2)
 	for (i = 0; i < n; ++i) str2[i] = nst_nt4_table[(uint8_t)s2[i]];
 
 	cigar = ksw_extz2_sse(m, str1, n, str2, 5, 2, 1, -1, &ez);
-	free(str1); free(str2);
+	free(str1); free(str2); str1 = str2 = NULL;
 
 	len = (int)cigar.length();
 	for (p = 0, i = len - 1; i >= 0; i--,p++)

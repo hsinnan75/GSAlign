@@ -130,7 +130,7 @@ bwt_t *bwa_idx_load_bwt(const char *hint)
 	bwt = bwt_restore_bwt(tmp);
 	strcat(strcpy(tmp, hint), ".sa");  // partial suffix array (SA)
 	bwt_restore_sa(tmp, bwt);
-	free(tmp);
+	free(tmp); tmp = NULL;
 
 	return bwt;
 }
