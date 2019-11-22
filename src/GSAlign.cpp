@@ -12,7 +12,7 @@ int QrySeqPos, QryChrLength;
 vector<AlnBlock_t> AlnBlockVec;
 vector<pair<int, int> > SeedGroupVec;
 int SeedNum, SeedGroupNum, GroupID, AlnBlockNum;
-int64_t TotalAlignmentLength = 0, LocalAlignmentNum = 0, SNP_num = 0, IND_num = 0, SVS_num = 0;
+int64_t TotalAlignmentLength = 0, TotalAlignmentMatches = 0, LocalAlignmentNum = 0, SNP_num = 0, IND_num = 0, SVS_num = 0;
 
 bool CompByAlnBlockQueryPos(const AlnBlock_t& p1, const AlnBlock_t& p2)
 {
@@ -507,7 +507,7 @@ void GenomeComparison()
 			else
 			{
 				n++; aln_len+= ABiter->aln_len;
-				LocalAlignmentNum++; TotalAlignmentLength += ABiter->aln_len;
+				LocalAlignmentNum++; TotalAlignmentLength += ABiter->aln_len; TotalAlignmentMatches += ABiter->score;
 				ABiter->coor = GenCoordinateInfo(ABiter->FragPairVec[0].rPos);
 				//if (ABiter->FragPairVec.begin()->rPos < ObrPos && ABiter->FragPairVec.rbegin()->rPos > ObrPos) ShowFragPairVec(ABiter->FragPairVec);
 			}
@@ -520,7 +520,7 @@ void GenomeComparison()
 		if (bShowPlot && GnuPlotPath != NULL) fprintf(stderr, "\t\tGenerate dotplot for query sequence (%s-%s).ps\n", OutputPrefix, QueryChrVec[QueryChrIdx].name.c_str()), OutputDotplot();
 		fprintf(stderr, "\n");
 	}
-	if (LocalAlignmentNum > 0) fprintf(stderr, "\tAlignment#=%d (total alignment length=%lld)\n", (int)LocalAlignmentNum, (long long)TotalAlignmentLength);
+	if (LocalAlignmentNum > 0) fprintf(stderr, "\tAlignment#=%d (total alignment length=%lld) ANI=%.2f%%\n", (int)LocalAlignmentNum, (long long)TotalAlignmentLength, (100 * (1.0*TotalAlignmentMatches / TotalAlignmentLength)));
 	fprintf(stderr, "\tIt took %lld seconds for genome sequence alignment.\n", (long long)(time(NULL) - StartProcessTime));
 
 	delete[] RefChrScoreArr; delete[] ThreadArr;
