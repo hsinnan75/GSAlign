@@ -6,7 +6,7 @@ string cmd_line;
 bwaidx_t *RefIdx;
 time_t StartProcessTime;
 vector<QueryChr_t> QueryChrVec;
-const char* VersionStr = "1.0.3";
+const char* VersionStr = "1.0.4";
 bool bDebugMode, bDUPmode, bSensitive, bVCF, bShowPlot;
 int QueryChrIdx, iThreadNum, iQueryChrNum, MaxIndelSize, MinSeedLength, MinSeqIdy, MinAlnBlockScore, MinAlnLength, OutputFormat = 1;
 char *RefSequence, *RefSeqFileName, *IndexFileName, *QueryFileName, *OutputPrefix, *vcfFileName, *mafFileName, *alnFileName, *gpFileName, *GnuPlotPath;
@@ -41,6 +41,23 @@ string TrimChromosomeName(string name)
 		else if (name[i] == ' ' || name[i] == '#' || name[i] == ':' || name[i] == '=' || name[i] == '\t') break;
 	}
 	return name.substr(0, i);
+}
+
+bool CheckQueryFile()
+{
+	string str;
+	fstream file;
+	bool b = true;
+
+	file.open(QueryFileName, ios_base::in);
+	if (!file.is_open()) b = false;
+	else
+	{
+		getline(file, str);
+		if (str[0] != '>') b = false;
+	}
+	file.close();
+	return b;
 }
 
 bool LoadQueryFile()
@@ -237,7 +254,7 @@ int main(int argc, char* argv[])
 	StartProcessTime = time(NULL);
 	fprintf(stderr, "Step1. Load the two genome sequences...\n");
 
-	if (LoadQueryFile() == false) fprintf(stderr, "Please check the query file: %s\n", QueryFileName), exit(0);
+	if (CheckQueryFile() == false || LoadQueryFile() == false) fprintf(stderr, "Please check the query file: %s\n", QueryFileName), exit(0);
 
 	if (IndexFileName != NULL && CheckBWAIndexFiles(IndexFileName)) RefIdx = bwa_idx_load(IndexFileName);
 	else if (RefSeqFileName != NULL)

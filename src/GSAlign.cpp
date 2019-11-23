@@ -94,11 +94,11 @@ void *IdentifyLocalMEM(void *arg)
 	sort(seed_vec.begin(), seed_vec.end(), CompByPosDiff);
 
 	if (iThreadNum == 1) SeedVec.swap(seed_vec);
-	else
+	else if (seed_vec.size() > 0)
 	{
 		pthread_mutex_lock(&Lock);
 		int num = (int)SeedVec.size();
-		std::copy(seed_vec.begin(), seed_vec.end(), std::back_inserter(SeedVec));
+		copy(seed_vec.begin(), seed_vec.end(), back_inserter(SeedVec));
 		inplace_merge(SeedVec.begin(), SeedVec.begin() + num, SeedVec.end(), CompByPosDiff);
 		pthread_mutex_unlock(&Lock);
 	}
@@ -500,20 +500,21 @@ void GenomeComparison()
 		for (i = 0; i < iThreadNum; i++) pthread_create(&ThreadArr[i], NULL, GenerateFragAlignment, &vec[i]);
 		for (i = 0; i < iThreadNum; i++) pthread_join(ThreadArr[i], NULL); fprintf(stderr, "\n");
 
-		int n = 0, aln_len = 0;
+		int n = 0; int64_t aln_score = 0, aln_len = 0;
 		for (ABiter = AlnBlockVec.begin(); ABiter != AlnBlockVec.end(); ABiter++)
 		{
 			if ((int)(100 * (1.0*ABiter->score / ABiter->aln_len)) < MinSeqIdy) ABiter->score = 0;
 			else
 			{
-				n++; aln_len+= ABiter->aln_len;
+				n++; aln_len += ABiter->aln_len; aln_score += ABiter->score;
 				LocalAlignmentNum++; TotalAlignmentLength += ABiter->aln_len; TotalAlignmentMatches += ABiter->score;
 				ABiter->coor = GenCoordinateInfo(ABiter->FragPairVec[0].rPos);
 				//if (ABiter->FragPairVec.begin()->rPos < ObrPos && ABiter->FragPairVec.rbegin()->rPos > ObrPos) ShowFragPairVec(ABiter->FragPairVec);
 			}
 		}
 		RemoveBadAlnBlocks();
-		fprintf(stderr, "\t\tProduce %d local alignments (length = %d)\n", n, aln_len);
+		if (n == 0) continue;
+		fprintf(stderr, "\t\tProduce %d local alignments (length = %lld), ANI=%.2f%%\n", n, (long long)aln_len, (100*(1.0*aln_score/aln_len)));
 		if (OutputFormat == 1) fprintf(stderr, "\t\tOutput alignments for query sequence (%s)\n", mafFileName), OutputMAF();
 		if (OutputFormat == 2) fprintf(stderr, "\t\tOutput alignments for query sequence (%s)\n", alnFileName), OutputAlignment();
 		if (bVCF) fprintf(stderr, "\t\tIdentify sequence variants for query sequence...\n"), VariantIdentification();
@@ -522,6 +523,6 @@ void GenomeComparison()
 	}
 	if (LocalAlignmentNum > 0) fprintf(stderr, "\tAlignment#=%d (total alignment length=%lld) ANI=%.2f%%\n", (int)LocalAlignmentNum, (long long)TotalAlignmentLength, (100 * (1.0*TotalAlignmentMatches / TotalAlignmentLength)));
 	fprintf(stderr, "\tIt took %lld seconds for genome sequence alignment.\n", (long long)(time(NULL) - StartProcessTime));
-
+	//fprintf(stdout, "%.2f%%\n", (100 * (1.0*TotalAlignmentMatches / TotalAlignmentLength)));
 	delete[] RefChrScoreArr; delete[] ThreadArr;
 }

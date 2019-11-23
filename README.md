@@ -103,3 +103,4 @@ To compile Evaluation.cpp, just type 'g++ Evaluation.cpp -o eva'
 - 1.0.1: Fixed a bug in <<CheckMemoryUsage>>
 - 1.0.2: Fixed a bug when running with multi-threads on Mac PCs
 - 1.0.3: Added the Average Nucleotide Identity (ANI) output
+- 1.0.4: Check the input file format
