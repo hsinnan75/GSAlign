@@ -6,7 +6,7 @@ string cmd_line;
 bwaidx_t *RefIdx;
 time_t StartProcessTime;
 vector<QueryChr_t> QueryChrVec;
-const char* VersionStr = "1.0.4";
+const char* VersionStr = "1.0.5";
 bool bDebugMode, bDUPmode, bSensitive, bVCF, bShowPlot;
 int QueryChrIdx, iThreadNum, iQueryChrNum, MaxIndelSize, MinSeedLength, MinSeqIdy, MinAlnBlockScore, MinAlnLength, OutputFormat = 1;
 char *RefSequence, *RefSeqFileName, *IndexFileName, *QueryFileName, *OutputPrefix, *vcfFileName, *mafFileName, *alnFileName, *gpFileName, *GnuPlotPath;
@@ -60,6 +60,19 @@ bool CheckQueryFile()
 	return b;
 }
 
+bool CheckQuerySeq(string& seq)
+{
+	for (string::iterator iter = seq.begin(); iter != seq.end(); iter++)
+	{
+		if (isalpha(*iter) == 0)
+		{
+			fprintf(stderr, "The query sequence contains non-alphabet characters! ");
+			return false;
+		}
+	}
+	return true;
+}
+
 bool LoadQueryFile()
 {
 	string str;
@@ -81,7 +94,11 @@ bool LoadQueryFile()
 				QueryChrVec[ChrIdx].name = TrimChromosomeName(str.substr(1));
 				QueryChrVec[ChrIdx].seq.clear();
 			}
-			else QueryChrVec[ChrIdx].seq.append(str);
+			else
+			{
+				if (CheckQuerySeq(str) == false) return false;
+				else QueryChrVec[ChrIdx].seq.append(str);
+			}
 		}
 		fprintf(stderr, "\tLoad the query sequences (%d %s)\n", (int)QueryChrVec.size(), (QueryChrVec.size() > 1 ? "chromosomes":"chromosome"));
 	}
