@@ -9,7 +9,7 @@
 unsigned char nst_nt4_table[256] = {
 	4, 4, 4, 4,  4, 4, 4, 4,  4, 4, 4, 4,  4, 4, 4, 4, 
 	4, 4, 4, 4,  4, 4, 4, 4,  4, 4, 4, 4,  4, 4, 4, 4, 
-	4, 4, 4, 4,  4, 4, 4, 4,  4, 4, 4, 4,  4, 5, 4, 4,
+	4, 4, 4, 4,  4, 4, 4, 4,  4, 4, 4, 4,  4, 4, 4, 4,
 	4, 4, 4, 4,  4, 4, 4, 4,  4, 4, 4, 4,  4, 4, 4, 4, 
 	4, 0, 4, 1,  4, 4, 4, 2,  4, 4, 4, 4,  4, 4, 4, 4, 
 	4, 4, 4, 4,  3, 4, 4, 4,  4, 4, 4, 4,  4, 4, 4, 4, 
@@ -201,7 +201,7 @@ FragPair_t Specific_BWT_Search(string& seq, int start, int stop, int64_t rPos1, 
 	FraPair.qLen = FraPair.rLen = 0;
 	for (pos = start + 1; pos < stop; pos++)
 	{
-		if ((nt = nst_nt4_table[(int)seq[pos]]) > 3) break;// ambiguous base
+		if ((nt = nst_nt4_table[(int)seq[pos]]) == 4) break;// ambiguous base
 
 		bwt_2occ4(Refbwt, ik.x[1] - 1, ik.x[1] - 1 + ik.x[2], tk, tl);
 		for (i = 0; i != 4; ++i) {

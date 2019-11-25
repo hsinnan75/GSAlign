@@ -6,7 +6,7 @@ string cmd_line;
 bwaidx_t *RefIdx;
 time_t StartProcessTime;
 vector<QueryChr_t> QueryChrVec;
-const char* VersionStr = "1.0.5";
+const char* VersionStr = "1.0.6";
 bool bDebugMode, bDUPmode, bSensitive, bVCF, bShowPlot;
 int QueryChrIdx, iThreadNum, iQueryChrNum, MaxIndelSize, MinSeedLength, MinSeqIdy, MinAlnBlockScore, MinAlnLength, OutputFormat = 1;
 char *RefSequence, *RefSeqFileName, *IndexFileName, *QueryFileName, *OutputPrefix, *vcfFileName, *mafFileName, *alnFileName, *gpFileName, *GnuPlotPath;
@@ -32,7 +32,7 @@ void ShowProgramUsage(const char* program)
 string TrimChromosomeName(string name)
 {
 	string str;
-	int i, len = (int)name.length();
+	uint32_t i, len = (uint32_t)name.length();
 
 	for (i = 0; i < len; i++)
 	{
@@ -66,6 +66,7 @@ bool CheckQuerySeq(string& seq)
 	{
 		if (isalpha(*iter) == 0)
 		{
+			printf("%s\n", seq.c_str());
 			fprintf(stderr, "The query sequence contains non-alphabet characters! ");
 			return false;
 		}
@@ -190,8 +191,8 @@ int main(int argc, char* argv[])
 	bDebugMode = false;
 	bVCF = true;
 	MinSeedLength = 15;
-	MinAlnBlockScore = 250;
-	MinAlnLength = 5000;
+	MinAlnBlockScore = 200;
+	MinAlnLength = 1000;
 	MinSeqIdy = 70;
 	MaxIndelSize = 25;
 	RefSequence = RefSeqFileName = IndexFileName = QueryFileName = OutputPrefix = NULL;
@@ -293,7 +294,7 @@ int main(int argc, char* argv[])
 		if (bShowPlot) FindGnuPlotPath();
 		InitializeOutputFiles();
 		GenomeComparison();
-		if (bVCF) fprintf(stderr, "\nGSAlign identifies %d sequence variants [%s].\n\n", (int)VarVec.size(), vcfFileName), OutputSequenceVariants();
+		if (bVCF) fprintf(stderr, "\nGSAlign identifies %d SNVs, %d insertions, and %d deletions [%s].\n\n", iSNV, iInsertion, iDeletion, vcfFileName), OutputSequenceVariants();
 		bwa_idx_destroy(RefIdx);
 		if (RefSequence != NULL) delete[] RefSequence;
 		DestroyOutputFileNames();

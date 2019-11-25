@@ -54,6 +54,7 @@ int CheckFragPairMismatch(FragPair_t* FragPair)
 
 	for (i = 0; i < FragPair->qLen; i++)
 	{
+		if (nst_nt4_table[(int)QuerySeq[i]] == 4) continue;
 		if (nst_nt4_table[(unsigned char)QuerySeq[i]] != nst_nt4_table[(unsigned char)TemplateSeq[i]]) mismatch++;
 	}
 	return mismatch;
@@ -227,10 +228,23 @@ void *FillAlnBlockGaps(void *arg)
 	return (void*)(1);
 }
 
+void ShowDifferences(string& aln1, string& aln2)
+{
+	string aln;
+	int i, len = (int)aln1.length();
+	for (i = 0; i < len; i++)
+	{
+		if (aln1[i] != aln2[i]) aln.push_back('*');
+		else aln.push_back(' ');
+	}
+	printf("%s\n%s\n%s\n\n", aln1.c_str(), aln2.c_str(), aln.c_str());
+}
+
 void *GenerateFragAlignment(void *arg)
 {
 	FragPair_t *FragPair;
-	int i, j, aln_len, score, FragPairNum, mismatch, *my_id = (int*)arg;
+	uint32_t aln_len, score;
+	int i, j, FragPairNum, mismatch, *my_id = (int*)arg;
 
 	for (i = 0; i < AlnBlockNum; i++)
 	{
@@ -278,7 +292,6 @@ void *GenerateFragAlignment(void *arg)
 					//if (FragPair->qPos == 1231410) ShowFragPair(*FragPair), printf("%s\n%s\n", FragPair->aln1.c_str(), FragPair->aln2.c_str());
 					aln_len += FragPair->aln1.length();
 					score += CountIdenticalPairs(FragPair->aln1, FragPair->aln2);
-					//if (FragPair->qPos == 91210692) printf("case2\n");
 				}
 			}
 		}

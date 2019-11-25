@@ -48,6 +48,8 @@ or with a pre-built index file
   $ bin/GSAlign -i idx_prefix -q fa2 -o output
   ```
 
+Please note, if the two genome sequences are intra-species, it is recommended to run GSAlign with default parameters. However, if they are inter-species, it is recommended to run GSAlign with '-clr 50 -alen 200.'
+
 # Datasets
 
 You may download the test datasets at http://bioapp.iis.sinica.edu.tw/~arith/GSAlign/ to test the performance of GSAlign.
@@ -103,5 +105,6 @@ To compile Evaluation.cpp, just type 'g++ Evaluation.cpp -o eva'
 - 1.0.1: Fixed a bug in <<CheckMemoryUsage>>
 - 1.0.2: Fixed a bug when running with multi-threads on Mac PCs
 - 1.0.3: Added the Average Nucleotide Identity (ANI) output
-- 1.0.4: Check the input file format
-- 1.0.5: Check the input file format
+- 1.0.4: Fixed a bug in reading input files
+- 1.0.5: Fixed a bug in reading input files
+- 1.0.6: Modified GSAlign's output and fixed type casting

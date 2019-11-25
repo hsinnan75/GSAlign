@@ -8,8 +8,8 @@ int ObrPos = -1;
 pthread_mutex_t Lock;
 int64_t *RefChrScoreArr;
 vector<FragPair_t> SeedVec;
-int QrySeqPos, QryChrLength;
 vector<AlnBlock_t> AlnBlockVec;
+uint32_t QrySeqPos, QryChrLength;
 vector<pair<int, int> > SeedGroupVec;
 int SeedNum, SeedGroupNum, GroupID, AlnBlockNum;
 int64_t TotalAlignmentLength = 0, TotalAlignmentMatches = 0, LocalAlignmentNum = 0, SNP_num = 0, IND_num = 0, SVS_num = 0;
@@ -50,8 +50,9 @@ void AddAlnBlock(int i, int j)
 
 void *IdentifyLocalMEM(void *arg)
 {
+	int i;
 	FragPair_t seed;
-	int i, start, stop;
+	uint32_t start, stop;
 	vector<FragPair_t> seed_vec;
 	bwtSearchResult_t bwtSearchResult;
 
@@ -466,7 +467,7 @@ void GenomeComparison()
 		//if (QueryChrVec[QueryChrIdx].name != "chr18_mut") continue;
 		//printf("Query=%s\n", QueryChrVec[QueryChrIdx].name.c_str());
 		fprintf(stderr, "\tProcess query chromsomoe: %s...\n", QueryChrVec[QueryChrIdx].name.c_str());
-		QrySeqPos = 0; QryChrLength = QueryChrVec[QueryChrIdx].seq.length();
+		QrySeqPos = 0; QryChrLength = (uint32_t)QueryChrVec[QueryChrIdx].seq.length();
 
 		SeedVec.clear(); SeedGroupVec.clear(); AlnBlockVec.clear(); //reset data structures
 
@@ -509,7 +510,6 @@ void GenomeComparison()
 				n++; aln_len += ABiter->aln_len; aln_score += ABiter->score;
 				LocalAlignmentNum++; TotalAlignmentLength += ABiter->aln_len; TotalAlignmentMatches += ABiter->score;
 				ABiter->coor = GenCoordinateInfo(ABiter->FragPairVec[0].rPos);
-				//if (ABiter->FragPairVec.begin()->rPos < ObrPos && ABiter->FragPairVec.rbegin()->rPos > ObrPos) ShowFragPairVec(ABiter->FragPairVec);
 			}
 		}
 		RemoveBadAlnBlocks();
@@ -523,6 +523,5 @@ void GenomeComparison()
 	}
 	if (LocalAlignmentNum > 0) fprintf(stderr, "\tAlignment#=%d (total alignment length=%lld) ANI=%.2f%%\n", (int)LocalAlignmentNum, (long long)TotalAlignmentLength, (100 * (1.0*TotalAlignmentMatches / TotalAlignmentLength)));
 	fprintf(stderr, "\tIt took %lld seconds for genome sequence alignment.\n", (long long)(time(NULL) - StartProcessTime));
-	//fprintf(stdout, "%.2f%%\n", (100 * (1.0*TotalAlignmentMatches / TotalAlignmentLength)));
 	delete[] RefChrScoreArr; delete[] ThreadArr;
 }

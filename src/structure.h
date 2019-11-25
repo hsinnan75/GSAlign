@@ -151,7 +151,7 @@ extern vector<Chromosome_t> ChromosomeVec;
 extern bool bDebugMode, bSensitive, bVCF, bShowPlot;
 extern int64_t GenomeSize, TwoGenomeSize, TotalAlignmentLength, LocalAlignmentNum;
 extern char *RefSequence, *RefSeqFileName, *IndexFileName, *QueryFileName, *OutputPrefix, *vcfFileName, *mafFileName, *alnFileName, *gpFileName, *GnuPlotPath;
-extern int ObrPos, QueryChrIdx, iThreadNum, iQueryChrNum, iChromsomeNum, AlnBlockNum, MinSeqIdy, MaxIndelSize, MinSeedLength, MinAlnLength, MinAlnBlockScore, OutputFormat;
+extern int ObrPos, QueryChrIdx, iThreadNum, iQueryChrNum, iChromsomeNum, AlnBlockNum, MinSeqIdy, MaxIndelSize, MinSeedLength, MinAlnLength, MinAlnBlockScore, OutputFormat, iSNV, iInsertion, iDeletion;
 
 extern string TrimChromosomeName(string name);
 

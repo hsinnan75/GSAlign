@@ -149,8 +149,9 @@ int CountGapNum(char *aln, int i, int stop)
 void OutputMAF()
 {
 	FILE *outFile;
+	int RefIdx;
+	uint32_t aln_len;
 	char *aln1, *aln2;
-	int RefIdx, aln_len;
 	vector<FragPair_t>::iterator FragPairIter;
 	string QueryChrName, RefChrName;
 
@@ -176,7 +177,7 @@ void OutputMAF()
 			{
 				strcpy(aln1 + aln_len, FragPairIter->aln1.c_str());
 				strcpy(aln2 + aln_len, FragPairIter->aln2.c_str());
-				aln_len += FragPairIter->aln1.length();
+				aln_len += (uint32_t)FragPairIter->aln1.length();
 			}
 		}
 
@@ -189,7 +190,7 @@ void OutputMAF()
 		{
 			fprintf(outFile, "a score=%d\n", ABiter->score);
 			fprintf(outFile, "s %s %d %d + %d %s\n", ChromosomeVec[RefIdx].name, ABiter->coor.gPos, ABiter->aln_len - CountGapNum(aln1, 0, ABiter->aln_len), ChromosomeVec[RefIdx].len, aln1);
-			fprintf(outFile, "s %s %d %d + %d %s\n\n", (char*)QueryChrName.c_str(), ABiter->FragPairVec[0].qPos + 1, ABiter->aln_len - CountGapNum(aln2, 0, ABiter->aln_len), (int)QueryChrVec[QueryChrIdx].seq.length(), aln2);
+			fprintf(outFile, "s %s %d %d + %d %s\n\n", (char*)QueryChrName.c_str(), ABiter->FragPairVec[0].qPos + 1, ABiter->aln_len - CountGapNum(aln2, 0, ABiter->aln_len), (uint32_t)QueryChrVec[QueryChrIdx].seq.length(), aln2);
 		}
 		else
 		{
@@ -197,7 +198,7 @@ void OutputMAF()
 			SelfComplementarySeq(ABiter->aln_len, aln1); SelfComplementarySeq(ABiter->aln_len, aln2);
 			fprintf(outFile, "a score=%d\n", ABiter->score);
 			fprintf(outFile, "s %s %d %d + %d %s\n", ChromosomeVec[RefIdx].name, GenCoordinateInfo(rPos).gPos, ABiter->aln_len - CountGapNum(aln1, 0, ABiter->aln_len), ChromosomeVec[RefIdx].len, aln1);
-			fprintf(outFile, "s %s %d %d - %d %s\n\n", (char*)QueryChrName.c_str(), (int)QueryChrVec[QueryChrIdx].seq.length() - (ABiter->FragPairVec.begin()->qPos + ABiter->FragPairVec.begin()->qLen - 1), ABiter->aln_len - CountGapNum(aln2, 0, ABiter->aln_len), (int)QueryChrVec[QueryChrIdx].seq.length(), aln2);
+			fprintf(outFile, "s %s %d %d - %d %s\n\n", (char*)QueryChrName.c_str(), (uint32_t)QueryChrVec[QueryChrIdx].seq.length() - (ABiter->FragPairVec.begin()->qPos + ABiter->FragPairVec.begin()->qLen - 1), ABiter->aln_len - CountGapNum(aln2, 0, ABiter->aln_len), (uint32_t)QueryChrVec[QueryChrIdx].seq.length(), aln2);
 		}
 		delete[] aln1; delete[] aln2;
 	}
@@ -209,8 +210,9 @@ void OutputAlignment()
 	FILE *outFile;
 	int64_t RefPos;
 	char *aln1, *aln2;
+	uint32_t pos, aln_len;
+	int p, q, RefIdx, QueryPos;
 	string QueryChrName, RefChrName;
-	int pos, p, q, aln_len, RefIdx, QueryPos;
 	vector<FragPair_t>::iterator FragPairIter;
 
 	if (QueryChrIdx == 0) outFile = fopen(alnFileName, "w");
@@ -231,7 +233,7 @@ void OutputAlignment()
 			{
 				strcpy(aln1 + aln_len, FragPairIter->aln1.c_str());
 				strcpy(aln2 + aln_len, FragPairIter->aln2.c_str());
-				aln_len += FragPairIter->aln1.length();
+				aln_len += (uint32_t)FragPairIter->aln1.length();
 			}
 		}
 		RefIdx = ABiter->coor.ChromosomeIdx;

@@ -1,6 +1,7 @@
 #include "structure.h"
 
 vector<Variant_t> VarVec;
+int iSNV, iInsertion, iDeletion;
 
 bool CompByVariantPos(const Variant_t& p1, const Variant_t& p2)
 {
@@ -28,6 +29,7 @@ void VariantIdentification()
 				if (FragPairIter->qLen == 0 && FragPairIter->rLen == 0) continue;
 				else if (FragPairIter->qLen == 0) // delete
 				{
+					iDeletion++;
 					frag1.resize(FragPairIter->rLen + 1); strncpy((char*)frag1.c_str(), RefSequence + FragPairIter->rPos - 1, FragPairIter->rLen + 1);
 					Variant.type = 2;
 					Variant.pos = GenCoordinateInfo(FragPairIter->rPos - 1).gPos;
@@ -37,6 +39,7 @@ void VariantIdentification()
 				}
 				else if (FragPairIter->rLen == 0) // insert
 				{
+					iInsertion++;
 					frag2.resize(FragPairIter->qLen + 1); strncpy((char*)frag2.c_str(), QueryChrVec[QueryChrIdx].seq.c_str() + FragPairIter->qPos - 1, FragPairIter->qLen + 1);
 					Variant.type = 1;
 					Variant.pos = GenCoordinateInfo(FragPairIter->rPos - 1).gPos;
@@ -46,14 +49,14 @@ void VariantIdentification()
 				}
 				else if (FragPairIter->qLen == 1 && FragPairIter->rLen == 1) // substitution
 				{
-					if (nst_nt4_table[(int)FragPairIter->aln1[0]] != nst_nt4_table[(int)FragPairIter->aln2[0]] && nst_nt4_table[(int)FragPairIter->aln1[0]] != 4 && nst_nt4_table[(int)FragPairIter->aln2[0]] != 4)
+					if (nst_nt4_table[(int)FragPairIter->aln1[0]] != nst_nt4_table[(int)FragPairIter->aln2[0]] && nst_nt4_table[(int)FragPairIter->aln2[0]] != 4)
 					{
+						iSNV++;
 						Variant.type = 0;
 						Variant.pos = GenCoordinateInfo(FragPairIter->rPos).gPos;
 						Variant.ref_frag = FragPairIter->aln1;
 						Variant.alt_frag = FragPairIter->aln2;
 						VarVec.push_back(Variant);
-						//if (Variant.pos == 6250062) ShowFragPairVec(ABiter->FragPairVec);
 					}
 				}
 				else
@@ -63,9 +66,9 @@ void VariantIdentification()
 					{
 						if (FragPairIter->aln1[i] == '-') // insert
 						{
+							iInsertion++;
 							ind_len = 1; while (FragPairIter->aln1[i + ind_len] == '-') ind_len++;
 							frag2 = QueryChrVec[QueryChrIdx].seq.substr(qPos - 1, ind_len + 1);
-							//fprintf(outFile, "%s\t%d\t.\t%c\t%s\t100\tPASS\tmt=INSERT\n", RefChrName.c_str(), GenCoordinateInfo(rPos - 1).gPos, frag2[0], (char*)frag2.c_str());
 							Variant.type = 1;
 							Variant.pos = GenCoordinateInfo(rPos - 1).gPos;
 							Variant.ref_frag.resize(1); Variant.ref_frag[0] = frag2[0];
@@ -76,7 +79,7 @@ void VariantIdentification()
 						}
 						else if (FragPairIter->aln2[i] == '-') // delete
 						{
-							//if (GenCoordinateInfo(rPos - 1).gPos == 1238929) OutputDesiredAlignment(*ABiter);
+							iDeletion++;
 							ind_len = 1; while (FragPairIter->aln2[i + ind_len] == '-') ind_len++;
 							frag1.resize(ind_len + 2); frag1[ind_len + 1] = '\0';
 							strncpy((char*)frag1.c_str(), RefSequence + rPos - 1, ind_len + 1);
@@ -91,14 +94,14 @@ void VariantIdentification()
 						}
 						else if (nst_nt4_table[(int)FragPairIter->aln1[i]] != nst_nt4_table[(int)FragPairIter->aln2[i]])// substitute
 						{
-							if (nst_nt4_table[(int)FragPairIter->aln1[i]] != 4 && nst_nt4_table[(int)FragPairIter->aln2[i]] != 4)
+							if (nst_nt4_table[(int)FragPairIter->aln2[i]] != 4)
 							{
+								iSNV++;
 								Variant.type = 0;
 								Variant.pos = GenCoordinateInfo(rPos).gPos;
 								Variant.ref_frag.resize(1); Variant.ref_frag[0] = FragPairIter->aln1[i];
 								Variant.alt_frag.resize(1); Variant.alt_frag[0] = FragPairIter->aln2[i];
 								VarVec.push_back(Variant);
-								//if (Variant.pos == 6250062) ShowFragPairVec(ABiter->FragPairVec);
 							}
 							rPos++; qPos++;
 						}
@@ -120,8 +123,10 @@ void OutputSequenceVariants()
 
 	sort(VarVec.begin(), VarVec.end(), CompByVariantPos);
 
+	iSNV = iInsertion = iDeletion = 0;
+
 	outFile = fopen(vcfFileName, "w");
-	fprintf(outFile, "##fileformat=VCFv4.2\n");
+	fprintf(outFile, "##fileformat=VCFv4.1\n");
 	if (IndexFileName != NULL) fprintf(outFile, "##reference=%s\n", IndexFileName);
 	else fprintf(outFile, "##reference=%s\n", RefSeqFileName);
 	fprintf(outFile, "##source=GSAlign %s\n", VersionStr);
@@ -130,8 +135,7 @@ void OutputSequenceVariants()
 	fprintf(outFile, "#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO\n");
 	for (vector<Variant_t>::iterator iter = VarVec.begin(); iter != VarVec.end(); iter++)
 	{
-		//fprintf(outFile, "%s\t%d\t.\t%s\t%s\t100\tPASS\tQuery=%s,TYPE=%s\n", ChromosomeVec[iter->chr_idx].name, iter->pos, (char*)iter->ref_frag.c_str(), (char*)iter->alt_frag.c_str(), QueryChrVec[iter->query_idx].name.c_str(), MutType[iter->type]);
-		fprintf(outFile, "%s\t%d\t.\t%s\t%s\t100\tPASS\tTYPE=%s\n", ChromosomeVec[iter->chr_idx].name, iter->pos, (char*)iter->ref_frag.c_str(), (char*)iter->alt_frag.c_str(), MutType[iter->type]);
+		fprintf(outFile, "%s\t%d\t.\t%s\t%s\t100\t*\tTYPE=%s\n", ChromosomeVec[iter->chr_idx].name, iter->pos, (char*)iter->ref_frag.c_str(), (char*)iter->alt_frag.c_str(), MutType[iter->type]);
 	}
 	std::fclose(outFile);
 }
