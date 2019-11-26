@@ -6,7 +6,7 @@ string cmd_line;
 bwaidx_t *RefIdx;
 time_t StartProcessTime;
 vector<QueryChr_t> QueryChrVec;
-const char* VersionStr = "1.0.6";
+const char* VersionStr = "1.0.7";
 bool bDebugMode, bDUPmode, bSensitive, bVCF, bShowPlot;
 int QueryChrIdx, iThreadNum, iQueryChrNum, MaxIndelSize, MinSeedLength, MinSeqIdy, MinAlnBlockScore, MinAlnLength, OutputFormat = 1;
 char *RefSequence, *RefSeqFileName, *IndexFileName, *QueryFileName, *OutputPrefix, *vcfFileName, *mafFileName, *alnFileName, *gpFileName, *GnuPlotPath;
@@ -180,6 +180,11 @@ void FindGnuPlotPath()
 	}
 }
 
+extern "C"
+{
+	int bwa_idx_build(const char *fa, const char *prefix);
+}
+
 int main(int argc, char* argv[])
 {
 	int i;
@@ -205,6 +210,15 @@ int main(int argc, char* argv[])
 	else if (strcmp(argv[1], "update") == 0)
 	{
 		i = system("git fetch; git merge origin/master master;make");
+		exit(0);
+	}
+	else if (strcmp(argv[1], "index") == 0)
+	{
+		if (argc == 4) bwa_idx_build(argv[2], argv[3]);
+		else
+		{
+			fprintf(stderr, "usage: %s index ref.fa prefix\n", argv[0]);
+		}
 		exit(0);
 	}
 	else

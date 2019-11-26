@@ -34,6 +34,12 @@ To index a reference genome, GSAlign requires the target genome file (in fasta f
   ```
   $ bin/bwt_index ref_file[ex.ecoli.fa] index_prefix[ex. Ecoli]
   ```
+or
+
+  ```
+  $ bin/GSAlign index ref_file[ex.ecoli.fa] index_prefix[ex. Ecoli]
+  ```
+
 The above command is to index the genome file Ecoli.fa and store the index files begining with ecoli.
 If the index files are not mdade beforehand, GSAlign will generate index files istself with the given reference genome sequences.
 
@@ -108,3 +114,4 @@ To compile Evaluation.cpp, just type 'g++ Evaluation.cpp -o eva'
 - 1.0.4: Fixed a bug in reading input files
 - 1.0.5: Fixed a bug in reading input files
 - 1.0.6: Modified GSAlign's output and fixed type casting
+- 1.0.7: Integrated bwt_index into GSAlign

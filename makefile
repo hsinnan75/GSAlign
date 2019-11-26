@@ -4,7 +4,8 @@ all: 		main bwt_index
 
 bin:
 		mkdir -p bin
-main: bin
+
+main: bwt_index
 		$(MAKE) -C src
 		mv -f src/GSAlign bin
 

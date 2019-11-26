@@ -81,6 +81,7 @@ int bwa_idx_build(const char *fa, const char *prefix) //**//
 
 	char *str, *str2, *str3;
 	clock_t t;
+	int64_t l_pac;
 
 	str  = (char*)calloc(strlen(prefix) + 10, 1);
 	str2 = (char*)calloc(strlen(prefix) + 10, 1);
@@ -89,9 +90,9 @@ int bwa_idx_build(const char *fa, const char *prefix) //**//
 	{ // nucleotide indexing
 		gzFile fp = xzopen(fa, "r");
 		t = clock();
-		fprintf(stderr, "[bwt_index] Pack FASTA... ");
-		(void)bns_fasta2bntseq(fp, prefix, 0);
-		fprintf(stderr, "%.2f sec\n", (float)(clock() - t) / CLOCKS_PER_SEC);
+		fprintf(stdout, "[bwt_index] Pack FASTA... ");
+		l_pac = bns_fasta2bntseq(fp, prefix, 0);
+		fprintf(stdout, "%.2f sec\n", (float)(clock() - t) / CLOCKS_PER_SEC);
 		err_gzclose(fp);
 	}
 	//if (algo_type == 0) algo_type = l_pac > 50000000? 2 : 3; // set the algorithm for generating BWT
@@ -101,7 +102,7 @@ int bwa_idx_build(const char *fa, const char *prefix) //**//
 		strcpy(str, prefix); strcat(str, ".pac");
 		strcpy(str2, prefix); strcat(str2, ".bwt");
 		t = clock();
-		fprintf(stderr, "[bwt_index] Construct BWT for the packed sequence...\n");
+		fprintf(stdout, "[bwt_index] Construct BWT for the packed sequence...\n");
 		//if (algo_type == 2) 
 			bwt_bwtgen2(str, str2, 10000000);
 		//else if (algo_type == 1 || algo_type == 3) {
@@ -110,25 +111,25 @@ int bwa_idx_build(const char *fa, const char *prefix) //**//
 			//bwt_dump_bwt(str2, bwt);
 			//bwt_destroy(bwt);
 		//}
-		fprintf(stderr, "[bwt_index] %.2f seconds elapse.\n", (float)(clock() - t) / CLOCKS_PER_SEC);
+		fprintf(stdout, "[bwt_index] %.2f seconds elapse.\n", (float)(clock() - t) / CLOCKS_PER_SEC);
 	}
 	{
 		bwt_t *bwt;
 		strcpy(str, prefix); strcat(str, ".bwt");
 		t = clock();
-		fprintf(stderr, "[bwt_index] Update BWT... ");
+		fprintf(stdout, "[bwt_index] Update BWT... ");
 		bwt = bwt_restore_bwt(str);
 		bwt_bwtupdate_core(bwt);
 		bwt_dump_bwt(str, bwt);
 		bwt_destroy(bwt);
-		fprintf(stderr, "%.2f sec\n", (float)(clock() - t) / CLOCKS_PER_SEC);
+		fprintf(stdout, "%.2f sec\n", (float)(clock() - t) / CLOCKS_PER_SEC);
 	}
 	{
 		gzFile fp = xzopen(fa, "r");
 		t = clock();
-		fprintf(stderr, "[bwt_index] Pack forward-only FASTA... ");
-		(void)bns_fasta2bntseq(fp, prefix, 1);
-		fprintf(stderr, "%.2f sec\n", (float)(clock() - t) / CLOCKS_PER_SEC);
+		fprintf(stdout, "[bwt_index] Pack forward-only FASTA... ");
+		l_pac = bns_fasta2bntseq(fp, prefix, 1);
+		fprintf(stdout, "%.2f sec\n", (float)(clock() - t) / CLOCKS_PER_SEC);
 		err_gzclose(fp);
 	}
 	{
@@ -136,12 +137,12 @@ int bwa_idx_build(const char *fa, const char *prefix) //**//
 		strcpy(str, prefix); strcat(str, ".bwt");
 		strcpy(str3, prefix); strcat(str3, ".sa");
 		t = clock();
-		fprintf(stderr, "[bwt_index] Construct SA from BWT and Occ... ");
+		fprintf(stdout, "[bwt_index] Construct SA from BWT and Occ... ");
 		bwt = bwt_restore_bwt(str);
 		bwt_cal_sa(bwt, 32);
 		bwt_dump_sa(str3, bwt);
 		bwt_destroy(bwt);
-		fprintf(stderr, "%.2f sec\n", (float)(clock() - t) / CLOCKS_PER_SEC);
+		fprintf(stdout, "%.2f sec\n", (float)(clock() - t) / CLOCKS_PER_SEC);
 	}
 	free(str3); free(str2); free(str);
 	return 0;
