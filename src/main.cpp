@@ -6,7 +6,7 @@ string cmd_line;
 bwaidx_t *RefIdx;
 time_t StartProcessTime;
 vector<QueryChr_t> QueryChrVec;
-const char* VersionStr = "1.0.9";
+const char* VersionStr = "1.0.10";
 bool bDebugMode, bDUPmode, bSensitive, bVCF, bShowPlot;
 int QueryChrIdx, iThreadNum, iQueryChrNum, MaxIndelSize, MinSeedLength, MinSeqIdy, MinAlnBlockScore, MinAlnLength, OutputFormat = 1;
 char *RefSequence, *RefSeqFileName, *IndexFileName, *QueryFileName, *OutputPrefix, *vcfFileName, *mafFileName, *alnFileName, *gpFileName, *GnuPlotPath;
@@ -187,7 +187,7 @@ extern "C"
 
 int main(int argc, char* argv[])
 {
-	int i;
+	int i, p;
 	string parameter, str;
 
 	iThreadNum = 8;
@@ -291,7 +291,8 @@ int main(int argc, char* argv[])
 	if (IndexFileName != NULL && CheckBWAIndexFiles(IndexFileName)) RefIdx = bwa_idx_load(IndexFileName);
 	else if (RefSeqFileName != NULL)
 	{
-		string prefix(RefSeqFileName); prefix.resize(prefix.find_last_of('.'));
+		string prefix(RefSeqFileName);
+		p = prefix.find_last_of('.'); if (p != -1) prefix.resize(p);
 		bwa_idx_build(RefSeqFileName, prefix.c_str());
 		RefIdx = bwa_idx_load(prefix.c_str());
 	}
