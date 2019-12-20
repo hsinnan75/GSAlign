@@ -518,7 +518,7 @@ void GenomeComparison()
 		if (OutputFormat == 1) fprintf(stderr, "\t\tOutput alignments for query sequence (%s)\n", mafFileName), OutputMAF();
 		if (OutputFormat == 2) fprintf(stderr, "\t\tOutput alignments for query sequence (%s)\n", alnFileName), OutputAlignment();
 		if (bVCF) fprintf(stderr, "\t\tIdentify sequence variants for query sequence...\n"), VariantIdentification();
-		if (bShowPlot && GnuPlotPath != NULL) fprintf(stderr, "\t\tGenerate dotplot for query sequence (%s-%s).ps\n", OutputPrefix, QueryChrVec[QueryChrIdx].name.c_str()), OutputDotplot();
+		if (bShowPlot && GnuPlotPath != NULL) fprintf(stderr, "\t\tGenerate dotplot for query sequence (%s-%s.ps)\n", OutputPrefix, QueryChrVec[QueryChrIdx].name.c_str()), OutputDotplot();
 		fprintf(stderr, "\n");
 	}
 	if (LocalAlignmentNum > 0) fprintf(stderr, "\tAlignment#=%d (total alignment length=%lld) ANI=%.2f%%\n", (int)LocalAlignmentNum, (long long)TotalAlignmentLength, (100 * (1.0*TotalAlignmentMatches / TotalAlignmentLength)));
