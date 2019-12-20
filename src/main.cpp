@@ -292,7 +292,7 @@ int main(int argc, char* argv[])
 	else if (RefSeqFileName != NULL)
 	{
 		string prefix(RefSeqFileName);
-		p = prefix.find_last_of('.'); if (p != -1) prefix.resize(p);
+		p = prefix.find_last_of('.'); if (p > 0) prefix.resize(p);
 		bwa_idx_build(RefSeqFileName, prefix.c_str());
 		RefIdx = bwa_idx_load(prefix.c_str());
 	}
