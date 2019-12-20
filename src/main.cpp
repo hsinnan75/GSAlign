@@ -6,7 +6,7 @@ string cmd_line;
 bwaidx_t *RefIdx;
 time_t StartProcessTime;
 vector<QueryChr_t> QueryChrVec;
-const char* VersionStr = "1.0.8";
+const char* VersionStr = "1.0.9";
 bool bDebugMode, bDUPmode, bSensitive, bVCF, bShowPlot;
 int QueryChrIdx, iThreadNum, iQueryChrNum, MaxIndelSize, MinSeedLength, MinSeqIdy, MinAlnBlockScore, MinAlnLength, OutputFormat = 1;
 char *RefSequence, *RefSeqFileName, *IndexFileName, *QueryFileName, *OutputPrefix, *vcfFileName, *mafFileName, *alnFileName, *gpFileName, *GnuPlotPath;
@@ -167,7 +167,7 @@ void FindGnuPlotPath()
 	stringstream ss;
 	string fullpath, cmd, str, tmp;
 
-	cmd = "/usr/bin/whereis gnuplot > GnuPlotPath"; (void)system(cmd.c_str());
+	cmd = "whereis gnuplot > GnuPlotPath"; (void)system(cmd.c_str());
 	file.open("GnuPlotPath"); getline(file, str); file.close();
 	ss.clear(); ss.str(str);
 

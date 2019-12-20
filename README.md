@@ -116,3 +116,4 @@ To compile Evaluation.cpp, just type 'g++ Evaluation.cpp -o eva'
 - 1.0.6: Modified GSAlign's output and fixed type casting
 - 1.0.7: Integrated bwt_index into GSAlign
 - 1.0.8: Use bwa_idx_build to build the bwt index instead of using bwt_index
+- 1.0.9: Fixed a bug in finding gnuplot's path
