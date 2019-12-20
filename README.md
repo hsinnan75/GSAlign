@@ -89,7 +89,7 @@ To compile Evaluation.cpp, just type 'g++ Evaluation.cpp -o eva'
 
 -sen Sensitive mode [False]
 
--dp Output Dot-plots [false]
+-dp Output Dot-plots [false]. It may not work on MacOS.
 
 -fmt INT Set the output format [1]: 1:maf, 2:aln
 
