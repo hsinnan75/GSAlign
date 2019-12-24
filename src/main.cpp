@@ -175,6 +175,7 @@ void FindGnuPlotPath()
 	{
 		ss >> fullpath;
 		if (fullpath != "" && fullpath[0] == '/') break;
+		else fullpath = "";
 	}
 	if (fullpath == "") GnuPlotPath = NULL;
 	else
