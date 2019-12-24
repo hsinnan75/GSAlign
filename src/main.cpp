@@ -6,7 +6,7 @@ string cmd_line;
 bwaidx_t *RefIdx;
 time_t StartProcessTime;
 vector<QueryChr_t> QueryChrVec;
-const char* VersionStr = "1.0.10";
+const char* VersionStr = "1.0.11";
 bool bDebugMode, bDUPmode, bSensitive, bVCF, bShowPlot;
 int QueryChrIdx, iThreadNum, iQueryChrNum, MaxIndelSize, MinSeedLength, MinSeqIdy, MinAlnBlockScore, MinAlnLength, OutputFormat = 1;
 char *RefSequence, *RefSeqFileName, *IndexFileName, *QueryFileName, *OutputPrefix, *vcfFileName, *mafFileName, *alnFileName, *gpFileName, *GnuPlotPath;
@@ -171,7 +171,11 @@ void FindGnuPlotPath()
 	file.open("GnuPlotPath"); getline(file, str); file.close();
 	ss.clear(); ss.str(str);
 
-	ss >> tmp >> fullpath;
+	while (!ss.eof())
+	{
+		ss >> fullpath;
+		if (fullpath != "" && fullpath[0] == '/') break;
+	}
 	if (fullpath == "") GnuPlotPath = NULL;
 	else
 	{
