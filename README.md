@@ -91,6 +91,8 @@ To compile Evaluation.cpp, just type 'g++ Evaluation.cpp -o eva'
 
 -dp Output Dot-plots [false]. It may not work on MacOS.
 
+-gp STR specify the path of gnuplot, ex: -gp /usr/bin/gnuplot
+
 -fmt INT Set the output format [1]: 1:maf, 2:aln
 
 -idy  set the minimal sequnce identity [70]
