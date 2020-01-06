@@ -6,7 +6,7 @@ string cmd_line;
 bwaidx_t *RefIdx;
 time_t StartProcessTime;
 vector<QueryChr_t> QueryChrVec;
-const char* VersionStr = "1.0.11";
+const char* VersionStr = "1.0.12";
 bool bDebugMode, bDUPmode, bSensitive, bVCF, bShowPlot;
 int QueryChrIdx, iThreadNum, iQueryChrNum, MaxIndelSize, MinSeedLength, MinSeqIdy, MinAlnBlockScore, MinAlnLength, OutputFormat = 1;
 char *RefSequence, *RefSeqFileName, *IndexFileName, *QueryFileName, *OutputPrefix, *vcfFileName, *mafFileName, *alnFileName, *gpFileName, *GnuPlotPath;
@@ -26,6 +26,7 @@ void ShowProgramUsage(const char* program)
 	fprintf(stderr, "         -clr   INT     Set the minimal cluster size [%d]\n", MinAlnBlockScore);
 	fprintf(stderr, "         -sen           Sensitive mode [False]\n");
 	fprintf(stderr, "         -dp            Output Dot-plots\n");
+	fprintf(stderr, "         -gp    STR     Specify the path of gnuplot\n");
 	fprintf(stderr, "\n");
 }
 
@@ -205,7 +206,7 @@ int main(int argc, char* argv[])
 	MinAlnLength = 1000;
 	MinSeqIdy = 70;
 	MaxIndelSize = 25;
-	RefSequence = RefSeqFileName = IndexFileName = QueryFileName = OutputPrefix = NULL;
+	RefSequence = RefSeqFileName = IndexFileName = QueryFileName = OutputPrefix = GnuPlotPath = NULL;
 
 	if (argc == 1 || strcmp(argv[1], "-h") == 0)
 	{
@@ -273,6 +274,7 @@ int main(int argc, char* argv[])
 			else if (parameter == "-alen" && i + 1 < argc) MinAlnLength = atoi(argv[++i]);
 			else if (parameter == "-clr" && i + 1 < argc) MinAlnBlockScore = atoi(argv[++i]);
 			else if (parameter == "-dp") bShowPlot = true;
+			else if (parameter == "-gp" && i + 1 < argc) GnuPlotPath = argv[++i];
 			else if (parameter == "-fmt" && i + 1 < argc) OutputFormat = atoi(argv[++i]);
 			else if (parameter == "-o") OutputPrefix = argv[++i];
 			else if (parameter == "-d" || parameter == "-debug") bDebugMode = true;
@@ -311,7 +313,7 @@ int main(int argc, char* argv[])
 		Refbwt = RefIdx->bwt;
 		RestoreReferenceInfo();
 		if (bSensitive) MinSeedLength = 10;
-		if (bShowPlot) FindGnuPlotPath();
+		if (bShowPlot && GnuPlotPath == NULL) FindGnuPlotPath();
 		InitializeOutputFiles();
 		GenomeComparison();
 		if (bVCF) fprintf(stderr, "\nGSAlign identifies %d SNVs, %d insertions, and %d deletions [%s].\n\n", iSNV, iInsertion, iDeletion, vcfFileName), OutputSequenceVariants();
