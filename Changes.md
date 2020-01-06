@@ -9,5 +9,5 @@
 - 1.0.7: Integrated bwt_index into GSAlign
 - 1.0.8: Use bwa_idx_build to build the bwt index instead of using bwt_index
 - 1.0.9: Fixed a bug on finding gnuplot's path
-- 1.0.10: Fix a bug on reading input files
- 
+- 1.0.10: Fixed a bug on reading input files
+- 1.0.12: Added an option "-gp" to specify the path of gnuplot
