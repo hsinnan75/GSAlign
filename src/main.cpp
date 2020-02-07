@@ -6,7 +6,7 @@ string cmd_line;
 bwaidx_t *RefIdx;
 time_t StartProcessTime;
 vector<QueryChr_t> QueryChrVec;
-const char* VersionStr = "1.0.12";
+const char* VersionStr = "1.0.13";
 bool bDebugMode, bDUPmode, bSensitive, bVCF, bShowPlot;
 int QueryChrIdx, iThreadNum, iQueryChrNum, MaxIndelSize, MinSeedLength, MinSeqIdy, MinAlnBlockScore, MinAlnLength, OutputFormat = 1;
 char *RefSequence, *RefSeqFileName, *IndexFileName, *QueryFileName, *OutputPrefix, *vcfFileName, *mafFileName, *alnFileName, *gpFileName, *GnuPlotPath;
@@ -44,13 +44,13 @@ string TrimChromosomeName(string name)
 	return name.substr(0, i);
 }
 
-bool CheckQueryFile()
+bool CheckInputFile(char* filename)
 {
 	string str;
 	fstream file;
 	bool b = true;
 
-	file.open(QueryFileName, ios_base::in);
+	file.open(filename, ios_base::in);
 	if (!file.is_open()) b = false;
 	else
 	{
@@ -63,12 +63,14 @@ bool CheckQueryFile()
 
 bool CheckQuerySeq(string& seq)
 {
+	int len;
+	if ((len = (int)seq.length()) > 0 && seq[len - 1] == '\r') seq.resize(len - 1);
 	for (string::iterator iter = seq.begin(); iter != seq.end(); iter++)
 	{
 		if (isalpha(*iter) == 0)
 		{
 			printf("%s\n", seq.c_str());
-			fprintf(stderr, "The query sequence contains non-alphabet characters! ");
+			fprintf(stderr, "The query sequence contains non-alphabet characters!\n");
 			return false;
 		}
 	}
@@ -293,17 +295,17 @@ int main(int argc, char* argv[])
 	StartProcessTime = time(NULL);
 	fprintf(stderr, "Step1. Load the two genome sequences...\n");
 
-	if (CheckQueryFile() == false || LoadQueryFile() == false) fprintf(stderr, "Please check the query file: %s\n", QueryFileName), exit(0);
+	if (CheckInputFile(QueryFileName) == false || LoadQueryFile() == false) fprintf(stderr, "Please check the query file: %s\n", QueryFileName), exit(0);
 
 	if (IndexFileName != NULL && CheckBWAIndexFiles(IndexFileName)) RefIdx = bwa_idx_load(IndexFileName);
-	else if (RefSeqFileName != NULL)
+	else if (RefSeqFileName != NULL && CheckInputFile(RefSeqFileName) != false)
 	{
 		string prefix(RefSeqFileName);
 		p = prefix.find_last_of('.'); if (p > 0) prefix.resize(p);
 		bwa_idx_build(RefSeqFileName, prefix.c_str());
 		RefIdx = bwa_idx_load(prefix.c_str());
 	}
-	else fprintf(stderr, "Please specify a reference genome\n"), exit(0);
+	else fprintf(stderr, "Please specify a valid reference genome\n"), exit(0);
 
 	if (RefIdx == 0) fprintf(stderr, "\n\nError! Please check your input!\n");
 	else
