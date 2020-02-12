@@ -205,7 +205,7 @@ int main(int argc, char* argv[])
 	bVCF = true;
 	MinSeedLength = 15;
 	MinAlnBlockScore = 200;
-	MinAlnLength = 1000;
+	MinAlnLength = 200;
 	MinSeqIdy = 70;
 	MaxIndelSize = 25;
 	RefSequence = RefSeqFileName = IndexFileName = QueryFileName = OutputPrefix = GnuPlotPath = NULL;
