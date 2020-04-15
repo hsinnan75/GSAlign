@@ -97,14 +97,14 @@ To compile Evaluation.cpp, just type 'g++ Evaluation.cpp -o eva'
 
 -idy  set the minimal sequnce identity [70]
 
--slen set the minimal seed length [15]
+-slen set the minimal seed length [15]. To compare two sequences of less similarity, please use smaller size seed length.
 
 -alen set the minimal alignment length [5000]
 
--ind set the maximal indel size [25]
+-ind set the maximal indel size [25]. The maximal sigle indel size allowed in an alignment.
 
--clr set the minimal cluster size [250]
+-clr set the minimal cluster size [250]. A cluster is a group of seeds, and  cluster size is the total length of its seeds. This value can filter out random clusters.
 
--no_vcf No VCF output [false]
+-no_vcf No VCF output [false]. Do not identify sequence variations.
 
   ```
