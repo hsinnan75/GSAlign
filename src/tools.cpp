@@ -198,7 +198,8 @@ void OutputMAF()
 			SelfComplementarySeq(ABiter->aln_len, aln1); SelfComplementarySeq(ABiter->aln_len, aln2);
 			fprintf(outFile, "a score=%d\n", ABiter->score);
 			fprintf(outFile, "s ref_%s %d %d + %d %s\n", ChromosomeVec[RefIdx].name, GenCoordinateInfo(rPos).gPos - 1, ABiter->aln_len - CountGapNum(aln1, 0, ABiter->aln_len), ChromosomeVec[RefIdx].len, aln1);
-			fprintf(outFile, "s qry_%s %d %d - %d %s\n\n", (char*)QueryChrName.c_str(), (uint32_t)QueryChrVec[QueryChrIdx].seq.length() - (ABiter->FragPairVec.begin()->qPos + ABiter->FragPairVec.begin()->qLen), ABiter->aln_len - CountGapNum(aln2, 0, ABiter->aln_len), (uint32_t)QueryChrVec[QueryChrIdx].seq.length(), aln2);
+			//fprintf(outFile, "s qry_%s %d %d - %d %s\n\n", (char*)QueryChrName.c_str(), (uint32_t)QueryChrVec[QueryChrIdx].seq.length() - (ABiter->FragPairVec.begin()->qPos + ABiter->FragPairVec.begin()->qLen), ABiter->aln_len - CountGapNum(aln2, 0, ABiter->aln_len), (uint32_t)QueryChrVec[QueryChrIdx].seq.length(), aln2);
+			fprintf(outFile, "s qry_%s %d %d - %d %s\n\n", (char*)QueryChrName.c_str(), (uint32_t)QueryChrVec[QueryChrIdx].seq.length() - (ABiter->FragPairVec.rbegin()->qPos + ABiter->FragPairVec.rbegin()->qLen), ABiter->aln_len - CountGapNum(aln2, 0, ABiter->aln_len), (uint32_t)QueryChrVec[QueryChrIdx].seq.length(), aln2);
 		}
 		delete[] aln1; delete[] aln2;
 	}
