@@ -12,3 +12,4 @@
 - 1.0.10: Fixed a bug on reading input files
 - 1.0.12: Added an option "-gp" to specify the path of gnuplot
 - 1.0.13: Fixed a bug on reading input files
+- 1.0.16: Fixed a bug on reporting coordinate of alignment
