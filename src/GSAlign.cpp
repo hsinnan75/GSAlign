@@ -465,7 +465,7 @@ void GenomeComparison()
 	fprintf(stderr, "Step2. Sequence analysis for all query chromosomes\n");
 	for (QueryChrIdx = 0; QueryChrIdx != iQueryChrNum; QueryChrIdx++)
 	{
-		//if (QueryChrVec[QueryChrIdx].name != "scaf_462") continue;
+		//if (QueryChrVec[QueryChrIdx].name != "") continue;
 		//printf("Query=%s\n", QueryChrVec[QueryChrIdx].name.c_str());
 		fprintf(stderr, "\tProcess query chromsomoe: %s...\n", QueryChrVec[QueryChrIdx].name.c_str());
 		QrySeqPos = 0; QryChrLength = (uint32_t)QueryChrVec[QueryChrIdx].seq.length();
