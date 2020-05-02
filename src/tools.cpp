@@ -193,9 +193,10 @@ void OutputMAF()
 		if (iExtension > 0)
 		{
 			//printf("%s: %lld-%lld --> %lld (%d)\n", ChromosomeVec[RefIdx].name, (ABiter->coor.bDir ? ChromosomeVec[RefIdx].FowardLocation : ChromosomeVec[RefIdx].ReverseLocation), (ABiter->coor.bDir ? ChromosomeVec[RefIdx].FowardLocation : ChromosomeVec[RefIdx].ReverseLocation) + ChromosomeVec[RefIdx].len, (ABiter->FragPairVec.rbegin()->rPos + ABiter->FragPairVec.rbegin()->rLen), iExtension);
-			ABiter->aln_len -= iExtension;
+			ABiter->aln_len -= iExtension; ABiter->score -= iExtension;
 			ABiter->FragPairVec.rbegin()->rLen -= iExtension;
 			ABiter->FragPairVec.rbegin()->qLen -= iExtension;
+			aln1[ABiter->aln_len] = aln2[ABiter->aln_len] = '\0';
 		}
 		if (ABiter->coor.bDir)
 		{
@@ -251,6 +252,18 @@ void OutputAlignment()
 		QueryChrName = QueryChrVec[QueryChrIdx].name; RefChrName = ChromosomeVec[RefIdx].name;
 		if (QueryChrName.length() > RefChrName.length()) RefChrName += string().assign((QueryChrName.length() - RefChrName.length()), ' ');
 		else QueryChrName += string().assign((RefChrName.length() - QueryChrName.length()), ' ');
+
+		iExtension = 0;
+		if (ABiter->coor.bDir && ((ABiter->FragPairVec.rbegin()->rPos + ABiter->FragPairVec.rbegin()->rLen) > (ChromosomeVec[RefIdx].FowardLocation + ChromosomeVec[RefIdx].len))) iExtension = (int)((ABiter->FragPairVec.rbegin()->rPos + ABiter->FragPairVec.rbegin()->rLen) - (ChromosomeVec[RefIdx].FowardLocation + ChromosomeVec[RefIdx].len));
+		else if (!ABiter->coor.bDir && ((ABiter->FragPairVec.rbegin()->rPos + ABiter->FragPairVec.rbegin()->rLen) > (ChromosomeVec[RefIdx].ReverseLocation + ChromosomeVec[RefIdx].len))) iExtension = (int)((ABiter->FragPairVec.rbegin()->rPos + ABiter->FragPairVec.rbegin()->rLen) - (ChromosomeVec[RefIdx].ReverseLocation + ChromosomeVec[RefIdx].len));
+		if (iExtension > 0)
+		{
+			//printf("%s: %lld-%lld --> %lld (%d)\n", ChromosomeVec[RefIdx].name, (ABiter->coor.bDir ? ChromosomeVec[RefIdx].FowardLocation : ChromosomeVec[RefIdx].ReverseLocation), (ABiter->coor.bDir ? ChromosomeVec[RefIdx].FowardLocation : ChromosomeVec[RefIdx].ReverseLocation) + ChromosomeVec[RefIdx].len, (ABiter->FragPairVec.rbegin()->rPos + ABiter->FragPairVec.rbegin()->rLen), iExtension);
+			ABiter->aln_len -= iExtension; ABiter->score -= iExtension;
+			ABiter->FragPairVec.rbegin()->rLen -= iExtension;
+			ABiter->FragPairVec.rbegin()->qLen -= iExtension;
+			aln1[ABiter->aln_len] = aln2[ABiter->aln_len] = '\0';
+		}
 
 		fprintf(outFile, "#Identity = %d / %d (%.2f%%) Orientation = %s\n\n", ABiter->score, ABiter->aln_len, (int)(1000 * (1.0*ABiter->score / ABiter->aln_len)) / 10.0, ABiter->coor.bDir ? "Forward" : "Reverse");
 		pos = 0; QueryPos = ABiter->FragPairVec[0].qPos + 1; RefPos = ABiter->coor.gPos;
