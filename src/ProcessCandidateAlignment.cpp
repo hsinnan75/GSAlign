@@ -78,6 +78,45 @@ void RemoveBadAlnBlocks()
 	AlnBlockVec.resize(num);
 }
 
+void CheckAlnBlockSpanMultipleRefChrs(AlnBlock_t& AlnBlock)
+{
+	int i, j, num;
+	int64_t last_rPos = -1;
+	AlnBlock_t SubAlnBlock;
+	vector<int> BreakPointVec;
+	vector<int>::iterator iter;
+
+	num = (int)AlnBlock.FragPairVec.size();
+	for (i = 0, j = 1; j < num; j++)
+	{
+		if (last_rPos == -1) last_rPos = ChrLocMap.lower_bound(AlnBlock.FragPairVec[i].rPos)->first;
+		if (AlnBlock.FragPairVec[j].rPos > last_rPos)
+		{
+			//printf("split! rPos1=%d, rPos2=%d\n", AlnBlock.FragPairVec[i].rPos, AlnBlock.FragPairVec[j].rPos);
+			BreakPointVec.push_back(j);
+			i = j; last_rPos = ChrLocMap.lower_bound(AlnBlock.FragPairVec[i].rPos)->first;
+		}
+	}
+	if ((num = (int)BreakPointVec.size()) > 0) // split this alignment block
+	{
+		pthread_mutex_lock(&Lock);
+		AlnBlock.score = 0;
+		for (i = 0, iter = BreakPointVec.begin(); iter != BreakPointVec.end(); iter++)
+		{
+			j = *iter;
+			SubAlnBlock.FragPairVec.clear(); copy(AlnBlock.FragPairVec.begin() + i, AlnBlock.FragPairVec.begin() + j, back_inserter(SubAlnBlock.FragPairVec));
+			if ((SubAlnBlock.score = CalAlnBlockScore(SubAlnBlock.FragPairVec)) > MinAlnBlockScore) AlnBlockVec.push_back(SubAlnBlock);
+			//printf("group [%d-%d]: score=%d\n", i, j, SubAlnBlock.score);
+			i = j;
+		}
+		//printf("split [%d-%d]\n", i, (int)AlnBlock.FragPairVec.size()); ShowFragPair(AlnBlock.FragPairVec[i - 1]); ShowFragPair(AlnBlock.FragPairVec[i]);
+		SubAlnBlock.FragPairVec.clear(); copy(AlnBlock.FragPairVec.begin() + i, AlnBlock.FragPairVec.end(), back_inserter(SubAlnBlock.FragPairVec));
+		if ((SubAlnBlock.score = CalAlnBlockScore(SubAlnBlock.FragPairVec)) > MinAlnBlockScore) AlnBlockVec.push_back(SubAlnBlock);
+		//printf("group [%d-%d]: score=%d\n", i, j, SubAlnBlock.score);
+		pthread_mutex_unlock(&Lock);
+	}
+}
+
 void CheckGapsBetweenSeeds(AlnBlock_t& AlnBlock)
 {
 	AlnBlock_t SubAlnBlock;
@@ -114,6 +153,14 @@ void CheckGapsBetweenSeeds(AlnBlock_t& AlnBlock)
 		if ((SubAlnBlock.score = CalAlnBlockScore(SubAlnBlock.FragPairVec)) > MinAlnBlockScore) AlnBlockVec.push_back(SubAlnBlock);
 		pthread_mutex_unlock(&Lock);
 	}
+}
+
+void *CheckAlnBlockSpanMultiSeqs(void *arg)
+{
+	int i, *my_id = (int*)arg;
+	for (i = *my_id; i < AlnBlockNum; i += iThreadNum) CheckAlnBlockSpanMultipleRefChrs(AlnBlockVec[i]);
+
+	return (void*)(1);
 }
 
 void *CheckAlnBlockLargeGaps(void *arg)

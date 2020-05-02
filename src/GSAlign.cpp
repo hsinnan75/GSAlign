@@ -126,10 +126,11 @@ void FindSpecificLocalMEM(int start, int stop, int64_t rPos1, int64_t rPos2)
 int SeedGrouping()
 {
 	int i, j, p;
+
 	for (p = i = 0, j = 1; j < SeedNum; i++, j++)
 	{
 		//printf("check: "); ShowFragPair(SeedVec[i]);
-		if (SeedVec[j].PosDiff - SeedVec[i].PosDiff > MaxIndelSize)
+		if ((SeedVec[j].PosDiff - SeedVec[i].PosDiff) > MaxIndelSize)
 		{
 			//printf("Break!!\n"); ShowFragPair(SeedVec[i]); ShowFragPair(SeedVec[j]);
 			SeedGroupVec.push_back(make_pair(p, j));
@@ -436,12 +437,12 @@ void RemoveRedundantAlnBlocks(int type)
 				overlap = (TailPos2 > TailPos1 ? TailPos1 - HeadPos2 : TailPos2 - HeadPos2); f1 = 1.*overlap / (TailPos1 - HeadPos1); f2 = 1.*overlap / (TailPos2 - HeadPos2);
 				//printf("\nType=%d Overlap=%d, f1=%.4f f2=%.4f\n", type, overlap, f1, f2); ShowAlnBlockBoundary(AlnBlockVec[i].score, AlnBlockVec[i].FragPairVec); ShowAlnBlockBoundary(AlnBlockVec[j].score, AlnBlockVec[j].FragPairVec);
 				//if (((HeadPos1 < ObrPos && TailPos1 > ObrPos) || (HeadPos2 < ObrPos && TailPos2 > ObrPos))) printf("!!!\n");
-				if ((f1 > f2 && f1 >= 0.9) || RefChrScoreArr[chr_idx2] > RefChrScoreArr[chr_idx1])
+				if ((f1 > f2 && f1 >= 0.9)/* || RefChrScoreArr[chr_idx2] > RefChrScoreArr[chr_idx1]*/)
 				{
 					AlnBlockVec[i].score = 0; //printf("Remove first\n");
 					break;
 				}
-				if ((f2 > f1 && f2 >= 0.9) || RefChrScoreArr[chr_idx1] > RefChrScoreArr[chr_idx2])
+				if ((f2 > f1 && f2 >= 0.9)/* || RefChrScoreArr[chr_idx1] > RefChrScoreArr[chr_idx2]*/)
 				{
 					AlnBlockVec[j].score = 0; //printf("Remove second\n");
 				}
@@ -478,7 +479,6 @@ void GenomeComparison()
 		fprintf(stderr, "\t\tSeed clustering and chaining..."); //iThreadNum = 1;
 		for (i = 0; i < iThreadNum; i++) pthread_create(&ThreadArr[i], NULL, GenerateAlignmentBlocks, &vec[i]);
 		for (i = 0; i < iThreadNum; i++) pthread_join(ThreadArr[i], NULL); fprintf(stderr, "\n");
-
 		fprintf(stderr, "\t\tFix overlapping seeds and close gaps between gaps...");
 		AlnBlockNum = (int)AlnBlockVec.size();// iThreadNum = 1;
 		for (i = 0; i < iThreadNum; i++) pthread_create(&ThreadArr[i], NULL, CheckAlnBlockOverlaps, &vec[i]);
@@ -486,10 +486,16 @@ void GenomeComparison()
 		AlnBlockNum = (int)AlnBlockVec.size();
 		for (i = 0; i < iThreadNum; i++) pthread_create(&ThreadArr[i], NULL, CheckAlnBlockLargeGaps, &vec[i]);
 		for (i = 0; i < iThreadNum; i++) pthread_join(ThreadArr[i], NULL); RemoveBadAlnBlocks();
+		AlnBlockNum = (int)AlnBlockVec.size();
+		for (i = 0; i < iThreadNum; i++) pthread_create(&ThreadArr[i], NULL, CheckAlnBlockSpanMultiSeqs, &vec[i]);
+		for (i = 0; i < iThreadNum; i++) pthread_join(ThreadArr[i], NULL); RemoveBadAlnBlocks();
+
 		EstChromosomeSimilarity(); RemoveRedundantAlnBlocks(1); RemoveRedundantAlnBlocks(2);
 		AlnBlockNum = (int)AlnBlockVec.size(); //iThreadNum = 1;
 		for (i = 0; i < iThreadNum; i++) pthread_create(&ThreadArr[i], NULL, FillAlnBlockGaps, &vec[i]);
 		for (i = 0; i < iThreadNum; i++) pthread_join(ThreadArr[i], NULL); fprintf(stderr, "\n");
+		//sort(AlnBlockVec.begin(), AlnBlockVec.end(), CompByAlnBlockRefPos);
+		//for (ABiter = AlnBlockVec.begin(); ABiter != AlnBlockVec.end(); ABiter++) ShowAlnBlockBoundary(ABiter->score, ABiter->FragPairVec);
 
 		//sort(AlnBlockVec.begin(), AlnBlockVec.end(), CompByAlnBlockRefPos);
 		//for (ABiter = AlnBlockVec.begin(); ABiter != AlnBlockVec.end(); ABiter++) ShowAlnBlockBoundary(ABiter->score, ABiter->FragPairVec);

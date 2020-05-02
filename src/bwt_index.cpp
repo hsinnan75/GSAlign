@@ -246,7 +246,7 @@ void RestoreReferenceInfo()
 
 		ChromosomeVec[i].FowardLocation = iTotalLength; iTotalLength += ChromosomeVec[i].len;
 		ChromosomeVec[i].ReverseLocation = TwoGenomeSize - iTotalLength;
-		//printf("%s: %lld %lld %lld\n", ChromosomeVec[i].name, ChromosomeVec[i].FowardLocation, ChromosomeVec[i].ReverseLocation);
+		//printf("%s: %lld %lld\n", ChromosomeVec[i].name, ChromosomeVec[i].FowardLocation, ChromosomeVec[i].ReverseLocation);
 
 		ChrLocMap.insert(make_pair(ChromosomeVec[i].FowardLocation + ChromosomeVec[i].len - 1, i));
 		ChrLocMap.insert(make_pair(ChromosomeVec[i].ReverseLocation + ChromosomeVec[i].len - 1, i));

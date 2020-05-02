@@ -179,6 +179,7 @@ extern void RemoveBadAlnBlocks();
 extern void *FillAlnBlockGaps(void *arg);
 extern void *CheckAlnBlockOverlaps(void *arg);
 extern void *CheckAlnBlockLargeGaps(void *arg);
+extern void *CheckAlnBlockSpanMultiSeqs(void *arg);
 //extern void *CheckAlnBlockNoisySeeds(void *arg);
 extern void RemoveBadSeeds(AlnBlock_t& AlnBlock);
 //extern void CheckOverlaps(vector<FragPair_t>& FragPairVec);

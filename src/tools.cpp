@@ -189,14 +189,13 @@ void OutputMAF()
 		//ShowAlnBlockBoundary(ABiter->score, ABiter->FragPairVec);
 		iExtension = 0;
 		if (ABiter->coor.bDir && ((ABiter->FragPairVec.rbegin()->rPos + ABiter->FragPairVec.rbegin()->rLen) > (ChromosomeVec[RefIdx].FowardLocation + ChromosomeVec[RefIdx].len))) iExtension = (int)((ABiter->FragPairVec.rbegin()->rPos + ABiter->FragPairVec.rbegin()->rLen) - (ChromosomeVec[RefIdx].FowardLocation + ChromosomeVec[RefIdx].len));
-		if (!ABiter->coor.bDir && ((ABiter->FragPairVec.rbegin()->rPos + ABiter->FragPairVec.rbegin()->rLen) > (ChromosomeVec[RefIdx].ReverseLocation + ChromosomeVec[RefIdx].len))) iExtension = (int)((ABiter->FragPairVec.rbegin()->rPos + ABiter->FragPairVec.rbegin()->rLen) - (ChromosomeVec[RefIdx].ReverseLocation + ChromosomeVec[RefIdx].len));
+		else if (!ABiter->coor.bDir && ((ABiter->FragPairVec.rbegin()->rPos + ABiter->FragPairVec.rbegin()->rLen) > (ChromosomeVec[RefIdx].ReverseLocation + ChromosomeVec[RefIdx].len))) iExtension = (int)((ABiter->FragPairVec.rbegin()->rPos + ABiter->FragPairVec.rbegin()->rLen) - (ChromosomeVec[RefIdx].ReverseLocation + ChromosomeVec[RefIdx].len));
 		if (iExtension > 0)
 		{
 			//printf("%s: %lld-%lld --> %lld (%d)\n", ChromosomeVec[RefIdx].name, (ABiter->coor.bDir ? ChromosomeVec[RefIdx].FowardLocation : ChromosomeVec[RefIdx].ReverseLocation), (ABiter->coor.bDir ? ChromosomeVec[RefIdx].FowardLocation : ChromosomeVec[RefIdx].ReverseLocation) + ChromosomeVec[RefIdx].len, (ABiter->FragPairVec.rbegin()->rPos + ABiter->FragPairVec.rbegin()->rLen), iExtension);
 			ABiter->aln_len -= iExtension;
 			ABiter->FragPairVec.rbegin()->rLen -= iExtension;
 			ABiter->FragPairVec.rbegin()->qLen -= iExtension;
-			aln1[ABiter->aln_len] = aln2[ABiter->aln_len] = '\0';
 		}
 		if (ABiter->coor.bDir)
 		{
@@ -223,8 +222,8 @@ void OutputAlignment()
 	int64_t RefPos;
 	char *aln1, *aln2;
 	uint32_t pos, aln_len;
-	int p, q, RefIdx, QueryPos;
 	string QueryChrName, RefChrName;
+	int p, q, RefIdx, QueryPos, iExtension;
 	vector<FragPair_t>::iterator FragPairIter;
 
 	if (QueryChrIdx == 0) outFile = fopen(alnFileName, "w");
