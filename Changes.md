@@ -15,3 +15,4 @@
 - 1.0.16: Fixed a bug on reporting coordinate of alignment
 - 1.0.17: Fixed a bug on spanning reference sequences
 - 1.0.18: Fixed a bug on spanning reference sequences
+- 1.0.19: Added the option of "-one" to set one-on-one alignment

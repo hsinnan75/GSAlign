@@ -95,7 +95,9 @@ To compile Evaluation.cpp, just type 'g++ Evaluation.cpp -o eva'
 
 -fmt INT Set the output format [1]: 1:maf, 2:aln
 
--idy  set the minimal sequnce identity [70]
+-idy set the minimal sequnce identity [70]
+
+-one set one on one aligment mode [false]
 
 -slen set the minimal seed length [15]. To compare two sequences of less similarity, please use smaller size seed length.
 

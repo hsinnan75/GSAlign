@@ -437,12 +437,12 @@ void RemoveRedundantAlnBlocks(int type)
 				overlap = (TailPos2 > TailPos1 ? TailPos1 - HeadPos2 : TailPos2 - HeadPos2); f1 = 1.*overlap / (TailPos1 - HeadPos1); f2 = 1.*overlap / (TailPos2 - HeadPos2);
 				//printf("\nType=%d Overlap=%d, f1=%.4f f2=%.4f\n", type, overlap, f1, f2); ShowAlnBlockBoundary(AlnBlockVec[i].score, AlnBlockVec[i].FragPairVec); ShowAlnBlockBoundary(AlnBlockVec[j].score, AlnBlockVec[j].FragPairVec);
 				//if (((HeadPos1 < ObrPos && TailPos1 > ObrPos) || (HeadPos2 < ObrPos && TailPos2 > ObrPos))) printf("!!!\n");
-				if ((f1 > f2 && f1 >= 0.9)/* || RefChrScoreArr[chr_idx2] > RefChrScoreArr[chr_idx1]*/)
+				if ((f1 > f2 && f1 >= 0.9) || (OneOnOneMode && RefChrScoreArr[chr_idx2] > RefChrScoreArr[chr_idx1]))
 				{
 					AlnBlockVec[i].score = 0; //printf("Remove first\n");
 					break;
 				}
-				if ((f2 > f1 && f2 >= 0.9)/* || RefChrScoreArr[chr_idx1] > RefChrScoreArr[chr_idx2]*/)
+				if ((f2 > f1 && f2 >= 0.9) || (OneOnOneMode && RefChrScoreArr[chr_idx1] > RefChrScoreArr[chr_idx2]))
 				{
 					AlnBlockVec[j].score = 0; //printf("Remove second\n");
 				}

@@ -6,8 +6,8 @@ string cmd_line;
 bwaidx_t *RefIdx;
 time_t StartProcessTime;
 vector<QueryChr_t> QueryChrVec;
-const char* VersionStr = "1.0.18";
-bool bDebugMode, bDUPmode, bSensitive, bVCF, bShowPlot;
+const char* VersionStr = "1.0.19";
+bool bDebugMode, bDUPmode, bSensitive, bVCF, bShowPlot, OneOnOneMode;
 int QueryChrIdx, iThreadNum, iQueryChrNum, MaxIndelSize, MinSeedLength, MinSeqIdy, MinAlnBlockScore, MinAlnLength, OutputFormat = 1;
 char *RefSequence, *RefSeqFileName, *IndexFileName, *QueryFileName, *OutputPrefix, *vcfFileName, *mafFileName, *alnFileName, *gpFileName, *GnuPlotPath;
 
@@ -26,6 +26,7 @@ void ShowProgramUsage(const char* program)
 	fprintf(stderr, "         -clr   INT     Set the minimal cluster size [%d]\n", MinAlnBlockScore);
 	fprintf(stderr, "         -sen           Sensitive mode [False]\n");
 	fprintf(stderr, "         -dp            Output Dot-plots\n");
+	fprintf(stderr, "         -one           set one on one aligment mode[false]\n");
 	fprintf(stderr, "         -gp    STR     Specify the path of gnuplot\n");
 	fprintf(stderr, "\n");
 }
@@ -203,6 +204,7 @@ int main(int argc, char* argv[])
 	bShowPlot = false;
 	bDebugMode = false;
 	bVCF = true;
+	OneOnOneMode = false;
 	MinSeedLength = 15;
 	MinAlnBlockScore = 200;
 	MinAlnLength = 200;
@@ -272,6 +274,7 @@ int main(int argc, char* argv[])
 				MinAlnBlockScore = 50;
 			}
 			else if (parameter == "-no_vcf") bVCF = false;
+			else if (parameter == "-one") OneOnOneMode = true;
 			else if (parameter == "-idy" && i + 1 < argc) MinSeqIdy = atoi(argv[++i]);
 			else if (parameter == "-alen" && i + 1 < argc) MinAlnLength = atoi(argv[++i]);
 			else if (parameter == "-clr" && i + 1 < argc) MinAlnBlockScore = atoi(argv[++i]);
