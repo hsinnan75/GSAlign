@@ -415,7 +415,6 @@ bool CheckDuplicatedChrScore(int score1, int score2)
 void RemoveRedundantAlnBlocks(int type) //type1:query, type2:ref
 {
 	float f1, f2;
-	bool bDuplicated;
 	int i, j, chr_idx1, chr_idx2;
 	int64_t HeadPos1, HeadPos2, TailPos1, TailPos2, overlap;
 
@@ -425,7 +424,7 @@ void RemoveRedundantAlnBlocks(int type) //type1:query, type2:ref
 
 	for (i = 0; i < AlnBlockNum; i++)
 	{
-		bDuplicated = false;
+		AlnBlockVec[i].bDup = false;
 		if (AlnBlockVec[i].score == 0) continue;
 		HeadPos1 = (type == 1 ? AlnBlockVec[i].FragPairVec.begin()->qPos : AlnBlockVec[i].FragPairVec.begin()->rPos);
 		TailPos1 = (type == 1 ? AlnBlockVec[i].FragPairVec.rbegin()->qPos + AlnBlockVec[i].FragPairVec.rbegin()->qLen - 1 : AlnBlockVec[i].FragPairVec.rbegin()->rPos + AlnBlockVec[i].FragPairVec.rbegin()->rLen - 1);
@@ -438,9 +437,10 @@ void RemoveRedundantAlnBlocks(int type) //type1:query, type2:ref
 			HeadPos2 = (type == 1 ? AlnBlockVec[j].FragPairVec.begin()->qPos : AlnBlockVec[j].FragPairVec.begin()->rPos);
 			TailPos2 = (type == 1 ? AlnBlockVec[j].FragPairVec.rbegin()->qPos + AlnBlockVec[j].FragPairVec.rbegin()->qLen - 1 : AlnBlockVec[j].FragPairVec.rbegin()->rPos + AlnBlockVec[j].FragPairVec.rbegin()->rLen - 1);
 			
-			if (HeadPos1 == HeadPos2 && TailPos1 == TailPos2)
+			if (type == 1 && HeadPos1 == HeadPos2 && TailPos1 == TailPos2)
 			{
-				bDuplicated = true;
+				//printf("h1=%d t1=%d, h2=%d t2=%d\n", HeadPos1, TailPos1, HeadPos2, TailPos2);
+				AlnBlockVec[i].bDup = true;
 				AlnBlockVec[j].score = 0;
 				continue;
 			}
@@ -466,7 +466,6 @@ void RemoveRedundantAlnBlocks(int type) //type1:query, type2:ref
 			}
 			else break;
 		}
-		if (bDuplicated) AlnBlockVec[i].bDup = true;
 	}
 	RemoveBadAlnBlocks();
 }
