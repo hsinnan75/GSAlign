@@ -19,6 +19,8 @@ void VariantIdentification()
 
 	for (vector<AlnBlock_t>::iterator ABiter = AlnBlockVec.begin(); ABiter != AlnBlockVec.end(); ABiter++)
 	{
+		if (ABiter->bDup) continue;
+
 		Variant.chr_idx = ABiter->coor.ChromosomeIdx;
 		Variant.query_idx = QueryChrIdx;
 

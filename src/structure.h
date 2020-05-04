@@ -114,6 +114,7 @@ typedef struct
 
 typedef struct
 {
+	bool bDup;
 	int score;
 	int aln_len;
 	Coordinate_t coor;
@@ -148,7 +149,7 @@ extern vector<AlnBlock_t> AlnBlockVec;
 extern vector<QueryChr_t> QueryChrVec;
 extern unsigned char nst_nt4_table[256];
 extern vector<Chromosome_t> ChromosomeVec;
-extern bool bDebugMode, bSensitive, bVCF, bShowPlot, OneOnOneMode;
+extern bool bDebugMode, bSensitive, bVCF, bShowPlot, bAllowDuplication, OneOnOneMode;
 extern int64_t GenomeSize, TwoGenomeSize, TotalAlignmentLength, LocalAlignmentNum;
 extern char *RefSequence, *RefSeqFileName, *IndexFileName, *QueryFileName, *OutputPrefix, *vcfFileName, *mafFileName, *alnFileName, *gpFileName, *GnuPlotPath;
 extern int ObrPos, QueryChrIdx, iThreadNum, iQueryChrNum, iChromsomeNum, AlnBlockNum, MinSeqIdy, MaxIndelSize, MinSeedLength, MinAlnLength, MinAlnBlockScore, OutputFormat, iSNV, iInsertion, iDeletion;

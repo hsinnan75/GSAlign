@@ -11,7 +11,7 @@ vector<FragPair_t> SeedVec;
 vector<AlnBlock_t> AlnBlockVec;
 uint32_t QrySeqPos, QryChrLength;
 vector<pair<int, int> > SeedGroupVec;
-int SeedNum, SeedGroupNum, GroupID, AlnBlockNum;
+int SeedNum, SeedGroupNum, GroupID, AlnBlockNum, DupAlnNum = 0;
 int64_t TotalAlignmentLength = 0, TotalAlignmentMatches = 0, LocalAlignmentNum = 0, SNP_num = 0, IND_num = 0, SVS_num = 0;
 
 bool CompByAlnBlockQueryPos(const AlnBlock_t& p1, const AlnBlock_t& p2)
@@ -31,7 +31,7 @@ void AddAlnBlock(int i, int j)
 	int region_size;
 	AlnBlock_t AlnBlock;
 
-	AlnBlock.score = 0;
+	AlnBlock.score = 0; AlnBlock.bDup = false;
 	copy(SeedVec.begin() + i, SeedVec.begin() + j, back_inserter(AlnBlock.FragPairVec));
 	for (vector<FragPair_t>::iterator iter = AlnBlock.FragPairVec.begin(); iter != AlnBlock.FragPairVec.end(); iter++) AlnBlock.score += iter->qLen;
 	region_size = (AlnBlock.FragPairVec.rbegin()->qPos + AlnBlock.FragPairVec.rbegin()->qLen) - AlnBlock.FragPairVec.begin()->qPos;
@@ -406,9 +406,16 @@ void EstChromosomeSimilarity()
 	//printf("Query=%s\n", QueryChrVec[QueryChrIdx].name.c_str()); for (i = 0; i < iChromsomeNum; i++) printf("%s: score=%lld\n", ChromosomeVec[i].name, RefChrScoreArr[i]);
 }
 
-void RemoveRedundantAlnBlocks(int type)
+bool CheckDuplicatedChrScore(int score1, int score2)
+{
+	if (score1 > score2 && score1 >= score2 * 2) return true;
+	else return false;
+}
+
+void RemoveRedundantAlnBlocks(int type) //type1:query, type2:ref
 {
 	float f1, f2;
+	bool bDuplicated;
 	int i, j, chr_idx1, chr_idx2;
 	int64_t HeadPos1, HeadPos2, TailPos1, TailPos2, overlap;
 
@@ -418,6 +425,7 @@ void RemoveRedundantAlnBlocks(int type)
 
 	for (i = 0; i < AlnBlockNum; i++)
 	{
+		bDuplicated = false;
 		if (AlnBlockVec[i].score == 0) continue;
 		HeadPos1 = (type == 1 ? AlnBlockVec[i].FragPairVec.begin()->qPos : AlnBlockVec[i].FragPairVec.begin()->rPos);
 		TailPos1 = (type == 1 ? AlnBlockVec[i].FragPairVec.rbegin()->qPos + AlnBlockVec[i].FragPairVec.rbegin()->qLen - 1 : AlnBlockVec[i].FragPairVec.rbegin()->rPos + AlnBlockVec[i].FragPairVec.rbegin()->rLen - 1);
@@ -429,26 +437,36 @@ void RemoveRedundantAlnBlocks(int type)
 			if (AlnBlockVec[j].score == 0) continue;
 			HeadPos2 = (type == 1 ? AlnBlockVec[j].FragPairVec.begin()->qPos : AlnBlockVec[j].FragPairVec.begin()->rPos);
 			TailPos2 = (type == 1 ? AlnBlockVec[j].FragPairVec.rbegin()->qPos + AlnBlockVec[j].FragPairVec.rbegin()->qLen - 1 : AlnBlockVec[j].FragPairVec.rbegin()->rPos + AlnBlockVec[j].FragPairVec.rbegin()->rLen - 1);
+			
+			if (HeadPos1 == HeadPos2 && TailPos1 == TailPos2)
+			{
+				bDuplicated = true;
+				AlnBlockVec[j].score = 0;
+				continue;
+			}
+
 			chr_idx2 = ChrLocMap.lower_bound(AlnBlockVec[j].FragPairVec.begin()->rPos)->second;
 			if (type == 2 && HeadPos2 >= GenomeSize) ReverseRefCoordinate(HeadPos2, TailPos2);
 
 			if (HeadPos2 < TailPos1) // overlap
 			{
-				overlap = (TailPos2 > TailPos1 ? TailPos1 - HeadPos2 : TailPos2 - HeadPos2); f1 = 1.*overlap / (TailPos1 - HeadPos1); f2 = 1.*overlap / (TailPos2 - HeadPos2);
+				overlap = (TailPos2 > TailPos1 ? TailPos1 - HeadPos2 : TailPos2 - HeadPos2);
+				f1 = 1.*overlap / (TailPos1 - HeadPos1); f2 = 1.*overlap / (TailPos2 - HeadPos2);
 				//printf("\nType=%d Overlap=%d, f1=%.4f f2=%.4f\n", type, overlap, f1, f2); ShowAlnBlockBoundary(AlnBlockVec[i].score, AlnBlockVec[i].FragPairVec); ShowAlnBlockBoundary(AlnBlockVec[j].score, AlnBlockVec[j].FragPairVec);
 				//if (((HeadPos1 < ObrPos && TailPos1 > ObrPos) || (HeadPos2 < ObrPos && TailPos2 > ObrPos))) printf("!!!\n");
-				if ((f1 > f2 && f1 >= 0.9) || (OneOnOneMode && RefChrScoreArr[chr_idx2] > RefChrScoreArr[chr_idx1]))
+				if ((f1 > f2 && f1 >= 0.9) || (OneOnOneMode && CheckDuplicatedChrScore(RefChrScoreArr[chr_idx2], RefChrScoreArr[chr_idx1])))
 				{
 					AlnBlockVec[i].score = 0; //printf("Remove first\n");
 					break;
 				}
-				if ((f2 > f1 && f2 >= 0.9) || (OneOnOneMode && RefChrScoreArr[chr_idx1] > RefChrScoreArr[chr_idx2]))
+				if ((f2 > f1 && f2 >= 0.9) || (OneOnOneMode && CheckDuplicatedChrScore(RefChrScoreArr[chr_idx1], RefChrScoreArr[chr_idx2])))
 				{
 					AlnBlockVec[j].score = 0; //printf("Remove second\n");
 				}
 			}
 			else break;
 		}
+		if (bDuplicated) AlnBlockVec[i].bDup = true;
 	}
 	RemoveBadAlnBlocks();
 }
@@ -513,6 +531,7 @@ void GenomeComparison()
 			if ((int)(100 * (1.0*ABiter->score / ABiter->aln_len)) < MinSeqIdy) ABiter->score = 0;
 			else
 			{
+				if (ABiter->bDup) DupAlnNum++;
 				n++; aln_len += ABiter->aln_len; aln_score += ABiter->score;
 				LocalAlignmentNum++; TotalAlignmentLength += ABiter->aln_len; TotalAlignmentMatches += ABiter->score;
 				ABiter->coor = GenCoordinateInfo(ABiter->FragPairVec[0].rPos);
@@ -527,7 +546,7 @@ void GenomeComparison()
 		if (bShowPlot && GnuPlotPath != NULL) fprintf(stderr, "\t\tGenerate dotplot for query sequence (%s-%s.ps)\n", OutputPrefix, QueryChrVec[QueryChrIdx].name.c_str()), OutputDotplot();
 		fprintf(stderr, "\n");
 	}
-	if (LocalAlignmentNum > 0) fprintf(stderr, "\tAlignment#=%d (total alignment length=%lld) ANI=%.2f%%\n", (int)LocalAlignmentNum, (long long)TotalAlignmentLength, (100 * (1.0*TotalAlignmentMatches / TotalAlignmentLength)));
+	if (LocalAlignmentNum > 0) fprintf(stderr, "\tAlignment#=%d (total alignment length=%lld) ANI=%.2f%%, unique alignment#=%d\n", (int)LocalAlignmentNum, (long long)TotalAlignmentLength, (100 * (1.0*TotalAlignmentMatches / TotalAlignmentLength)), int(LocalAlignmentNum - DupAlnNum));
 	fprintf(stderr, "\tIt took %lld seconds for genome sequence alignment.\n", (long long)(time(NULL) - StartProcessTime));
 	delete[] RefChrScoreArr; delete[] ThreadArr;
 }

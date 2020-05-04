@@ -99,6 +99,8 @@ To compile Evaluation.cpp, just type 'g++ Evaluation.cpp -o eva'
 
 -one set one on one aligment mode [false]
 
+-unique Only output unique alignment [false]
+
 -slen set the minimal seed length [15]. To compare two sequences of less similarity, please use smaller size seed length.
 
 -alen set the minimal alignment length [5000]

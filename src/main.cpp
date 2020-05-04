@@ -6,8 +6,8 @@ string cmd_line;
 bwaidx_t *RefIdx;
 time_t StartProcessTime;
 vector<QueryChr_t> QueryChrVec;
-const char* VersionStr = "1.0.19";
-bool bDebugMode, bDUPmode, bSensitive, bVCF, bShowPlot, OneOnOneMode;
+const char* VersionStr = "1.0.20";
+bool bDebugMode, bDUPmode, bSensitive, bVCF, bShowPlot, bAllowDuplication, OneOnOneMode;
 int QueryChrIdx, iThreadNum, iQueryChrNum, MaxIndelSize, MinSeedLength, MinSeqIdy, MinAlnBlockScore, MinAlnLength, OutputFormat = 1;
 char *RefSequence, *RefSeqFileName, *IndexFileName, *QueryFileName, *OutputPrefix, *vcfFileName, *mafFileName, *alnFileName, *gpFileName, *GnuPlotPath;
 
@@ -24,6 +24,7 @@ void ShowProgramUsage(const char* program)
 	fprintf(stderr, "         -alen  INT     Set the minimal alignment length [%d]\n", MinAlnLength);
 	fprintf(stderr, "         -ind   INT     Set the maximal indel size [%d]\n", MaxIndelSize);
 	fprintf(stderr, "         -clr   INT     Set the minimal cluster size [%d]\n", MinAlnBlockScore);
+	fprintf(stderr, "         -unique        Output unique alignment only [false]\n");
 	fprintf(stderr, "         -sen           Sensitive mode [False]\n");
 	fprintf(stderr, "         -dp            Output Dot-plots\n");
 	fprintf(stderr, "         -one           set one on one aligment mode[false]\n");
@@ -204,6 +205,7 @@ int main(int argc, char* argv[])
 	bShowPlot = false;
 	bDebugMode = false;
 	bVCF = true;
+	bAllowDuplication = true;
 	OneOnOneMode = false;
 	MinSeedLength = 15;
 	MinAlnBlockScore = 200;
@@ -273,6 +275,7 @@ int main(int argc, char* argv[])
 				MinAlnLength = 200;
 				MinAlnBlockScore = 50;
 			}
+			else if (parameter == "-unique") bAllowDuplication = false;
 			else if (parameter == "-no_vcf") bVCF = false;
 			else if (parameter == "-one") OneOnOneMode = true;
 			else if (parameter == "-idy" && i + 1 < argc) MinSeqIdy = atoi(argv[++i]);
