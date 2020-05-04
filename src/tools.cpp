@@ -276,7 +276,7 @@ void OutputAlignment()
 			p = 80 - CountGapNum(aln1, pos, (pos + 80 > aln_len ? aln_len : pos + 80));
 			q = 80 - CountGapNum(aln2, pos, (pos + 80 > aln_len ? aln_len : pos + 80));
 
-			fprintf(outFile, "ref_%s\t%12lld\t%.80s\nqry_%s\t%12d\t%.80s\n\n", RefChrName.c_str(), (long long)RefPos, aln1 + pos, QueryChrName.c_str(), QueryPos, aln2 + pos);
+			fprintf(outFile, "ref.%s\t%12lld\t%.80s\nqry.%s\t%12d\t%.80s\n\n", RefChrName.c_str(), (long long)RefPos, aln1 + pos, QueryChrName.c_str(), QueryPos, aln2 + pos);
 			pos += 80; RefPos += (ABiter->coor.bDir ? p : 0 - p); QueryPos += q;
 		}
 		delete[] aln1; delete[] aln2;
