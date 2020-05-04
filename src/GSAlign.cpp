@@ -424,7 +424,7 @@ void RemoveRedundantAlnBlocks(int type) //type1:query, type2:ref
 
 	for (i = 0; i < AlnBlockNum; i++)
 	{
-		AlnBlockVec[i].bDup = false;
+		///AlnBlockVec[i].bDup = false;
 		if (AlnBlockVec[i].score == 0) continue;
 		HeadPos1 = (type == 1 ? AlnBlockVec[i].FragPairVec.begin()->qPos : AlnBlockVec[i].FragPairVec.begin()->rPos);
 		TailPos1 = (type == 1 ? AlnBlockVec[i].FragPairVec.rbegin()->qPos + AlnBlockVec[i].FragPairVec.rbegin()->qLen - 1 : AlnBlockVec[i].FragPairVec.rbegin()->rPos + AlnBlockVec[i].FragPairVec.rbegin()->rLen - 1);
@@ -439,7 +439,7 @@ void RemoveRedundantAlnBlocks(int type) //type1:query, type2:ref
 			
 			if (type == 1 && HeadPos1 == HeadPos2 && TailPos1 == TailPos2)
 			{
-				//printf("h1=%d t1=%d, h2=%d t2=%d\n", HeadPos1, TailPos1, HeadPos2, TailPos2);
+				//printf("\n%s: h1=%d t1=%d, h2=%d t2=%d\n", ChromosomeVec[chr_idx1].name, HeadPos1, TailPos1, HeadPos2, TailPos2);
 				AlnBlockVec[i].bDup = true;
 				AlnBlockVec[j].score = 0;
 				continue;
@@ -507,6 +507,7 @@ void GenomeComparison()
 		for (i = 0; i < iThreadNum; i++) pthread_create(&ThreadArr[i], NULL, CheckAlnBlockSpanMultiSeqs, &vec[i]);
 		for (i = 0; i < iThreadNum; i++) pthread_join(ThreadArr[i], NULL); RemoveBadAlnBlocks();
 
+		for (ABiter = AlnBlockVec.begin(); ABiter != AlnBlockVec.end(); ABiter++) ABiter->bDup = false;
 		EstChromosomeSimilarity(); RemoveRedundantAlnBlocks(1); RemoveRedundantAlnBlocks(2);
 		AlnBlockNum = (int)AlnBlockVec.size(); //iThreadNum = 1;
 		for (i = 0; i < iThreadNum; i++) pthread_create(&ThreadArr[i], NULL, FillAlnBlockGaps, &vec[i]);
