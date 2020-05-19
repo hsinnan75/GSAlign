@@ -36,7 +36,7 @@ void bwt_restore_sa(const char *fn, bwt_t *bwt)
 
 bntseq_t *bns_restore_core(const char *ann_filename, const char* amb_filename, const char* pac_filename)
 {
-	char str[1024];
+	char str[10240];
 	FILE *fp;
 	const char *fname;
 	bntseq_t *bns;
