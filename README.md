@@ -54,8 +54,6 @@ or with a pre-built index file
   $ bin/GSAlign -i idx_prefix -q fa2 -o output
   ```
 
-Please note, if the two genome sequences are intra-species, it is recommended to run GSAlign with default parameters. However, if they are inter-species, it is recommended to run GSAlign with '-clr 50 -alen 200.'
-
 # Datasets
 
 You may download the test datasets at http://bioapp.iis.sinica.edu.tw/~arith/GSAlign/ to test the performance of GSAlign.
