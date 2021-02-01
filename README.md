@@ -95,7 +95,8 @@ To compile Evaluation.cpp, just type 'g++ Evaluation.cpp -o eva'
 
 -idy set the minimal sequnce identity [70]
 
--one set one on one aligment mode [false]
+-one set one on one aligment mode [false] (This option forces the query
+sequence is only allowed to be aligned at most one position).
 
 -unique Only output unique alignment [false]
 
