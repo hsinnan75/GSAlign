@@ -30,3 +30,12 @@
 *.exe
 *.out
 *.app
+
+# Binaries
+bin/
+
+# Test outcomes
+test/ecoli.amb
+test/ecoli.ann
+test/ecoli.pac
+

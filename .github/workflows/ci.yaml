@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build:
+    name: Linux x86_64
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Build
+      run: |
+        make -j
+        file bin/GSAlign | grep x86-64
+
+    - name: Test
+      run: ./run_test.sh
+
+  build-aarch64:
+    name: Linux aarch64
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Build
+      uses: uraimo/run-on-arch-action@v2
+      with:
+        arch: aarch64
+        distro: ubuntu20.04
+        githubToken: ${{ github.token }}
+        dockerRunArgs: |
+          --volume "${PWD}:/gsalign"
+        install: |
+          apt-get update -q -y
+          apt-get install -q -y make gcc-10 g++-10 file zlib1g-dev
+        run: |
+          cd /gsalign
+          make CC=gcc-10 CXX=g++-10 ARCH_FLAGS="-march=native" -j
+          file bin/GSAlign | grep aarch64
+          ./run_test.sh
